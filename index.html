@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>CheeseFork - Your Cheesy Scheduler</title>
+    <style>
+        /* Dynamic calendar table height */
+        #calendar .fc-time-grid .fc-slats td {
+            font-size: calc(-0.3em + 3.1vh);
+        }
+
+        /* Dynamic event text size */
+        #calendar .fc-event {
+            font-size: calc(0.1em + 1.3vh);
+        }
+
+        /* Center event text vertically */
+        #calendar .fc-time-grid-event {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Center event text horizontally */
+        #calendar .fc-content {
+            text-align: center !important;
+        }
+
+        #course-button-list {
+            margin-top: 20px;
+        }
+
+        /* Borders for calendar items */
+        .calendar-item-previewed {
+            border: 3px solid #1565C0 !important;
+        }
+
+        .calendar-item-same-course-as-hovered {
+            border: 3px solid #1565C0 !important;
+        }
+
+        .calendar-item-same-type-as-hovered {
+            border: 3px solid #CC0000 !important;
+        }
+
+        /* Borders for group items */
+        .list-group-item-same-course-as-hovered {
+            -webkit-box-shadow: inset 0 0 0 3px #CC0000;
+            -moz-box-shadow: inset 0 0 0 3px #CC0000;
+            box-shadow: inset 0 0 0 3px #CC0000;
+        }
+
+        .list-group-item-conflicted {
+            color: red !important;
+            font-weight: bold;
+            text-shadow: 0 0 10px black;
+        }
+
+        /* Overrides list-group-item from Bootstrap */
+        .list-group-item {
+            font-size: small;
+        }
+
+        /* Absolute Center CSS Overlay Spinner: https://codepen.io/MattIn4D/pen/LiKFC */
+
+        /* Absolute Center Spinner */
+        .loading {
+            position: fixed;
+            z-index: 999;
+            height: 2em;
+            width: 2em;
+            overflow: show;
+            margin: auto;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+        }
+
+        /* Transparent Overlay */
+        .loading:before {
+            content: '';
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.3);
+        }
+
+        /* :not(:required) hides these rules from IE9 and below */
+        .loading:not(:required) {
+            /* hide "loading..." text */
+            font: 0/0 a;
+            color: transparent;
+            text-shadow: none;
+            background-color: transparent;
+            border: 0;
+        }
+
+        .loading:not(:required):after {
+            content: '';
+            display: block;
+            font-size: 10px;
+            width: 1em;
+            height: 1em;
+            margin-top: -0.5em;
+            -webkit-animation: spinner 1500ms infinite linear;
+            -moz-animation: spinner 1500ms infinite linear;
+            -ms-animation: spinner 1500ms infinite linear;
+            -o-animation: spinner 1500ms infinite linear;
+            animation: spinner 1500ms infinite linear;
+            border-radius: 0.5em;
+            -webkit-box-shadow: rgba(0, 0, 0, 0.75) 1.5em 0 0 0, rgba(0, 0, 0, 0.75) 1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) 0 1.5em 0 0, rgba(0, 0, 0, 0.75) -1.1em 1.1em 0 0, rgba(0, 0, 0, 0.5) -1.5em 0 0 0, rgba(0, 0, 0, 0.5) -1.1em -1.1em 0 0, rgba(0, 0, 0, 0.75) 0 -1.5em 0 0, rgba(0, 0, 0, 0.75) 1.1em -1.1em 0 0;
+            box-shadow: rgba(0, 0, 0, 0.75) 1.5em 0 0 0, rgba(0, 0, 0, 0.75) 1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) 0 1.5em 0 0, rgba(0, 0, 0, 0.75) -1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) -1.5em 0 0 0, rgba(0, 0, 0, 0.75) -1.1em -1.1em 0 0, rgba(0, 0, 0, 0.75) 0 -1.5em 0 0, rgba(0, 0, 0, 0.75) 1.1em -1.1em 0 0;
+        }
+
+        /* Animation */
+
+        @-webkit-keyframes spinner {
+            0% {
+                -webkit-transform: rotate(0deg);
+                -moz-transform: rotate(0deg);
+                -ms-transform: rotate(0deg);
+                -o-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+            100% {
+                -webkit-transform: rotate(360deg);
+                -moz-transform: rotate(360deg);
+                -ms-transform: rotate(360deg);
+                -o-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
+        }
+        @-moz-keyframes spinner {
+            0% {
+                -webkit-transform: rotate(0deg);
+                -moz-transform: rotate(0deg);
+                -ms-transform: rotate(0deg);
+                -o-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+            100% {
+                -webkit-transform: rotate(360deg);
+                -moz-transform: rotate(360deg);
+                -ms-transform: rotate(360deg);
+                -o-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
+        }
+        @-o-keyframes spinner {
+            0% {
+                -webkit-transform: rotate(0deg);
+                -moz-transform: rotate(0deg);
+                -ms-transform: rotate(0deg);
+                -o-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+            100% {
+                -webkit-transform: rotate(360deg);
+                -moz-transform: rotate(360deg);
+                -ms-transform: rotate(360deg);
+                -o-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
+        }
+        @keyframes spinner {
+            0% {
+                -webkit-transform: rotate(0deg);
+                -moz-transform: rotate(0deg);
+                -ms-transform: rotate(0deg);
+                -o-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+            100% {
+                -webkit-transform: rotate(360deg);
+                -moz-transform: rotate(360deg);
+                -ms-transform: rotate(360deg);
+                -o-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="bootstrap_rtl/css/bootstrap.css">
+    <link rel="stylesheet" href="fullcalendar/fullcalendar.min.css">
+    <!--link href="fullcalendar/fullcalendar.css" rel="stylesheet" /-->
+    <link rel="stylesheet" media="print" href="fullcalendar/fullcalendar.print.min.css">
+    <link rel="stylesheet" href="selectize/css/selectize.css">
+</head>
+<body class="bg-light">
+<div class="container-fluid">
+
+    <div class="loading" id="page-loader">Loading&#8230;</div>
+
+    <div class="py-2 text-center">
+        <h2 dir="ltr">
+            CheeseFork
+            <img src="logo.png" alt="logo" height="30">
+        </h2>
+    </div>
+
+    <div class="row">
+        <div class="col-md-2">
+            <select id="select-course" placeholder="לחצו לבחירת קורס...">
+                <option value="">לחצו לבחירת קורס...</option>
+            </select>
+
+            <div id="course-button-list" class="list-group">
+            </div>
+        </div>
+        <div id="calendar" class="col-md-10"></div>
+    </div>
+
+    <footer class="pt-4 text-muted text-center text-small">
+        <p class="mb-1">תוכנת על ידי <a href="https://github.com/michael-maltsev" target="_blank">מיכאל מלצב</a>.</p>
+    </footer>
+
+</div>
+<script src="fullcalendar/lib/jquery.min.js"></script>
+<script src="bootstrap_rtl/js/bootstrap.min.js"></script>
+<script src="fullcalendar/lib/moment.min.js"></script>
+<script src="fullcalendar/fullcalendar.min.js"></script>
+<!--script src="fullcalendar/fullcalendar.js"></script-->
+<script src='fullcalendar/locale/he.js'></script>
+<!-- (WAS MODIFIED, DON'T USE MINIFIED!!!) script src="selectize/js/standalone/selectize.min.js"></script-->
+<script src="selectize/js/standalone/selectize.js"></script>
+<script src="color-hash/color-hash.js"></script>
+<script src="courses_201702.js"></script>
+<script>
+    var courses_chosen = {};
+    var color_hash = new ColorHash();
+
+    $(document).ready(function() {
+        'use strict';
+
+        function rishum_time_parse(time) {
+            var match = /^(\d+)(:\d+)? - (\d+)(:\d+)?$/.exec(time);
+            var start_hour = ('00' + match[1]).slice(-2);
+            var start_minute = '00';
+            if (match[2] !== undefined) {
+                start_minute = (match[2] + '00').slice(1, 3);
+            }
+            var start = start_hour + ':' + start_minute;
+
+            var end_hour = ('00' + match[3]).slice(-2);
+            var end_minute = '00';
+            if (match[4] !== undefined) {
+                end_minute = (match[4] + '00').slice(1, 3);
+            }
+            var end = end_hour + ':' + end_minute;
+
+            return {'start': start, 'end': end};
+        }
+
+        function string_hex_encode(str) {
+            var result = "";
+            for (var i=0; i<str.length; i++) {
+                var hex = str.charCodeAt(i).toString(16);
+                result += ("000"+hex).slice(-4);
+            }
+            return result;
+        }
+
+        function update_course_conflicted_status(course) {
+            var calendar = $('#calendar');
+
+            var available_options_per_type = {};
+
+            calendar.fullCalendar('clientEvents', function (event) {
+                if (event.courseNumber !== course) {
+                    return false;
+                }
+
+                var type = event.lessonData['סוג'];
+                if (!(type in available_options_per_type)) {
+                    available_options_per_type[type] = 0;
+                }
+
+                if (event.start.week() === 1) {
+                    available_options_per_type[type]++;
+                }
+
+                return false;
+            });
+
+            var conflicted = false;
+
+            Object.keys(available_options_per_type).some(function (type) {
+                if (available_options_per_type[type] === 0) {
+                    conflicted = true;
+                    return true;
+                }
+                return false;
+            });
+
+            if (conflicted) {
+                $('.list-group-item-course-' + course).addClass('list-group-item-conflicted');
+            } else {
+                $('.list-group-item-course-' + course).removeClass('list-group-item-conflicted');
+            }
+        }
+
+        function are_events_overlapping(event1, event2) {
+            if (event1.start.day() !== event2.start.day()) {
+                return false;
+            }
+
+            var start_time_1 = event1.start.clone().year(0).month(0).date(1);
+            var end_time_1 = event1.end.clone().year(0).month(0).date(1);
+            var start_time_2 = event2.start.clone().year(0).month(0).date(1);
+            var end_time_2 = event2.end.clone().year(0).month(0).date(1);
+
+            return start_time_1.isBefore(end_time_2) && end_time_1.isAfter(start_time_2);
+        }
+
+        function add_course_to_calendar(course) {
+            var general = courses_from_rishum[course].general;
+            var schedule = courses_from_rishum[course].schedule;
+            if (schedule.length === 0) {
+                return;
+            }
+
+            var calendar = $('#calendar');
+
+            var lessons_added = {};
+            var events = [];
+            var has_conflicted = false;
+
+            for (var i = 0; i < schedule.length; i++) {
+                var lesson = schedule[i];
+                if (lesson['מס.'] in lessons_added) {
+                    continue;
+                }
+
+                events.push(make_lesson_event(lesson));
+                lessons_added[lesson['מס.']] = true;
+            }
+
+            calendar.fullCalendar('renderEvents', events);
+
+            if (has_conflicted) {
+                update_course_conflicted_status(course);
+            }
+
+            function make_lesson_event(lesson) {
+                var lesson_day = lesson['יום'].charCodeAt(0) - 'א'.charCodeAt(0) + 1;
+                var lesson_start_end = rishum_time_parse(lesson['שעה']);
+                var event_start_end = {
+                    start: moment.utc('2017-01-0' + lesson_day + 'T' + lesson_start_end['start'] + ':00'),
+                    end: moment.utc('2017-01-0' + lesson_day + 'T' + lesson_start_end['end'] + ':00')
+                };
+
+                var title = lesson['סוג'] + ' ' + lesson['מס.'];
+                if (lesson['בניין'] !== '') {
+                    title += '\n' + lesson['בניין'];
+                    if (lesson['חדר'] !== '') {
+                        title += ' ' + lesson['חדר'];
+                    }
+                }
+                if (lesson['מרצה/מתרגל'] !== '') {
+                    title += '\n' + lesson['מרצה/מתרגל'];
+                }
+                title += '\n' + general['שם מקצוע'];
+
+                // Hide conflicting events which cannot be selected.
+                calendar.fullCalendar('clientEvents', function (cb_event) {
+                    if (cb_event.selected && are_events_overlapping(cb_event, event_start_end)) {
+                        event_start_end.start.add(7, 'days');
+                        event_start_end.end.add(7, 'days');
+                        has_conflicted = true;
+                    }
+                    return false;
+                });
+
+                return {
+                    id: course + '.' + lesson['מס.'],
+                    title: title,
+                    start: event_start_end.start,
+                    end: event_start_end.end,
+                    backgroundColor: '#F8F9FA',
+                    textColor: 'black',
+                    borderColor: 'black',
+                    className: 'calendar-item-course-' + course
+                        + ' calendar-item-course-' + course + '-type-' + string_hex_encode(lesson['סוג'])
+                        + ' calendar-item-course-' + course + '-lesson-' + lesson['מס.'],
+                    courseNumber: course,
+                    lessonData: lesson,
+                    selected: false,
+                    temporary: false
+                };
+            }
+        }
+
+        function remove_course_from_calendar(course) {
+            var calendar = $('#calendar');
+
+            // Show conflicting events which can now be selected.
+            var conflicted_events = calendar.fullCalendar('clientEvents', function (event) {
+                if (event.courseNumber !== course && is_conflicted(event, course)) {
+                    return true;
+                }
+
+                return false;
+            });
+
+            var conflicted_courses = {};
+
+            for (var i = 0; i < conflicted_events.length; i++) {
+                conflicted_events[i].start.add(-7, 'days');
+                conflicted_events[i].end.add(-7, 'days');
+                conflicted_courses[conflicted_events[i].courseNumber] = true;
+            }
+
+            Object.keys(conflicted_courses).forEach(function (conflicted_course) {
+                update_course_conflicted_status(conflicted_course);
+            });
+
+            calendar.fullCalendar('updateEvents', conflicted_events);
+            calendar.fullCalendar('removeEvents', function (event) {
+                return event.courseNumber === course;
+            });
+
+            // True if the event cannot be selected because of the given course.
+            function is_conflicted(event, course) {
+                var conflicting_event = calendar.fullCalendar('clientEvents', function (cb_event) {
+                    if (cb_event.courseNumber === course && cb_event.selected && are_events_overlapping(cb_event, event)) {
+                        return true;
+                    }
+
+                    return false;
+                });
+
+                return conflicting_event.length > 0;
+            }
+        }
+
+        function change_course_previewed_status(course, previewed) {
+            var calendar = $('#calendar');
+            if (previewed) {
+                var conflicted_events = calendar.fullCalendar('clientEvents', function (event) {
+                    if (event.courseNumber === course && event.start.week() > 1) {
+                        return true;
+                    }
+
+                    return false;
+                });
+
+                var temporary_events = [];
+
+                for (var i = 0; i < conflicted_events.length; i++) {
+                    var conf = conflicted_events[i];
+                    var temp = {
+                        id: 'temp_' + conf.id,
+                        title: conf.title,
+                        start: conf.start.clone().week(1),
+                        end: conf.end.clone().week(1),
+                        backgroundColor: conf.backgroundColor,
+                        textColor: conf.textColor,
+                        borderColor: conf.borderColor,
+                        className: conf.className,
+                        courseNumber: conf.courseNumber,
+                        lessonData: conf.lessonData,
+                        selected: conf.selected,
+                        temporary: true
+                    };
+
+                    temporary_events.push(temp);
+                }
+
+                calendar.fullCalendar('renderEvents', temporary_events);
+
+                $('.calendar-item-course-' + course).addClass('calendar-item-previewed');
+            } else {
+                $('.calendar-item-course-' + course).removeClass('calendar-item-previewed');
+                calendar.fullCalendar('removeEvents', function (event) {
+                    return event.temporary;
+                });
+            }
+        }
+
+        function on_event_click(event) {
+            var calendar = $('#calendar');
+
+            var hide_conflicted_events;
+
+            if (event.selected) {
+                event.backgroundColor = '#F8F9FA';
+                event.textColor = 'black';
+                event.borderColor = 'black';
+                hide_conflicted_events = false;
+            } else {
+                event.backgroundColor = color_hash.hex(event.courseNumber);
+                event.textColor = 'white';
+                event.borderColor = 'white';
+                hide_conflicted_events = true;
+            }
+            event.selected = !event.selected;
+            calendar.fullCalendar('updateEvent', event);
+
+            var conflicted_events = calendar.fullCalendar('clientEvents', function (cb_event) {
+                if (cb_event.id === event.id) {
+                    return false;
+                }
+
+                if (cb_event.courseNumber === event.courseNumber &&
+                    cb_event.lessonData['סוג'] === event.lessonData['סוג']) {
+                    return true;
+                }
+
+                return are_events_overlapping(cb_event, event);
+            });
+
+            var conflicted_courses = {};
+
+            for (var i = 0; i < conflicted_events.length; i++) {
+                conflicted_events[i].start.add(hide_conflicted_events ? 7 : -7, 'days');
+                conflicted_events[i].end.add(hide_conflicted_events ? 7 : -7, 'days');
+                conflicted_courses[conflicted_events[i].courseNumber] = true;
+            }
+
+            Object.keys(conflicted_courses).forEach(function (conflicted_course) {
+                update_course_conflicted_status(conflicted_course);
+            });
+
+            calendar.fullCalendar('updateEvents', conflicted_events);
+        }
+
+        function on_event_mouseover(event, jsEvent) {
+            $('.list-group-item-course-' + event.courseNumber).addClass('list-group-item-same-course-as-hovered');
+            $('.calendar-item-course-' + event.courseNumber).addClass('calendar-item-same-course-as-hovered');
+            $('.calendar-item-course-' + event.courseNumber + '-type-' + string_hex_encode(event.lessonData['סוג'])).addClass('calendar-item-same-type-as-hovered');
+        }
+
+        function on_event_mouseout(event, jsEvent) {
+            $('.list-group-item-course-' + event.courseNumber).removeClass('list-group-item-same-course-as-hovered');
+            $('.calendar-item-course-' + event.courseNumber).removeClass('calendar-item-same-course-as-hovered');
+            $('.calendar-item-course-' + event.courseNumber + '-type-' + string_hex_encode(event.lessonData['סוג'])).removeClass('calendar-item-same-type-as-hovered');
+        }
+
+        function get_course_title(course) {
+            var general = courses_from_rishum[course].general;
+            return general['מספר מקצוע'] + ' - ' + general['שם מקצוע'];
+        }
+
+        function on_course_button_click(button, course) {
+            if (button.hasClass('active')) {
+                remove_course_from_calendar(course);
+                button.removeClass('active').removeClass('list-group-item-conflicted');
+                button.css({ 'background-color': '', 'border-color': '' });
+            } else {
+                add_course_to_calendar(course);
+                change_course_previewed_status(course, true);
+                button.addClass('active');
+                var color = color_hash.hex(course);
+                button.css({ 'background-color': color, 'border-color': color });
+            }
+        }
+
+        function add_course_to_list_group(course) {
+            var button = $('<button type="button"'
+                + ' class="list-group-item list-group-item-action active list-group-item-course-' + course + '">'
+                + '</button>');
+            var color = color_hash.hex(course);
+            button.css({ 'background-color': color, 'border-color': color });
+            button.click(function () {
+                on_course_button_click($(this), course)
+            }).hover(
+                function() {
+                    $(this).addClass('list-group-item-same-course-as-hovered');
+                    change_course_previewed_status(course, true);
+                }, function() {
+                    $(this).removeClass('list-group-item-same-course-as-hovered');
+                    change_course_previewed_status(course, false);
+                }
+            );
+            button.text(get_course_title(course));
+            $('#course-button-list').append(button);
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        $.each(courses_from_rishum, function (i, item) {
+            var courseNumber = item.general['מספר מקצוע'];
+            // Skip sport courses, which are not supported so well.
+            if (Math.floor(courseNumber / 10000) !== 39) {
+                $('#select-course').append($('<option>', {
+                    value: i,
+                    text: courseNumber + ' - ' + item.general['שם מקצוע']
+                }));
+            }
+        });
+
+        $('#page-loader').hide();
+
+        $('#select-course').selectize({
+            //searchConjunction: 'or',
+            maxOptions: null,
+            onItemAdd: function (course) {
+                if (!(course in courses_chosen)) {
+                    courses_chosen[course] = true;
+                    add_course_to_calendar(course);
+                    add_course_to_list_group(course);
+                }
+                this.clear();
+            },
+            onDropdownItemActivate: function (course) {
+                if (!(course in courses_chosen)) {
+                    add_course_to_calendar(course);
+                }
+                change_course_previewed_status(course, true);
+            },
+            onDropdownItemDeactivate: function (course) {
+                if (!(course in courses_chosen)) {
+                    remove_course_from_calendar(course);
+                } else {
+                    // Remove highlight
+                    change_course_previewed_status(course, false);
+                }
+            }
+        });
+
+        $('#calendar').fullCalendar({
+            defaultDate: '2017-01-01',
+            //editable: true,
+            //eventLimit: true, // allow "more" link when too many events
+            defaultView: 'agendaWeek',
+            header: false,
+            allDaySlot: false,
+            minTime: '08:00:00',
+            maxTime: '18:30:00',
+            hiddenDays: [ 5, 6 ],
+            height: 'auto',
+            contentHeight: 'auto',
+            columnFormat: 'dddd',
+            locale: 'he',
+            slotEventOverlap: false,
+            displayEventTime: false,
+            eventClick: on_event_click,
+            eventMouseover: on_event_mouseover,
+            eventMouseout: on_event_mouseout
+        });
+    });
+</script>
+
+</body>
+</html>
