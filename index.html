@@ -601,8 +601,8 @@
             onItemAdd: function (course) {
                 if (!(course in courses_chosen)) {
                     courses_chosen[course] = true;
-                    add_course_to_calendar(course);
                     add_course_to_list_group(course);
+                    add_course_to_calendar(course);
                 }
                 this.clear();
             },
