@@ -1,0 +1,110 @@
+#course-button-list {
+    margin: 20px 0 100px;
+}
+
+#exam-info {
+    position: absolute;
+    bottom: 0;
+}
+
+/* Dynamic calendar table height */
+#calendar .fc-time-grid .fc-slats td {
+    font-size: calc(-0.3em + 3.1vh);
+}
+
+/* Dynamic event text size */
+#calendar .fc-event {
+    font-size: calc(0.1em + 1.3vh);
+}
+
+/* Center event text vertically */
+#calendar .fc-time-grid-event {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Center event text horizontally */
+#calendar .fc-content {
+    text-align: center !important;
+}
+
+/* Calendar items */
+.calendar-item-previewed {
+    border: 3px solid #1565C0 !important;
+}
+
+.calendar-item-same-course-as-hovered {
+    border: 3px solid #1565C0 !important;
+}
+
+.calendar-item-same-type-as-hovered {
+    border: 3px solid #CC0000 !important;
+}
+
+.calendar-item-previewed .fc-content,
+.calendar-item-same-course-as-hovered .fc-content,
+.calendar-item-same-type-as-hovered .fc-content {
+    font-weight: bold;
+}
+
+.calendar-item-last-choice .fc-content {
+    color: #AA66CC;
+}
+
+/* List group items */
+.list-group-item-same-course-as-hovered {
+    -webkit-box-shadow: inset 0 0 0 3px #CC0000;
+    -moz-box-shadow: inset 0 0 0 3px #CC0000;
+    box-shadow: inset 0 0 0 3px #CC0000;
+    font-weight: bold;
+}
+
+.list-group-item-conflicted {
+    color: red !important;
+    font-weight: bold;
+    text-shadow: 0 0 10px black;
+}
+
+.course-description-tooltip-inner {
+    min-width: 500px;
+}
+
+/* Overrides list-group-item from Bootstrap */
+.list-group-item {
+    font-size: small;
+}
+
+/* Exam dates items */
+.exams-moed-content {
+    margin: 6px 0 6px;
+}
+
+.exam-days-item {
+    color: white;
+    padding: 5px;
+    border-radius: 6px;
+    cursor: default;
+}
+
+.exam-days-item-same-course-as-hovered {
+    -webkit-box-shadow: inset 0 0 0 3px #CC0000;
+    -moz-box-shadow: inset 0 0 0 3px #CC0000;
+    box-shadow: inset 0 0 0 3px #CC0000;
+    font-weight: bold;
+}
+
+.exam-days-item-conflicted {
+    color: red;
+    font-weight: bold;
+    text-shadow: 0 0 10px black;
+}
+
+.exam-days-left-arrow {
+    border: solid black;
+    border-width: 0 3px 3px 0;
+    display: inline-block;
+    padding: 3px;
+    transform: rotate(135deg);
+    -webkit-transform: rotate(135deg);
+}
