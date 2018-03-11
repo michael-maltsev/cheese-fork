@@ -32,6 +32,19 @@ $(document).ready(function() {
         return moment.utc(match[3] + '-' + match[2] + '-' + match[1] + 'T00:00:00');
     }
 
+    function get_lesson_type(course_number, lesson) {
+        // Sport courses have a non-standard format, treat all of the lessons as the same type.
+        if (/^394[89]$/.test(course_number.slice(0, 4))) {
+            return 'sport';
+        } else {
+            return string_hex_encode(lesson['סוג']);
+        }
+    }
+
+    function get_event_lesson_type(event) {
+        return get_lesson_type(event.courseNumber, event.lessonData);
+    }
+
     function update_calendar_max_day_and_time(extra_courses) {
         var calendar = $('#calendar');
         var min_time = moment.utc('2017-01-01T08:30:00');
@@ -220,7 +233,7 @@ $(document).ready(function() {
                 return false;
             }
 
-            var type = event.lessonData['סוג'];
+            var type = get_lesson_type(course, event.lessonData);
             if (!(type in available_options_per_type)) {
                 available_options_per_type[type] = 0;
             }
@@ -277,12 +290,12 @@ $(document).ready(function() {
 
         for (var i = 0; i < schedule.length; i++) {
             var lesson = schedule[i];
-            if (lesson['מס.'] in lessons_added) {
+            if (lesson['מס.'] in lessons_added && (lessons_added[lesson['מס.']]) !== lesson['קבוצה']) {
                 continue;
             }
 
             events.push(make_lesson_event(lesson));
-            lessons_added[lesson['מס.']] = true;
+            lessons_added[lesson['מס.']] = lesson['קבוצה'];
         }
 
         calendar.fullCalendar('renderEvents', events);
@@ -330,8 +343,8 @@ $(document).ready(function() {
                 textColor: 'black',
                 borderColor: 'black',
                 className: 'calendar-item-course-' + course
-                + ' calendar-item-course-' + course + '-type-' + string_hex_encode(lesson['סוג'])
-                + ' calendar-item-course-' + course + '-lesson-' + lesson['מס.'],
+                    + ' calendar-item-course-' + course + '-type-' + get_lesson_type(course, lesson)
+                    + ' calendar-item-course-' + course + '-lesson-' + lesson['מס.'],
                 courseNumber: course,
                 lessonData: lesson,
                 selected: false,
@@ -345,11 +358,7 @@ $(document).ready(function() {
 
         // Show conflicting events which can now be selected.
         var conflicted_events = calendar.fullCalendar('clientEvents', function (event) {
-            if (event.courseNumber !== course && is_conflicted(event, course)) {
-                return true;
-            }
-
-            return false;
+            return event.courseNumber !== course && is_conflicted(event, course);
         });
 
         var conflicted_courses = {};
@@ -372,11 +381,7 @@ $(document).ready(function() {
         // True if the event cannot be selected because of the given course.
         function is_conflicted(event, course) {
             var conflicting_event = calendar.fullCalendar('clientEvents', function (cb_event) {
-                if (cb_event.courseNumber === course && cb_event.selected && are_events_overlapping(cb_event, event)) {
-                    return true;
-                }
-
-                return false;
+                return cb_event.courseNumber === course && cb_event.selected && are_events_overlapping(cb_event, event);
             });
 
             return conflicting_event.length > 0;
@@ -387,11 +392,7 @@ $(document).ready(function() {
         var calendar = $('#calendar');
         if (previewed) {
             var conflicted_events = calendar.fullCalendar('clientEvents', function (event) {
-                if (event.courseNumber === course && event.start.week() > 1) {
-                    return true;
-                }
-
-                return false;
+                return event.courseNumber === course && event.start.week() > 1;
             });
 
             var temporary_events = [];
@@ -430,70 +431,88 @@ $(document).ready(function() {
     function on_event_click(event) {
         var calendar = $('#calendar');
 
-        var hide_conflicted_events;
-
-        if (event.selected) {
-            selected_lesson_unsave(event.courseNumber, event.lessonData['מס.']);
-            event.backgroundColor = '#F8F9FA';
-            event.textColor = 'black';
-            event.borderColor = 'black';
-            hide_conflicted_events = false;
-        } else {
-            selected_lesson_save(event.courseNumber, event.lessonData['מס.']);
-            event.backgroundColor = color_hash.hex(event.courseNumber);
-            event.textColor = 'white';
-            event.borderColor = 'white';
-            hide_conflicted_events = true;
-        }
-        event.selected = !event.selected;
-        calendar.fullCalendar('updateEvent', event);
-
-        var conflicted_events = calendar.fullCalendar('clientEvents', function (cb_event) {
-            if (cb_event.id === event.id) {
-                return false;
-            }
-
-            if (cb_event.courseNumber === event.courseNumber &&
-                cb_event.lessonData['סוג'] === event.lessonData['סוג']) {
-                return true;
-            }
-
-            return are_events_overlapping(cb_event, event);
-        });
-
+        var selecting_event = !event.selected;
         var conflicted_courses = {};
 
-        for (var i = 0; i < conflicted_events.length; i++) {
-            conflicted_events[i].start.add(hide_conflicted_events ? 7 : -7, 'days');
-            conflicted_events[i].end.add(hide_conflicted_events ? 7 : -7, 'days');
-            conflicted_courses[conflicted_events[i].courseNumber] = true;
+        // There might be multiple events for the same id, process them all.
+        calendar.fullCalendar('clientEvents', function (cb_event) {
+            if (cb_event.id === event.id) {
+                apply_event_click_on_item(cb_event);
+            }
+            return false;
+        });
+
+        var same_course_type_events = calendar.fullCalendar('clientEvents', function (cb_event) {
+            return cb_event.courseNumber === event.courseNumber &&
+                get_event_lesson_type(cb_event) === get_event_lesson_type(event) &&
+                cb_event.lessonData['מס.'] !== event.lessonData['מס.'];
+        });
+
+        for (var i = 0; i < same_course_type_events.length; i++) {
+            same_course_type_events[i].start.add(selecting_event ? 7 : -7, 'days');
+            same_course_type_events[i].end.add(selecting_event ? 7 : -7, 'days');
         }
 
-        calendar.fullCalendar('updateEvents', conflicted_events);
+        calendar.fullCalendar('updateEvents', same_course_type_events);
 
         Object.keys(conflicted_courses).forEach(function (conflicted_course) {
             update_course_conflicted_status(conflicted_course);
         });
+
+        function apply_event_click_on_item(event) {
+            if (selecting_event) {
+                selected_lesson_save(event.courseNumber, event.lessonData['מס.']);
+                event.selected = true;
+                event.backgroundColor = color_hash.hex(event.courseNumber);
+                event.textColor = 'white';
+                event.borderColor = 'white';
+            } else {
+                selected_lesson_unsave(event.courseNumber, event.lessonData['מס.']);
+                event.selected = false;
+                event.backgroundColor = '#F8F9FA';
+                event.textColor = 'black';
+                event.borderColor = 'black';
+            }
+            calendar.fullCalendar('updateEvent', event);
+
+            var conflicted_events = calendar.fullCalendar('clientEvents', function (cb_event) {
+                if (cb_event.courseNumber === event.courseNumber &&
+                    get_event_lesson_type(cb_event) === get_event_lesson_type(event)) {
+                    return false;
+                }
+
+                return are_events_overlapping(cb_event, event);
+            });
+
+            for (var i = 0; i < conflicted_events.length; i++) {
+                conflicted_events[i].start.add(selecting_event ? 7 : -7, 'days');
+                conflicted_events[i].end.add(selecting_event ? 7 : -7, 'days');
+                conflicted_courses[conflicted_events[i].courseNumber] = true;
+            }
+
+            calendar.fullCalendar('updateEvents', conflicted_events);
+        }
     }
 
-    function on_event_mouseover(event, jsEvent) {
+    function on_event_mouseover(event) {
         $('.list-group-item-course-' + event.courseNumber).addClass('list-group-item-same-course-as-hovered');
         $('.exam-days-item-course-' + event.courseNumber).addClass('exam-days-item-same-course-as-hovered');
         $('.calendar-item-course-' + event.courseNumber).addClass('calendar-item-same-course-as-hovered');
-        $('.calendar-item-course-' + event.courseNumber + '-type-' + string_hex_encode(event.lessonData['סוג'])).addClass('calendar-item-same-type-as-hovered');
+        $('.calendar-item-course-' + event.courseNumber + '-type-' + get_event_lesson_type(event)).addClass('calendar-item-same-type-as-hovered');
     }
 
-    function on_event_mouseout(event, jsEvent) {
+    function on_event_mouseout(event) {
         $('.list-group-item-course-' + event.courseNumber).removeClass('list-group-item-same-course-as-hovered');
         $('.exam-days-item-course-' + event.courseNumber).removeClass('exam-days-item-same-course-as-hovered');
         $('.calendar-item-course-' + event.courseNumber).removeClass('calendar-item-same-course-as-hovered');
-        $('.calendar-item-course-' + event.courseNumber + '-type-' + string_hex_encode(event.lessonData['סוג'])).removeClass('calendar-item-same-type-as-hovered');
+        $('.calendar-item-course-' + event.courseNumber + '-type-' + get_event_lesson_type(event)).removeClass('calendar-item-same-type-as-hovered');
     }
 
-    function after_event_render(event, element, view) {
+    function after_event_render(event, element) {
         if (!event.selected) {
-            var same_type = $('.calendar-item-course-' + event.courseNumber + '-type-' + string_hex_encode(event.lessonData['סוג']));
-            if (same_type.length === 1) {
+            var same_type = $('.calendar-item-course-' + event.courseNumber + '-type-' + get_event_lesson_type(event))
+                .not('.calendar-item-course-' + event.courseNumber + '-lesson-' + event.lessonData['מס.']);
+            if (same_type.length === 0) {
                 element.addClass('calendar-item-last-choice');
             }
         }
@@ -598,7 +617,7 @@ $(document).ready(function() {
 
                 var lessons = JSON.parse(localStorage.getItem(course) || '{}');
                 Object.keys(lessons).forEach(function (lesson) {
-                    $('.calendar-item-course-' + course + '-lesson-' + lesson).click();
+                    $('.calendar-item-course-' + course + '-lesson-' + lesson).first().click();
                 });
             }
         });
@@ -611,14 +630,11 @@ $(document).ready(function() {
 
     courses_from_rishum.forEach(function (item) {
         var course_number = item.general['מספר מקצוע'];
-        // Skip sport courses, which are not supported so well.
-        if (course_number.slice(0, 2) !== '39') {
-            courses_hashmap[course_number] = item;
-            $('#select-course').append($('<option>', {
-                value: course_number,
-                text: course_number + ' - ' + item.general['שם מקצוע']
-            }));
-        }
+        courses_hashmap[course_number] = item;
+        $('#select-course').append($('<option>', {
+            value: course_number,
+            text: course_number + ' - ' + item.general['שם מקצוע']
+        }));
     });
 
     $('#select-course').selectize({
