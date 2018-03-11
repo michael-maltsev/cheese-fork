@@ -32,6 +32,43 @@ $(document).ready(function() {
         return moment.utc(match[3] + '-' + match[2] + '-' + match[1] + 'T00:00:00');
     }
 
+    function update_calendar_max_day_and_time(extra_courses) {
+        var calendar = $('#calendar');
+        var min_time = moment.utc('2017-01-01T08:30:00');
+        var max_time = moment.utc('2017-01-01T18:30:00');
+        var friday = false;
+
+        Object.keys(courses_chosen).filter(function (course) {
+            return courses_chosen[course];
+        }).concat(extra_courses).forEach(function (course) {
+            var schedule = courses_hashmap[course].schedule;
+            for (var i = 0; i < schedule.length; i++) {
+                var lesson = schedule[i];
+                var lesson_day = lesson['יום'].charCodeAt(0) - 'א'.charCodeAt(0) + 1;
+                if (lesson_day === 6) {
+                    friday = true;
+                }
+
+                var lesson_start_end = rishum_time_parse(lesson['שעה']);
+                var event_start = moment.utc('2017-01-01T' + lesson_start_end['start'] + ':00');
+                if (min_time.isAfter(event_start)) {
+                    min_time = event_start;
+                }
+
+                var event_end = moment.utc('2017-01-01T' + lesson_start_end['end'] + ':00');
+                if (max_time.isBefore(event_end)) {
+                    max_time = event_end;
+                }
+            }
+        });
+
+        calendar.fullCalendar('option', {
+            minTime: min_time.format('HH:mm:ss'),
+            maxTime: max_time.format('HH:mm:ss'),
+            hiddenDays: friday ? [6] : [5, 6]
+        });
+    }
+
     function get_course_description(course) {
         var general = courses_hashmap[course].general;
         var text = general['מספר מקצוע'] + ' - ' + general['שם מקצוע'];
@@ -474,6 +511,7 @@ $(document).ready(function() {
             button.css({ 'background-color': '', 'border-color': '' });
             selected_course_unsave(course);
             courses_chosen[course] = false;
+            update_calendar_max_day_and_time([]);
             update_exam_info([]);
         } else {
             add_course_to_calendar(course);
@@ -483,6 +521,7 @@ $(document).ready(function() {
             button.css({ 'background-color': color, 'border-color': color });
             selected_course_save(course);
             courses_chosen[course] = true;
+            update_calendar_max_day_and_time([]);
             update_exam_info([]);
         }
     }
@@ -564,6 +603,7 @@ $(document).ready(function() {
             }
         });
 
+        update_calendar_max_day_and_time([]);
         update_exam_info([]);
     }
 
@@ -590,6 +630,7 @@ $(document).ready(function() {
                 add_course_to_list_group(course);
                 add_course_to_calendar(course);
                 selected_course_save(course);
+                update_calendar_max_day_and_time([]);
                 update_exam_info([]);
             }
             this.clear();
@@ -597,6 +638,7 @@ $(document).ready(function() {
         onDropdownItemActivate: function (course) {
             if (!(course in courses_chosen)) {
                 add_course_to_calendar(course);
+                update_calendar_max_day_and_time([course]);
                 update_exam_info([course]);
                 $('.exam-days-item-course-' + course).addClass('exam-days-item-same-course-as-hovered');
             }
@@ -605,6 +647,7 @@ $(document).ready(function() {
         onDropdownItemDeactivate: function (course) {
             if (!(course in courses_chosen)) {
                 remove_course_from_calendar(course);
+                update_calendar_max_day_and_time([]);
                 update_exam_info([]);
             } else {
                 // Remove highlight
@@ -622,7 +665,6 @@ $(document).ready(function() {
         allDaySlot: false,
         minTime: '08:00:00',
         maxTime: '18:30:00',
-        hiddenDays: [ 5, 6 ],
         height: 'auto',
         contentHeight: 'auto',
         columnFormat: 'dddd',
