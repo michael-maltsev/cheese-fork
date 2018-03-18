@@ -34,7 +34,7 @@ $(document).ready(function() {
 
     function get_lesson_type(course_number, lesson) {
         // Sport courses have a non-standard format, treat all of the lessons as the same type.
-        if (/^394[89]$/.test(course_number.slice(0, 4))) {
+        if (/^394[89]\d\d$/.test(course_number)) {
             return 'sport';
         } else {
             return string_hex_encode(lesson['סוג']);
@@ -305,12 +305,21 @@ $(document).ready(function() {
         }
 
         function make_lesson_event(lesson) {
+            var lesson_type = get_lesson_type(course, lesson);
             var lesson_day = lesson['יום'].charCodeAt(0) - 'א'.charCodeAt(0) + 1;
             var lesson_start_end = rishum_time_parse(lesson['שעה']);
             var event_start_end = {
                 start: moment.utc('2017-01-0' + lesson_day + 'T' + lesson_start_end['start'] + ':00'),
                 end: moment.utc('2017-01-0' + lesson_day + 'T' + lesson_start_end['end'] + ':00')
             };
+
+            // Hopefully a unique id.
+            var event_id = course
+                + '.' + lesson['מס.']
+                + '.' + lesson_type
+                + '.' + lesson_day
+                + '.' + lesson_start_end['start']
+                + '.' + lesson_start_end['end'];
 
             var title = lesson['סוג'] + ' ' + lesson['מס.'];
             if (lesson['בניין'] !== '') {
@@ -335,7 +344,7 @@ $(document).ready(function() {
             });
 
             return {
-                id: course + '.' + lesson['מס.'],
+                id: event_id,
                 title: title,
                 start: event_start_end.start,
                 end: event_start_end.end,
@@ -343,7 +352,7 @@ $(document).ready(function() {
                 textColor: 'black',
                 borderColor: 'black',
                 className: 'calendar-item-course-' + course
-                    + ' calendar-item-course-' + course + '-type-' + get_lesson_type(course, lesson)
+                    + ' calendar-item-course-' + course + '-type-' + lesson_type
                     + ' calendar-item-course-' + course + '-lesson-' + lesson['מס.'],
                 courseNumber: course,
                 lessonData: lesson,
@@ -434,18 +443,19 @@ $(document).ready(function() {
         var selecting_event = !event.selected;
         var conflicted_courses = {};
 
-        // There might be multiple events for the same id, process them all.
-        calendar.fullCalendar('clientEvents', function (cb_event) {
-            if (cb_event.id === event.id) {
-                apply_event_click_on_item(cb_event);
+        var same_course_type_events = calendar.fullCalendar('clientEvents', function (cb_event) {
+            if (cb_event.courseNumber === event.courseNumber &&
+                get_event_lesson_type(cb_event) === get_event_lesson_type(event)) {
+
+                if (cb_event.lessonData['מס.'] === event.lessonData['מס.']) {
+                    // There might be multiple events for the same course, type, and number, process them all.
+                    apply_event_click_on_item(cb_event);
+                    return false;
+                } else {
+                    return true;
+                }
             }
             return false;
-        });
-
-        var same_course_type_events = calendar.fullCalendar('clientEvents', function (cb_event) {
-            return cb_event.courseNumber === event.courseNumber &&
-                get_event_lesson_type(cb_event) === get_event_lesson_type(event) &&
-                cb_event.lessonData['מס.'] !== event.lessonData['מס.'];
         });
 
         for (var i = 0; i < same_course_type_events.length; i++) {
