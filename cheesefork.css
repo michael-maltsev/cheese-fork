@@ -79,6 +79,7 @@
 /* Overrides list-group-item from Bootstrap */
 .list-group-item {
     font-size: small;
+    cursor: default;
 }
 
 /* Exam dates items */
