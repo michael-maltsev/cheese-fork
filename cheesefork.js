@@ -593,13 +593,14 @@ $(document).ready(function() {
     }
 
     function add_course_to_list_group(course) {
-        var button = $('<button type="button"'
-            + ' class="list-group-item list-group-item-action active list-group-item-course-' + course + '">'
-            + '</button>');
+        var button = $('<a href="#" type="button"'
+            + ' class="list-group-item active list-group-item-course-' + course + '">'
+            + '</a>');
         var color = color_hash.hex(course);
         button.css({ 'background-color': color, 'border-color': color }).click(function () {
             $(this).tooltip('disable');
             on_course_button_click($(this), course);
+            return false;
         }).hover(
             function() {
                 $(this).addClass('list-group-item-same-course-as-hovered');
