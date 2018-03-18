@@ -73,7 +73,7 @@
 }
 
 .course-description-tooltip-inner {
-    min-width: 500px;
+    min-width: 30vw;
 }
 
 /* Overrides list-group-item from Bootstrap */
