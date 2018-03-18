@@ -12,9 +12,10 @@
     font-size: calc(-0.3em + 3.1vh);
 }
 
-/* Dynamic event text size */
+/* Dynamic event text size, RTL direction */
 #calendar .fc-event {
     font-size: calc(0.1em + 1.3vh);
+    direction: rtl;
 }
 
 /* Center event text vertically */
