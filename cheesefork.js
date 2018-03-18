@@ -471,13 +471,13 @@ $(document).ready(function() {
 
         function apply_event_click_on_item(event) {
             if (selecting_event) {
-                selected_lesson_save(event.courseNumber, event.lessonData['מס.']);
+                selected_lesson_save(event.courseNumber, event.lessonData['מס.'], get_event_lesson_type(event));
                 event.selected = true;
                 event.backgroundColor = color_hash.hex(event.courseNumber);
                 event.textColor = 'white';
                 event.borderColor = 'white';
             } else {
-                selected_lesson_unsave(event.courseNumber, event.lessonData['מס.']);
+                selected_lesson_unsave(event.courseNumber, event.lessonData['מס.'], get_event_lesson_type(event));
                 event.selected = false;
                 event.backgroundColor = '#F8F9FA';
                 event.textColor = 'black';
@@ -605,15 +605,17 @@ $(document).ready(function() {
         localStorage.removeItem(course);
     }
 
-    function selected_lesson_save(course, lesson) {
+    function selected_lesson_save(course, lesson_number, lesson_type) {
         var lessons = JSON.parse(localStorage.getItem(course) || '{}');
-        lessons[lesson] = true;
+        delete lessons[lesson_number]; // remove old format
+        lessons[lesson_type] = lesson_number;
         localStorage.setItem(course, JSON.stringify(lessons));
     }
 
-    function selected_lesson_unsave(course, lesson) {
+    function selected_lesson_unsave(course, lesson_number, lesson_type) {
         var lessons = JSON.parse(localStorage.getItem(course) || '{}');
-        delete lessons[lesson];
+        delete lessons[lesson_number]; // remove old format
+        delete lessons[lesson_type];
         localStorage.setItem(course, JSON.stringify(lessons));
     }
 
@@ -626,8 +628,16 @@ $(document).ready(function() {
                 add_course_to_calendar(course);
 
                 var lessons = JSON.parse(localStorage.getItem(course) || '{}');
-                Object.keys(lessons).forEach(function (lesson) {
-                    $('.calendar-item-course-' + course + '-lesson-' + lesson).first().click();
+                Object.keys(lessons).forEach(function (lesson_type) {
+                    var lesson_number = lessons[lesson_type];
+                    if (lesson_number === true) {
+                        // Old data, for compatibility reasons.
+                        // lesson_type is actually the lesson number.
+                        $('.calendar-item-course-' + course + '-lesson-' + lesson_type).first().click();
+                    } else {
+                        $('.calendar-item-course-' + course + '-type-' + lesson_type
+                            + '.calendar-item-course-' + course + '-lesson-' + lesson_number).first().click();
+                    }
                 });
             }
         });
