@@ -124,6 +124,41 @@ $(document).ready(function() {
         return text;
     }
 
+    function update_general_info_line() {
+        var courses = 0;
+        var points = 0;
+
+        Object.keys(courses_chosen).filter(function (course) {
+            return courses_chosen[course];
+        }).forEach(function (course) {
+            var general = courses_hashmap[course].general;
+            courses++;
+            points += parseFloat(general['נקודות']);
+        });
+
+        points = points.toFixed(1).replace(/\.0+$/, '');
+
+        var text;
+        if (courses > 0) {
+            if (courses === 1) {
+                text = 'מקצוע אחד';
+            } else {
+                text = courses + ' מקצועות';
+            }
+
+            text += ', ';
+            if (points === '1') {
+                text += 'נקודה אחת';
+            } else {
+                text += points + ' נקודות';
+            }
+        } else {
+            text = 'לא נבחרו מקצועות';
+        }
+
+        $('#general-info').text(text);
+    }
+
     function string_hex_encode(str) {
         var result = "";
         for (var i=0; i<str.length; i++) {
@@ -540,6 +575,7 @@ $(document).ready(function() {
             button.css({ 'background-color': '', 'border-color': '' });
             selected_course_unsave(course);
             courses_chosen[course] = false;
+            update_general_info_line();
             update_calendar_max_day_and_time([]);
             update_exam_info([]);
         } else {
@@ -550,6 +586,7 @@ $(document).ready(function() {
             button.css({ 'background-color': color, 'border-color': color });
             selected_course_save(course);
             courses_chosen[course] = true;
+            update_general_info_line();
             update_calendar_max_day_and_time([]);
             update_exam_info([]);
         }
@@ -642,6 +679,7 @@ $(document).ready(function() {
             }
         });
 
+        update_general_info_line();
         update_calendar_max_day_and_time([]);
         update_exam_info([]);
     }
@@ -666,6 +704,7 @@ $(document).ready(function() {
                 add_course_to_list_group(course);
                 add_course_to_calendar(course);
                 selected_course_save(course);
+                update_general_info_line();
                 update_calendar_max_day_and_time([]);
                 update_exam_info([]);
             }
