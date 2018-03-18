@@ -596,31 +596,39 @@ $(document).ready(function() {
         var button = $('<a href="#" type="button"'
             + ' class="list-group-item active list-group-item-course-' + course + '">'
             + '</a>');
+        var badge = $('<span class="badge badge-pill badge-secondary float-right">i</span>');
         var color = color_hash.hex(course);
         button.css({ 'background-color': color, 'border-color': color }).click(function () {
-            $(this).tooltip('disable');
-            on_course_button_click($(this), course);
-            return false;
-        }).hover(
-            function() {
-                $(this).addClass('list-group-item-same-course-as-hovered');
-                $('.exam-days-item-course-' + course).addClass('exam-days-item-same-course-as-hovered');
-                change_course_previewed_status(course, true);
-            }, function() {
-                $(this).removeClass('list-group-item-same-course-as-hovered');
-                $('.exam-days-item-course-' + course).removeClass('exam-days-item-same-course-as-hovered');
-                change_course_previewed_status(course, false);
-                $(this).tooltip('enable');
-            }
-        ).text(get_course_title(course))
-            .prop('title', get_course_description(course).replace(/\n/g, '<br>'))
+                $(this).tooltip('disable');
+                on_course_button_click($(this), course);
+                return false;
+            }).hover(
+                function() {
+                    $(this).addClass('list-group-item-same-course-as-hovered');
+                    $('.exam-days-item-course-' + course).addClass('exam-days-item-same-course-as-hovered');
+                    change_course_previewed_status(course, true);
+                }, function() {
+                    $(this).removeClass('list-group-item-same-course-as-hovered');
+                    $('.exam-days-item-course-' + course).removeClass('exam-days-item-same-course-as-hovered');
+                    change_course_previewed_status(course, false);
+                    $(this).tooltip('enable');
+                }
+            ).text(get_course_title(course))
+            .append(badge);
+        var course_description_html = $('<div>').text(get_course_description(course)).html().replace(/\n/g, '<br>');
+        badge.hover(
+                function() {
+                    $(this).removeClass('badge-secondary');
+                    $(this).addClass('badge-primary');
+                }, function() {
+                    $(this).removeClass('badge-primary');
+                    $(this).addClass('badge-secondary');
+                }
+            ).prop('title', course_description_html)
             .attr('data-toggle', 'tooltip')
             .tooltip({
-                delay: { "show": 500, "hide": 0 },
                 html: true,
-                placement: 'bottom',
-                animation: false,
-                fallbackPlacement: 'clockwise',
+                placement: 'right',
                 template: '<div class="tooltip" role="tooltip"><div class="arrow"></div><div class="tooltip-inner course-description-tooltip-inner"></div></div>',
                 trigger: 'hover'
             });
