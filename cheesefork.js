@@ -706,7 +706,7 @@ $(document).ready(function() {
 
     $('#select-course').selectize({
         searchConjunction: 'or',
-        maxOptions: null,
+        maxOptions: 200,
         onItemAdd: function (course) {
             if (!(course in courses_chosen)) {
                 courses_chosen[course] = true;
