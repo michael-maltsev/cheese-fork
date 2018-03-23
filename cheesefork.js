@@ -297,6 +297,22 @@ $(document).ready(function() {
         }
     }
 
+    function my_update_events(calendar, events) {
+        events = events.slice(); // make a copy
+        events.forEach(function (value, index) {
+            events[index] = $.extend({}, events[index]); // make a copy
+
+            // Delete properties which are not shared among events with the same id.
+            delete events[index].title;
+            delete events[index].lessonData;
+        });
+        calendar.fullCalendar('updateEvents', events);
+    }
+
+    function my_update_event(calendar, event) {
+        my_update_events(calendar, [event]);
+    }
+
     function are_events_overlapping(event1, event2) {
         if (event1.start.day() !== event2.start.day()) {
             return false;
@@ -348,13 +364,9 @@ $(document).ready(function() {
                 end: moment.utc('2017-01-0' + lesson_day + 'T' + lesson_start_end['end'] + ':00')
             };
 
-            // Hopefully a unique id.
             var event_id = course
                 + '.' + lesson['מס.']
-                + '.' + lesson_type
-                + '.' + lesson_day
-                + '.' + lesson_start_end['start']
-                + '.' + lesson_start_end['end'];
+                + '.' + lesson_type;
 
             var title = lesson['סוג'] + ' ' + lesson['מס.'];
             if (lesson['בניין'] !== '') {
@@ -413,7 +425,7 @@ $(document).ready(function() {
             conflicted_courses[conflicted_events[i].courseNumber] = true;
         }
 
-        calendar.fullCalendar('updateEvents', conflicted_events);
+        my_update_events(calendar, conflicted_events);
         calendar.fullCalendar('removeEvents', function (event) {
             return event.courseNumber === course;
         });
@@ -478,13 +490,28 @@ $(document).ready(function() {
         var selecting_event = !event.selected;
         var conflicted_courses = {};
 
+        if (selecting_event) {
+            selected_lesson_save(event.courseNumber, event.lessonData['מס.'], get_event_lesson_type(event));
+            event.selected = true;
+            event.backgroundColor = color_hash.hex(event.courseNumber);
+            event.textColor = 'white';
+            event.borderColor = 'white';
+        } else {
+            selected_lesson_unsave(event.courseNumber, event.lessonData['מס.'], get_event_lesson_type(event));
+            event.selected = false;
+            event.backgroundColor = '#F8F9FA';
+            event.textColor = 'black';
+            event.borderColor = 'black';
+        }
+        my_update_event(calendar, event);
+
         var same_course_type_events = calendar.fullCalendar('clientEvents', function (cb_event) {
             if (cb_event.courseNumber === event.courseNumber &&
                 get_event_lesson_type(cb_event) === get_event_lesson_type(event)) {
 
                 if (cb_event.lessonData['מס.'] === event.lessonData['מס.']) {
                     // There might be multiple events for the same course, type, and number, process them all.
-                    apply_event_click_on_item(cb_event);
+                    handle_conflicted_events(cb_event);
                     return false;
                 } else {
                     return true;
@@ -498,28 +525,13 @@ $(document).ready(function() {
             same_course_type_events[i].end.add(selecting_event ? 7 : -7, 'days');
         }
 
-        calendar.fullCalendar('updateEvents', same_course_type_events);
+        my_update_events(calendar, same_course_type_events);
 
         Object.keys(conflicted_courses).forEach(function (conflicted_course) {
             update_course_conflicted_status(conflicted_course);
         });
 
-        function apply_event_click_on_item(event) {
-            if (selecting_event) {
-                selected_lesson_save(event.courseNumber, event.lessonData['מס.'], get_event_lesson_type(event));
-                event.selected = true;
-                event.backgroundColor = color_hash.hex(event.courseNumber);
-                event.textColor = 'white';
-                event.borderColor = 'white';
-            } else {
-                selected_lesson_unsave(event.courseNumber, event.lessonData['מס.'], get_event_lesson_type(event));
-                event.selected = false;
-                event.backgroundColor = '#F8F9FA';
-                event.textColor = 'black';
-                event.borderColor = 'black';
-            }
-            calendar.fullCalendar('updateEvent', event);
-
+        function handle_conflicted_events(event) {
             var conflicted_events = calendar.fullCalendar('clientEvents', function (cb_event) {
                 if (cb_event.courseNumber === event.courseNumber &&
                     get_event_lesson_type(cb_event) === get_event_lesson_type(event)) {
@@ -535,7 +547,7 @@ $(document).ready(function() {
                 conflicted_courses[conflicted_events[i].courseNumber] = true;
             }
 
-            calendar.fullCalendar('updateEvents', conflicted_events);
+            my_update_events(calendar, conflicted_events);
         }
     }
 
