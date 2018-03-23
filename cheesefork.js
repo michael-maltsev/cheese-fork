@@ -705,7 +705,7 @@ $(document).ready(function() {
     });
 
     $('#select-course').selectize({
-        searchConjunction: 'or',
+        //searchConjunction: 'or',
         maxOptions: 200,
         onItemAdd: function (course) {
             if (!(course in courses_chosen)) {
