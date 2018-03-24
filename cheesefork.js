@@ -351,9 +351,9 @@ $(document).ready(function() {
 
         for (i = 0; i < events.length; i++) {
             if (conflicted_ids.propertyIsEnumerable(events[i].id)) {
-                var conflicts = conflicted_ids[events[i].id];
-                events[i].start.add(7*conflicts, 'days');
-                events[i].end.add(7*conflicts, 'days');
+                var weeks = conflicted_ids[events[i].id];
+                events[i].start.add(7*weeks, 'days');
+                events[i].end.add(7*weeks, 'days');
             }
         }
 
@@ -420,15 +420,27 @@ $(document).ready(function() {
         var calendar = $('#calendar');
 
         // Show conflicting events which can now be selected.
+        var conflicted_ids = {};
+
         var conflicted_events = calendar.fullCalendar('clientEvents', function (event) {
-            return event.courseNumber !== course && is_conflicted(event, course);
+            if (event.courseNumber !== course && is_conflicted(event, course)) {
+                if (!conflicted_ids.propertyIsEnumerable(event.id)) {
+                    conflicted_ids[event.id] = 1;
+                    return true;
+                }
+                conflicted_ids[event.id]++;
+                return false;
+            }
+
+            return false;
         });
 
         var conflicted_courses = {};
 
         for (var i = 0; i < conflicted_events.length; i++) {
-            conflicted_events[i].start.add(-7, 'days');
-            conflicted_events[i].end.add(-7, 'days');
+            var weeks = conflicted_ids[conflicted_events[i].id];
+            conflicted_events[i].start.add(-7*weeks, 'days');
+            conflicted_events[i].end.add(-7*weeks, 'days');
             conflicted_courses[conflicted_events[i].courseNumber] = true;
         }
 
@@ -539,18 +551,30 @@ $(document).ready(function() {
         });
 
         function handle_conflicted_events(event) {
+            var conflicted_ids = {};
+
             var conflicted_events = calendar.fullCalendar('clientEvents', function (cb_event) {
                 if (cb_event.courseNumber === event.courseNumber &&
                     get_event_lesson_type(cb_event) === get_event_lesson_type(event)) {
                     return false;
                 }
 
-                return are_events_overlapping(cb_event, event);
+                if (are_events_overlapping(cb_event, event)) {
+                    if (!conflicted_ids.propertyIsEnumerable(cb_event.id)) {
+                        conflicted_ids[cb_event.id] = 1;
+                        return true;
+                    }
+                    conflicted_ids[cb_event.id]++;
+                    return false;
+                }
+
+                return false;
             });
 
             for (var i = 0; i < conflicted_events.length; i++) {
-                conflicted_events[i].start.add(selecting_event ? 7 : -7, 'days');
-                conflicted_events[i].end.add(selecting_event ? 7 : -7, 'days');
+                var weeks = conflicted_ids[conflicted_events[i].id];
+                conflicted_events[i].start.add((selecting_event ? 7 : -7)*weeks, 'days');
+                conflicted_events[i].end.add((selecting_event ? 7 : -7)*weeks, 'days');
                 conflicted_courses[conflicted_events[i].courseNumber] = true;
             }
 
