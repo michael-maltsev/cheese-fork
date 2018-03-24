@@ -337,7 +337,7 @@ $(document).ready(function() {
 
         var lessons_added = {};
         var events = [];
-        var has_conflicted = false;
+        var conflicted_ids = {};
 
         for (var i = 0; i < schedule.length; i++) {
             var lesson = schedule[i];
@@ -349,9 +349,17 @@ $(document).ready(function() {
             lessons_added[lesson['מס.']] = lesson['קבוצה'];
         }
 
+        for (i = 0; i < events.length; i++) {
+            if (conflicted_ids.propertyIsEnumerable(events[i].id)) {
+                var conflicts = conflicted_ids[events[i].id];
+                events[i].start.add(7*conflicts, 'days');
+                events[i].end.add(7*conflicts, 'days');
+            }
+        }
+
         calendar.fullCalendar('renderEvents', events);
 
-        if (has_conflicted) {
+        if (Object.keys(conflicted_ids).length > 0) {
             update_course_conflicted_status(course);
         }
 
@@ -364,9 +372,7 @@ $(document).ready(function() {
                 end: moment.utc('2017-01-0' + lesson_day + 'T' + lesson_start_end['end'] + ':00')
             };
 
-            var event_id = course
-                + '.' + lesson['מס.']
-                + '.' + lesson_type;
+            var event_id = course + '.' + lesson['מס.'] + '.' + lesson_type;
 
             var title = lesson['סוג'] + ' ' + lesson['מס.'];
             if (lesson['בניין'] !== '') {
@@ -380,12 +386,13 @@ $(document).ready(function() {
             }
             title += '\n' + general['שם מקצוע'];
 
-            // Hide conflicting events which cannot be selected.
+            // Mark conflicting events which cannot be selected.
             calendar.fullCalendar('clientEvents', function (cb_event) {
                 if (cb_event.selected && are_events_overlapping(cb_event, event_start_end)) {
-                    event_start_end.start.add(7, 'days');
-                    event_start_end.end.add(7, 'days');
-                    has_conflicted = true;
+                    if (!conflicted_ids.propertyIsEnumerable(event_id)) {
+                        conflicted_ids[event_id] = 0;
+                    }
+                    conflicted_ids[event_id]++;
                 }
                 return false;
             });
