@@ -86,11 +86,11 @@ $(document).ready(function() {
         var general = courses_hashmap[course].general;
         var text = general['מספר מקצוע'] + ' - ' + general['שם מקצוע'];
 
-        if ('פקולטה' in general && general['פקולטה'].length > 0) {
+        if (general.propertyIsEnumerable('פקולטה') && general['פקולטה'].length > 0) {
             text += '\nפקולטה: ' + general['פקולטה'];
         }
 
-        if ('נקודות' in general && general['נקודות'].length > 0) {
+        if (general.propertyIsEnumerable('נקודות') && general['נקודות'].length > 0) {
             var points = general['נקודות'];
             if (points.indexOf('.') < 0) {
                 points += '.0';
@@ -98,26 +98,26 @@ $(document).ready(function() {
             text += '\nנקודות: ' + points;
         }
 
-        if ('סילבוס' in general && general['סילבוס'].length > 0) {
+        if (general.propertyIsEnumerable('סילבוס') && general['סילבוס'].length > 0) {
             text += '\n\n' + general['סילבוס'];
         }
 
-        if ('אחראים' in general && general['אחראים'].length > 0) {
+        if (general.propertyIsEnumerable('אחראים') && general['אחראים'].length > 0) {
             text += '\n\nאחראים: ' + general['אחראים'];
         }
 
-        if ((('מועד א' in general) && general['מועד א'].length > 0) ||
-            (('מועד ב' in general) && general['מועד ב'].length > 0)) {
+        if ((general.propertyIsEnumerable('מועד א') && general['מועד א'].length > 0) ||
+            (general.propertyIsEnumerable('מועד ב') && general['מועד ב'].length > 0)) {
             text += '\n';
-            if (('מועד א' in general) && general['מועד א'].length > 0) {
+            if (general.propertyIsEnumerable('מועד א') && general['מועד א'].length > 0) {
                 text += '\nמועד א\': ' + general['מועד א'];
             }
-            if (('מועד ב' in general) && general['מועד ב'].length > 0) {
+            if (general.propertyIsEnumerable('מועד ב') && general['מועד ב'].length > 0) {
                 text += '\nמועד ב\': ' + general['מועד ב'];
             }
         }
 
-        if ('הערות' in general && general['הערות'].length > 0) {
+        if (general.propertyIsEnumerable('הערות') && general['הערות'].length > 0) {
             text += '\n\nהערות: ' + general['הערות'];
         }
 
@@ -177,7 +177,7 @@ $(document).ready(function() {
             return courses_chosen[course];
         }).concat(extra_courses).forEach(function (course) {
             var general = courses_hashmap[course].general;
-            if (moed_name in general) {
+            if (general.propertyIsEnumerable(moed_name)) {
                 var date = rishum_exam_date_parse(general[moed_name]);
                 if (date !== null) {
                     moed_dates[course] = date;
@@ -269,7 +269,7 @@ $(document).ready(function() {
             }
 
             var type = get_lesson_type(course, event.lessonData);
-            if (!(type in available_options_per_type)) {
+            if (!available_options_per_type.propertyIsEnumerable(type)) {
                 available_options_per_type[type] = 0;
             }
 
@@ -341,7 +341,7 @@ $(document).ready(function() {
 
         for (var i = 0; i < schedule.length; i++) {
             var lesson = schedule[i];
-            if (lesson['מס.'] in lessons_added && (lessons_added[lesson['מס.']]) !== lesson['קבוצה']) {
+            if (lessons_added.propertyIsEnumerable(lesson['מס.']) && lessons_added[lesson['מס.']] !== lesson['קבוצה']) {
                 continue;
             }
 
@@ -680,7 +680,7 @@ $(document).ready(function() {
     function load_saved_courses_and_lessons() {
         var courses = JSON.parse(localStorage.getItem('courses') || '[]');
         courses.forEach(function (course) {
-            if (!(course in courses_chosen) && (course in courses_hashmap)) {
+            if (!courses_chosen.propertyIsEnumerable(course) && courses_hashmap.propertyIsEnumerable(course)) {
                 courses_chosen[course] = true;
                 add_course_to_list_group(course);
                 add_course_to_calendar(course);
@@ -720,7 +720,7 @@ $(document).ready(function() {
         //searchConjunction: 'or',
         maxOptions: 200,
         onItemAdd: function (course) {
-            if (!(course in courses_chosen)) {
+            if (!courses_chosen.propertyIsEnumerable(course)) {
                 courses_chosen[course] = true;
                 add_course_to_list_group(course);
                 add_course_to_calendar(course);
@@ -732,7 +732,7 @@ $(document).ready(function() {
             this.clear();
         },
         onDropdownItemActivate: function (course) {
-            if (!(course in courses_chosen)) {
+            if (!courses_chosen.propertyIsEnumerable(course)) {
                 add_course_to_calendar(course);
                 update_calendar_max_day_and_time([course]);
                 update_exam_info([course]);
@@ -741,7 +741,7 @@ $(document).ready(function() {
             change_course_previewed_status(course, true);
         },
         onDropdownItemDeactivate: function (course) {
-            if (!(course in courses_chosen)) {
+            if (!courses_chosen.propertyIsEnumerable(course)) {
                 remove_course_from_calendar(course);
                 update_calendar_max_day_and_time([]);
                 update_exam_info([]);
