@@ -1,0 +1,4 @@
+[submodule "technion-ug-info-fetcher"]
+	path = technion-ug-info-fetcher
+	url = https://github.com/michael-maltsev/technion-ug-info-fetcher
+	branch = master
