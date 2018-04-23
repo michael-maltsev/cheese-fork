@@ -1,7 +1,7 @@
 language: php
 php:
-  - '7.2'
-script: ./deploy.sh
+  - '7.1'
+script: bash deploy.sh
 deploy:
   provider: pages
   skip-cleanup: true
