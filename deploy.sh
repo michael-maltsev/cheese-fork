@@ -31,4 +31,3 @@ function fetch_semester {
 fetch_semester 201701 || exit 1
 fetch_semester 201702 || exit 1
 fetch_semester 201703 || exit 1
-echo Done!
