@@ -721,13 +721,16 @@ $(document).ready(function() {
     function load_saved_courses_and_lessons() {
         var semesterCoursesKey = semester + '_courses';
 
-        var courses;
+        // For old users before multi-semester support.
         if (semester === '201702') {
-            // For old users before multi-semester support.
-            courses = JSON.parse(localStorage.getItem(semesterCoursesKey) || localStorage.getItem('courses') || '[]');
-        } else {
-            courses = JSON.parse(localStorage.getItem(semesterCoursesKey) || '[]');
+            var oldCourses = localStorage.getItem('courses');
+            if (oldCourses !== null) {
+                localStorage.setItem(semesterCoursesKey, oldCourses);
+                localStorage.removeItem('courses');
+            }
         }
+
+        var courses = JSON.parse(localStorage.getItem(semesterCoursesKey) || '[]');
 
         courses.forEach(function (course) {
             if (!courses_chosen.propertyIsEnumerable(course) && courses_hashmap.propertyIsEnumerable(course)) {
@@ -737,13 +740,16 @@ $(document).ready(function() {
 
                 var courseKey = semester + '_' + course;
 
-                var lessons;
+                // For old users before multi-semester support.
                 if (semester === '201702') {
-                    // For old users before multi-semester support.
-                    lessons = JSON.parse(localStorage.getItem(courseKey) || localStorage.getItem(course) || '{}');
-                } else {
-                    lessons = JSON.parse(localStorage.getItem(courseKey) || '{}');
+                    var oldLessons = localStorage.getItem(course);
+                    if (oldLessons !== null) {
+                        localStorage.setItem(courseKey, oldLessons);
+                        localStorage.removeItem(course);
+                    }
                 }
+
+                var lessons = JSON.parse(localStorage.getItem(courseKey) || '{}');
                 Object.keys(lessons).forEach(function (lesson_type) {
                     var lesson_number = lessons[lesson_type];
                     if (lesson_number === true) {
