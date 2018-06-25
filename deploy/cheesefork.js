@@ -679,44 +679,71 @@ $(document).ready(function() {
     }
 
     function selected_course_save(course) {
-        var courses = JSON.parse(localStorage.getItem('courses') || '[]');
+        var semesterCoursesKey = semester + '_courses';
+        var courseKey = semester + '_' + course;
+
+        var courses = JSON.parse(localStorage.getItem(semesterCoursesKey) || '[]');
         courses.push(course);
-        localStorage.setItem('courses', JSON.stringify(courses));
-        localStorage.removeItem(course);
+        localStorage.setItem(semesterCoursesKey, JSON.stringify(courses));
+        localStorage.removeItem(courseKey);
     }
 
     function selected_course_unsave(course) {
-        var courses = JSON.parse(localStorage.getItem('courses') || '[]');
+        var semesterCoursesKey = semester + '_courses';
+        var courseKey = semester + '_' + course;
+
+        var courses = JSON.parse(localStorage.getItem(semesterCoursesKey) || '[]');
         courses = courses.filter(function (item) {
             return item !== course;
         });
-        localStorage.setItem('courses', JSON.stringify(courses));
-        localStorage.removeItem(course);
+        localStorage.setItem(semesterCoursesKey, JSON.stringify(courses));
+        localStorage.removeItem(courseKey);
     }
 
     function selected_lesson_save(course, lesson_number, lesson_type) {
-        var lessons = JSON.parse(localStorage.getItem(course) || '{}');
+        var courseKey = semester + '_' + course;
+
+        var lessons = JSON.parse(localStorage.getItem(courseKey) || '{}');
         delete lessons[lesson_number]; // remove old format
         lessons[lesson_type] = lesson_number;
-        localStorage.setItem(course, JSON.stringify(lessons));
+        localStorage.setItem(courseKey, JSON.stringify(lessons));
     }
 
     function selected_lesson_unsave(course, lesson_number, lesson_type) {
-        var lessons = JSON.parse(localStorage.getItem(course) || '{}');
+        var courseKey = semester + '_' + course;
+
+        var lessons = JSON.parse(localStorage.getItem(courseKey) || '{}');
         delete lessons[lesson_number]; // remove old format
         delete lessons[lesson_type];
-        localStorage.setItem(course, JSON.stringify(lessons));
+        localStorage.setItem(courseKey, JSON.stringify(lessons));
     }
 
     function load_saved_courses_and_lessons() {
-        var courses = JSON.parse(localStorage.getItem('courses') || '[]');
+        var semesterCoursesKey = semester + '_courses';
+
+        var courses;
+        if (semester === '201702') {
+            // For old users before multi-semester support.
+            courses = JSON.parse(localStorage.getItem(semesterCoursesKey) || localStorage.getItem('courses') || '[]');
+        } else {
+            courses = JSON.parse(localStorage.getItem(semesterCoursesKey) || '[]');
+        }
+
         courses.forEach(function (course) {
             if (!courses_chosen.propertyIsEnumerable(course) && courses_hashmap.propertyIsEnumerable(course)) {
                 courses_chosen[course] = true;
                 add_course_to_list_group(course);
                 add_course_to_calendar(course);
 
-                var lessons = JSON.parse(localStorage.getItem(course) || '{}');
+                var courseKey = semester + '_' + course;
+
+                var lessons;
+                if (semester === '201702') {
+                    // For old users before multi-semester support.
+                    lessons = JSON.parse(localStorage.getItem(courseKey) || localStorage.getItem(course) || '{}');
+                } else {
+                    lessons = JSON.parse(localStorage.getItem(courseKey) || '{}');
+                }
                 Object.keys(lessons).forEach(function (lesson_type) {
                     var lesson_number = lessons[lesson_type];
                     if (lesson_number === true) {
