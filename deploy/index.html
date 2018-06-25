@@ -64,7 +64,29 @@
 <!-- (WAS MODIFIED, DON'T USE MINIFIED!!!) script src="selectize/js/standalone/selectize.min.js"></script-->
 <script src="selectize/js/standalone/selectize.js"></script>
 <script src="color-hash/color-hash.js"></script>
-<script src="courses_201702.min.js"></script>
+<script>
+    var semester;
+    (function() {
+        // https://stackoverflow.com/a/901144
+        function getParameterByName(name, url) {
+            if (!url) url = window.location.href;
+            name = name.replace(/[\[\]]/g, "\\$&");
+            var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+                results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, " "));
+        }
+
+        semester = getParameterByName('semester') || '201702';
+        var script = document.createElement('script');
+        script.src = 'courses_' + semester + '.min.js';
+        script.onload = function() {
+            alert('שגיאה בנסיון לטעון מידע על הקורסים בסמסטר');
+        };
+        document.write(script.outerHTML);
+    })();
+</script>
 <script src="cheesefork.js"></script>
 </body>
 </html>
