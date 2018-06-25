@@ -78,12 +78,12 @@
             return decodeURIComponent(results[2].replace(/\+/g, " "));
         }
 
-        semester = getParameterByName('semester') || '201702';
+        semester = getParameterByName('semester');
+        if (!semester || !/^\d{6}$/.test(semester)) {
+            semester = '201702';
+        }
         var script = document.createElement('script');
         script.src = 'courses_' + semester + '.min.js';
-        script.onload = function() {
-            alert('שגיאה בנסיון לטעון מידע על הקורסים בסמסטר');
-        };
         document.write(script.outerHTML);
     })();
 </script>
