@@ -5,6 +5,25 @@ $(document).ready(function() {
     var courses_chosen = {};
     var color_hash = new ColorHash();
 
+    function semester_friendly_name(semester) {
+        var year = parseInt(semester.slice(0, 4), 10);
+        var semesterCode = semester.slice(4);
+
+        switch (semesterCode) {
+        case '01':
+            return 'חורף ' + year + '-' + (year + 1);
+
+        case '02':
+            return 'אביב ' + (year + 1);
+
+        case '03':
+            return 'קיץ ' + (year + 1);
+
+        default:
+            return semester;
+        }
+    }
+
     function rishum_time_parse(time) {
         var match = /^(\d+)(:\d+)? - (\d+)(:\d+)?$/.exec(time);
         var start_hour = ('00' + match[1]).slice(-2);
@@ -836,6 +855,9 @@ $(document).ready(function() {
         eventMouseout: on_event_mouseout,
         eventAfterRender: after_event_render
     });
+
+    $('#footer-semester-name').text(semester_friendly_name(semester));
+    $('#footer-semester').removeClass('d-none');
 
     $('#right-content-bar').removeClass('invisible');
     load_saved_courses_and_lessons();
