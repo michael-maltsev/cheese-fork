@@ -798,7 +798,7 @@ $(document).ready(function() {
     });
 
     $('#select-semester').val(current_semester).change(function() {
-        window.location = './?semester=' + this.value;
+        window.location = '?semester=' + this.value;
     });
 
     courses_from_rishum.forEach(function (item) {
