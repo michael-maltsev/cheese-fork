@@ -1,3 +1,19 @@
+@media screen and (max-width: 400px) {
+    #main-logo {
+        font-size: 1.5rem;
+    }
+}
+
+@media screen and (max-width: 350px) {
+    #main-logo {
+        font-size: 1rem;
+    }
+    #main-logo img {
+        height: 20px;
+        width: auto;
+    }
+}
+
 #general-info {
     font-size: small;
     text-align: center;
