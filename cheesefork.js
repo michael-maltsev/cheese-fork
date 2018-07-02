@@ -10,17 +10,17 @@ $(document).ready(function() {
         var semesterCode = semester.slice(4);
 
         switch (semesterCode) {
-        case '01':
-            return 'חורף ' + year + '-' + (year + 1);
+            case '01':
+                return 'חורף ' + year + '-' + (year + 1);
 
-        case '02':
-            return 'אביב ' + (year + 1);
+            case '02':
+                return 'אביב ' + (year + 1);
 
-        case '03':
-            return 'קיץ ' + (year + 1);
+            case '03':
+                return 'קיץ ' + (year + 1);
 
-        default:
-            return semester;
+            default:
+                return semester;
         }
     }
 
@@ -698,8 +698,8 @@ $(document).ready(function() {
     }
 
     function selected_course_save(course) {
-        var semesterCoursesKey = semester + '_courses';
-        var courseKey = semester + '_' + course;
+        var semesterCoursesKey = current_semester + '_courses';
+        var courseKey = current_semester + '_' + course;
 
         var courses = JSON.parse(localStorage.getItem(semesterCoursesKey) || '[]');
         courses.push(course);
@@ -708,8 +708,8 @@ $(document).ready(function() {
     }
 
     function selected_course_unsave(course) {
-        var semesterCoursesKey = semester + '_courses';
-        var courseKey = semester + '_' + course;
+        var semesterCoursesKey = current_semester + '_courses';
+        var courseKey = current_semester + '_' + course;
 
         var courses = JSON.parse(localStorage.getItem(semesterCoursesKey) || '[]');
         courses = courses.filter(function (item) {
@@ -720,7 +720,7 @@ $(document).ready(function() {
     }
 
     function selected_lesson_save(course, lesson_number, lesson_type) {
-        var courseKey = semester + '_' + course;
+        var courseKey = current_semester + '_' + course;
 
         var lessons = JSON.parse(localStorage.getItem(courseKey) || '{}');
         delete lessons[lesson_number]; // remove old format
@@ -729,7 +729,7 @@ $(document).ready(function() {
     }
 
     function selected_lesson_unsave(course, lesson_number, lesson_type) {
-        var courseKey = semester + '_' + course;
+        var courseKey = current_semester + '_' + course;
 
         var lessons = JSON.parse(localStorage.getItem(courseKey) || '{}');
         delete lessons[lesson_number]; // remove old format
@@ -738,10 +738,10 @@ $(document).ready(function() {
     }
 
     function load_saved_courses_and_lessons() {
-        var semesterCoursesKey = semester + '_courses';
+        var semesterCoursesKey = current_semester + '_courses';
 
         // For old users before multi-semester support.
-        if (semester === '201702') {
+        if (current_semester === '201702') {
             var oldCourses = localStorage.getItem('courses');
             if (oldCourses !== null) {
                 localStorage.setItem(semesterCoursesKey, oldCourses);
@@ -757,10 +757,10 @@ $(document).ready(function() {
                 add_course_to_list_group(course);
                 add_course_to_calendar(course);
 
-                var courseKey = semester + '_' + course;
+                var courseKey = current_semester + '_' + course;
 
                 // For old users before multi-semester support.
-                if (semester === '201702') {
+                if (current_semester === '201702') {
                     var oldLessons = localStorage.getItem(course);
                     if (oldLessons !== null) {
                         localStorage.setItem(courseKey, oldLessons);
@@ -789,6 +789,17 @@ $(document).ready(function() {
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    available_semesters.forEach(function (semester) {
+        $('#select-semester').append($('<option>', {
+            value: semester,
+            text: semester_friendly_name(semester)
+        }));
+    });
+
+    $('#select-semester').val(current_semester).change(function() {
+        window.location = './?semester=' + this.value;
+    });
 
     courses_from_rishum.forEach(function (item) {
         var course_number = item.general['מספר מקצוע'];
@@ -856,7 +867,7 @@ $(document).ready(function() {
         eventAfterRender: after_event_render
     });
 
-    $('#footer-semester-name').text(semester_friendly_name(semester));
+    $('#footer-semester-name').text(semester_friendly_name(current_semester));
     $('#footer-semester').removeClass('d-none');
 
     $('#right-content-bar').removeClass('invisible');
