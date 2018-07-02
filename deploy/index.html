@@ -17,11 +17,25 @@
 <div class="container-fluid">
     <div class="loading" id="page-loader">Loading&#8230;</div>
 
-    <div class="py-2 text-center">
-        <h2 dir="ltr">
-            CheeseFork
-            <img src="logo.png" alt="logo" height="30">
-        </h2>
+    <div class="pos-f-t">
+        <div class="collapse" id="navbarToggleExternalContent">
+            <div class="p-4">
+                <label for="select-semester">הצג סמסטר:</label>
+                <select name="select-semester" id="select-semester">
+                </select>
+            </div>
+        </div>
+        <nav class="navbar navbar-light">
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggleExternalContent" aria-controls="navbarToggleExternalContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="mx-auto">
+                <h2 dir="ltr">
+                    CheeseFork
+                    <img src="logo.png" alt="logo" height="30">
+                </h2>
+            </div>
+        </nav>
     </div>
 
     <div class="row">
@@ -68,7 +82,11 @@
 <script src="selectize/js/standalone/selectize.js"></script>
 <script src="color-hash/color-hash.js"></script>
 <script>
-    var semester;
+    var available_semesters = [
+        '201701', '201702', '201703',
+        '201801'
+    ];
+    var current_semester;
     (function() {
         // https://stackoverflow.com/a/901144
         function getParameterByName(name, url) {
@@ -81,12 +99,12 @@
             return decodeURIComponent(results[2].replace(/\+/g, " "));
         }
 
-        semester = getParameterByName('semester');
-        if (!semester || !/^\d{6}$/.test(semester)) {
-            semester = '201801';
+        current_semester = getParameterByName('semester');
+        if (available_semesters.indexOf(current_semester) === -1) {
+            current_semester = '201801';
         }
         var script = document.createElement('script');
-        script.src = 'courses_' + semester + '.min.js';
+        script.src = 'courses_' + current_semester + '.min.js';
         document.write(script.outerHTML);
     })();
 </script>
