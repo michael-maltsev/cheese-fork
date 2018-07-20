@@ -64,6 +64,69 @@ $(document).ready(function() {
         return get_lesson_type(event.courseNumber, event.lessonData);
     }
 
+    function get_course_schedule(course) {
+        var general = courses_hashmap[course].general;
+        var schedule = courses_hashmap[course].schedule;
+
+        if (general.propertyIsEnumerable('הערות') && general['הערות'].length > 0) {
+            // Extract sadnaot from course comments.
+            var comment = general['הערות'];
+            var comment_lines = comment.split('\n');
+            for (var i = 0; i < comment_lines.length; i++) {
+                var line = comment_lines[i];
+                if (line.lastIndexOf('סדנאות', 0) === 0 || line.lastIndexOf('סדנת', 0) === 0) {
+                    var sadnaot_ta = '';
+                    match = /^מתרגל[ית]? הסדנ(?:א|ה|אות).*?:\s*(.*?)$/m.exec(comment);
+                    if (match !== null) {
+                        sadnaot_ta = match[1];
+                    }
+
+                    var sadnaot = [];
+                    var sadna_id = 101;
+                    var match;
+                    for (i++; i < comment_lines.length; i++) {
+                        line = comment_lines[i];
+                        match = /^ימי ([א-ו])' (\d+)\.(\d+)-(\d+)\.(\d+)\s*,\s*(.*?) (\d+)(?:\s*,\s*(.*?))?$/.exec(line);
+                        if (match === null) {
+                            break;
+                        }
+
+                        var building = match[6];
+                        switch (building) {
+                            case 'פ\'':
+                                building = 'פישבך';
+                                break;
+
+                            case 'מ\'':
+                                building = 'מאייר';
+                                break;
+                        }
+
+                        sadnaot.push({
+                            'קבוצה': sadna_id,
+                            'מס.': sadna_id,
+                            'סוג': 'sadna',
+                            'מרצה\/מתרגל': match[8] || sadnaot_ta,
+                            'יום': match[1],
+                            'שעה': match[2] + ':' + match[3] + ' - ' + match[4] + ':' + match[5],
+                            'בניין': building,
+                            'חדר': match[7]
+                        });
+                        sadna_id++;
+                    }
+
+                    if (sadnaot.length > 0) {
+                        schedule = schedule.concat(sadnaot);
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        return schedule;
+    }
+
     function update_calendar_max_day_and_time(extra_courses) {
         var calendar = $('#calendar');
         var min_time = moment.utc('2017-01-01T08:30:00');
@@ -73,7 +136,7 @@ $(document).ready(function() {
         Object.keys(courses_chosen).filter(function (course) {
             return courses_chosen[course];
         }).concat(extra_courses).forEach(function (course) {
-            var schedule = courses_hashmap[course].schedule;
+            var schedule = get_course_schedule(course);
             for (var i = 0; i < schedule.length; i++) {
                 var lesson = schedule[i];
                 var lesson_day = lesson['יום'].charCodeAt(0) - 'א'.charCodeAt(0) + 1;
@@ -347,7 +410,7 @@ $(document).ready(function() {
 
     function add_course_to_calendar(course) {
         var general = courses_hashmap[course].general;
-        var schedule = courses_hashmap[course].schedule;
+        var schedule = get_course_schedule(course);
         if (schedule.length === 0) {
             return;
         }
@@ -394,6 +457,9 @@ $(document).ready(function() {
             var event_id = course + '.' + lesson['מס.'] + '.' + lesson_type;
 
             var title = lesson['סוג'] + ' ' + lesson['מס.'];
+            if (lesson['סוג'] === 'sadna') {
+                title = 'סדנה';
+            }
             if (lesson['בניין'] !== '') {
                 title += '\n' + lesson['בניין'];
                 if (lesson['חדר'] !== '') {
