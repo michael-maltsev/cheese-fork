@@ -4,6 +4,7 @@ $(document).ready(function() {
     var courses_hashmap = {};
     var courses_chosen = {};
     var color_hash = new ColorHash();
+    var firestore_db = null;
 
     function semester_friendly_name(semester) {
         var year = parseInt(semester.slice(0, 4), 10);
@@ -282,7 +283,7 @@ $(document).ready(function() {
             return diff !== 0 ? diff : left_course - right_course;
         });
 
-        span_exam_list.html('');
+        span_exam_list.empty();
 
         moed_courses.forEach(function (course, i) {
             var days_text = $('<span class="exam-days-item exam-days-item-course-' + course + '"></span>');
@@ -767,91 +768,219 @@ $(document).ready(function() {
         var semesterCoursesKey = current_semester + '_courses';
         var courseKey = current_semester + '_' + course;
 
-        var courses = JSON.parse(localStorage.getItem(semesterCoursesKey) || '[]');
-        courses.push(course);
-        localStorage.setItem(semesterCoursesKey, JSON.stringify(courses));
-        localStorage.removeItem(courseKey);
+        var doc = firestore_auth_user_doc();
+        if (doc) {
+            var input = {};
+            input[semesterCoursesKey] = firebase.firestore.FieldValue.arrayUnion(course);
+            input[courseKey] = {};
+            doc.set(input, {merge: true});
+        } else {
+            var courses = JSON.parse(localStorage.getItem(semesterCoursesKey) || '[]');
+            courses.push(course);
+            localStorage.setItem(semesterCoursesKey, JSON.stringify(courses));
+            localStorage.removeItem(courseKey);
+        }
     }
 
     function selected_course_unsave(course) {
         var semesterCoursesKey = current_semester + '_courses';
         var courseKey = current_semester + '_' + course;
 
-        var courses = JSON.parse(localStorage.getItem(semesterCoursesKey) || '[]');
-        courses = courses.filter(function (item) {
-            return item !== course;
-        });
-        localStorage.setItem(semesterCoursesKey, JSON.stringify(courses));
-        localStorage.removeItem(courseKey);
+        var doc = firestore_auth_user_doc();
+        if (doc) {
+            var input = {};
+            input[semesterCoursesKey] = firebase.firestore.FieldValue.arrayRemove(course);
+            input[courseKey] = firebase.firestore.FieldValue.delete();
+            doc.update(input);
+        } else {
+            var courses = JSON.parse(localStorage.getItem(semesterCoursesKey) || '[]');
+            courses = courses.filter(function (item) {
+                return item !== course;
+            });
+            localStorage.setItem(semesterCoursesKey, JSON.stringify(courses));
+            localStorage.removeItem(courseKey);
+        }
     }
 
     function selected_lesson_save(course, lesson_number, lesson_type) {
         var courseKey = current_semester + '_' + course;
 
-        var lessons = JSON.parse(localStorage.getItem(courseKey) || '{}');
-        delete lessons[lesson_number]; // remove old format
-        lessons[lesson_type] = lesson_number;
-        localStorage.setItem(courseKey, JSON.stringify(lessons));
+        var doc = firestore_auth_user_doc();
+        if (doc) {
+            var input = {};
+            input[courseKey + '.' + lesson_type] = lesson_number;
+            doc.update(input);
+        } else {
+            var lessons = JSON.parse(localStorage.getItem(courseKey) || '{}');
+            lessons[lesson_type] = lesson_number;
+            localStorage.setItem(courseKey, JSON.stringify(lessons));
+        }
     }
 
     function selected_lesson_unsave(course, lesson_number, lesson_type) {
         var courseKey = current_semester + '_' + course;
 
-        var lessons = JSON.parse(localStorage.getItem(courseKey) || '{}');
-        delete lessons[lesson_number]; // remove old format
-        delete lessons[lesson_type];
-        localStorage.setItem(courseKey, JSON.stringify(lessons));
+        var doc = firestore_auth_user_doc();
+        if (doc) {
+            var input = {};
+            input[courseKey + '.' + lesson_type] = firebase.firestore.FieldValue.delete();
+            doc.update(input);
+        } else {
+            var lessons = JSON.parse(localStorage.getItem(courseKey) || '{}');
+            delete lessons[lesson_type];
+            localStorage.setItem(courseKey, JSON.stringify(lessons));
+        }
     }
 
-    function load_saved_courses_and_lessons() {
+    function load_saved_courses_and_lessons(on_loaded_func) {
         var semesterCoursesKey = current_semester + '_courses';
 
-        // For old users before multi-semester support.
-        if (current_semester === '201702') {
-            var oldCourses = localStorage.getItem('courses');
-            if (oldCourses !== null) {
-                localStorage.setItem(semesterCoursesKey, oldCourses);
-                localStorage.removeItem('courses');
-            }
+        var doc = firestore_auth_user_doc();
+        if (doc) {
+            doc.get().then(function (doc) {
+                apply_saved(doc.exists ? doc.data() : {});
+                on_loaded_func();
+            }, function (error) {
+                alert("Error loading data from server: " + error);
+            });
+        } else {
+            var data = {};
+            data[semesterCoursesKey] = JSON.parse(localStorage.getItem(semesterCoursesKey) || '[]');
+            data[semesterCoursesKey].forEach(function (course) {
+                var courseKey = current_semester + '_' + course;
+                data[courseKey] = JSON.parse(localStorage.getItem(courseKey) || '{}');
+            });
+            apply_saved(data);
+            on_loaded_func();
         }
 
-        var courses = JSON.parse(localStorage.getItem(semesterCoursesKey) || '[]');
+        function apply_saved(data) {
+            var courses = data[semesterCoursesKey] || [];
 
-        courses.forEach(function (course) {
-            if (!courses_chosen.propertyIsEnumerable(course) && courses_hashmap.propertyIsEnumerable(course)) {
-                courses_chosen[course] = true;
-                add_course_to_list_group(course);
-                add_course_to_calendar(course);
+            courses.forEach(function (course) {
+                if (!courses_chosen.propertyIsEnumerable(course) && courses_hashmap.propertyIsEnumerable(course)) {
+                    courses_chosen[course] = true;
+                    add_course_to_list_group(course);
+                    add_course_to_calendar(course);
 
-                var courseKey = current_semester + '_' + course;
+                    var courseKey = current_semester + '_' + course;
 
-                // For old users before multi-semester support.
-                if (current_semester === '201702') {
-                    var oldLessons = localStorage.getItem(course);
-                    if (oldLessons !== null) {
-                        localStorage.setItem(courseKey, oldLessons);
-                        localStorage.removeItem(course);
-                    }
-                }
-
-                var lessons = JSON.parse(localStorage.getItem(courseKey) || '{}');
-                Object.keys(lessons).forEach(function (lesson_type) {
-                    var lesson_number = lessons[lesson_type];
-                    if (lesson_number === true) {
-                        // Old data, for compatibility reasons.
-                        // lesson_type is actually the lesson number.
-                        $('.calendar-item-course-' + course + '-lesson-' + lesson_type).first().click();
-                    } else {
+                    var lessons = data[courseKey] || {};
+                    Object.keys(lessons).forEach(function (lesson_type) {
+                        var lesson_number = lessons[lesson_type];
                         $('.calendar-item-course-' + course + '-type-' + lesson_type
                             + '.calendar-item-course-' + course + '-lesson-' + lesson_number).first().click();
-                    }
-                });
-            }
+                    });
+                }
+            });
+
+            update_general_info_line();
+            update_calendar_max_day_and_time([]);
+            update_exam_info([]);
+        }
+    }
+
+    function reload_saved_courses_and_lessons(on_loaded_func) {
+        $('#course-button-list').empty();
+        $('#calendar').fullCalendar('removeEvents', function (event) {
+            return true;
         });
+        courses_chosen = {};
 
         update_general_info_line();
         update_calendar_max_day_and_time([]);
         update_exam_info([]);
+
+        load_saved_courses_and_lessons(on_loaded_func);
+    }
+
+    function firestore_auth_user_doc() {
+        if (typeof firebase !== 'undefined' && firebase.auth().currentUser !== null) {
+            return firestore_db.collection("users").doc(firebase.auth().currentUser.uid);
+        }
+        return null;
+    }
+
+    function firebase_init(after_init_func) {
+        // Initialize Firebase.
+        var config = {
+            apiKey: "AIzaSyAfKPyTM83mkLgdQTdx9YS9UXywiswwIYI",
+            authDomain: "cheesefork-de9af.firebaseapp.com",
+            databaseURL: "https://cheesefork-de9af.firebaseio.com",
+            projectId: "cheesefork-de9af",
+            storageBucket: "",
+            messagingSenderId: "916559682433"
+        };
+        firebase.initializeApp(config);
+
+        // Initialize Firestore.
+        firestore_db = firebase.firestore();
+        firestore_db.settings({timestampsInSnapshots: true}); // silence a warning
+
+        // FirebaseUI config.
+        var uiConfig = {
+            signInOptions: [
+                // Leave the lines as is for the providers you want to offer your users.
+                firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+                firebase.auth.EmailAuthProvider.PROVIDER_ID
+            ],
+            callbacks: {
+                // Called when the user has been successfully signed in.
+                signInSuccessWithAuthResult: function (authResult) {
+                    if (authResult.user) {
+                        handleSignedInUser(authResult.user);
+                    }
+                    // Do not redirect.
+                    return false;
+                }
+            },
+            // Terms of service url.
+            tosUrl: 'https://policies.google.com/terms',
+            // Privacy policy url.
+            privacyPolicyUrl: 'https://policies.google.com/privacy'
+        };
+
+        // Initialize the FirebaseUI Widget using Firebase.
+        var firebaseUI = new firebaseui.auth.AuthUI(firebase.auth());
+        // The start method will wait until the DOM is loaded.
+        firebaseUI.start('#firebaseui-auth-container', uiConfig);
+
+        var auth_initialized = false;
+
+        // Listen to change in auth state so it displays the correct UI for when
+        // the user is signed in or not.
+        firebase.auth().onAuthStateChanged(function (user) {
+            user ? handleSignedInUser(user) : handleSignedOutUser();
+            if (!auth_initialized) {
+                after_init_func();
+                auth_initialized = true;
+            } else if (user) {
+                // Slow reload.
+                $('#page-loader').show();
+                reload_saved_courses_and_lessons(function () {
+                    $('#page-loader').hide();
+                });
+            } else {
+                // Fast reload.
+                reload_saved_courses_and_lessons(function () {});
+            }
+        });
+
+        document.getElementById('sign-out').addEventListener('click', function () {
+            firebase.auth().signOut();
+        });
+
+        function handleSignedInUser(user) {
+            document.getElementById('user-signed-in').style.display = 'block';
+            document.getElementById('user-signed-out').style.display = 'none';
+            document.getElementById('user-name').textContent = user.displayName;
+        }
+
+        function handleSignedOutUser() {
+            document.getElementById('user-signed-in').style.display = 'none';
+            document.getElementById('user-signed-out').style.display = 'block';
+            firebaseUI.start('#firebaseui-auth-container', uiConfig);
+        }
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -863,7 +992,7 @@ $(document).ready(function() {
         }));
     });
 
-    $('#select-semester').val(current_semester).change(function() {
+    $('#select-semester').val(current_semester).change(function () {
         window.location = '?semester=' + this.value;
     });
 
@@ -919,7 +1048,7 @@ $(document).ready(function() {
         defaultView: 'agendaWeek',
         header: false,
         allDaySlot: false,
-        minTime: '08:00:00',
+        minTime: '08:30:00',
         maxTime: '18:30:00',
         height: 'auto',
         contentHeight: 'auto',
@@ -931,12 +1060,27 @@ $(document).ready(function() {
         eventMouseover: on_event_mouseover,
         eventMouseout: on_event_mouseout,
         eventAfterRender: after_event_render
+    }).fullCalendar('option', {
+        // Set afterwards as a bug workaround.
+        // https://github.com/fullcalendar/fullcalendar/issues/4102
+        hiddenDays: [5, 6]
     });
 
     $('#footer-semester-name').text(semester_friendly_name(current_semester));
     $('#footer-semester').removeClass('d-none');
 
     $('#right-content-bar').removeClass('invisible');
-    load_saved_courses_and_lessons();
-    $('#page-loader').hide();
+
+    if (typeof firebase !== 'undefined') {
+        firebase_init(function () {
+            load_saved_courses_and_lessons(function () {
+                $('#page-loader').hide();
+            });
+        });
+    } else {
+        document.getElementById('firebase-sign-in').style.display = 'none';
+        load_saved_courses_and_lessons(function () {
+            $('#page-loader').hide();
+        });
+    }
 });

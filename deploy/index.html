@@ -6,20 +6,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>CheeseFork - Your Cheesy Scheduler</title>
     <link rel="shortcut icon" type="image/png" href="favicon.ico">
-    <link rel="stylesheet" href="cheesefork.css">
-    <link rel="stylesheet" href="loader.css">
+    <link rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/3.3.0/firebase-ui-auth-rtl.css">
     <link rel="stylesheet" href="bootstrap_rtl/css/bootstrap.min.css">
     <link rel="stylesheet" href="fullcalendar/fullcalendar.min.css">
     <link rel="stylesheet" media="print" href="fullcalendar/fullcalendar.print.min.css">
     <link rel="stylesheet" href="selectize/css/selectize.css">
+    <link rel="stylesheet" href="loader.css">
+    <link rel="stylesheet" href="cheesefork.css">
 </head>
 <body class="bg-light">
 <div class="container-fluid">
     <div class="loading" id="page-loader">Loading&#8230;</div>
 
     <div class="pos-f-t">
-        <div class="collapse" id="navbarToggleExternalContent">
-            <div class="form-group row p-4">
+        <div class="collapse px-4 pt-4" id="navbarToggleExternalContent">
+            <div id="firebase-sign-in" class="form-group row">
+                <div id="user-signed-out">
+                    <div id="firebaseui-auth-container"></div>
+                </div>
+                <div id="user-signed-in">
+                    מחובר בתור <span id="user-name" class="font-weight-bold"></span>
+                    <button type="button" class="btn" id="sign-out">התנתק</button>
+                </div>
+            </div>
+            <div class="form-group row">
                 <label for="select-semester" class="col-form-label pr-2">הצג סמסטר:</label>
                 <select name="select-semester" id="select-semester" class="form-control" style="width:auto;"></select>
             </div>
@@ -80,6 +90,10 @@
 <!-- (WAS MODIFIED, DON'T USE MINIFIED!!!) script src="selectize/js/standalone/selectize.min.js"></script-->
 <script src="selectize/js/standalone/selectize.js"></script>
 <script src="color-hash/color-hash.js"></script>
+<script src="https://www.gstatic.com/firebasejs/5.3.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/5.3.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/5.3.1/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/ui/3.3.0/firebase-ui-auth__iw.js"></script>
 <script>
     var available_semesters = [
         '201701', '201702', '201703',
