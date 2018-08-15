@@ -908,7 +908,7 @@ $(document).ready(function() {
             authDomain: "cheesefork-de9af.firebaseapp.com",
             databaseURL: "https://cheesefork-de9af.firebaseio.com",
             projectId: "cheesefork-de9af",
-            storageBucket: "",
+            storageBucket: "cheesefork-de9af.appspot.com",
             messagingSenderId: "916559682433"
         };
         firebase.initializeApp(config);
@@ -919,6 +919,8 @@ $(document).ready(function() {
 
         // FirebaseUI config.
         var uiConfig = {
+            // Opens IDP Providers sign-in flow in a popup.
+            signInFlow: 'popup',
             signInOptions: [
                 // Leave the lines as is for the providers you want to offer your users.
                 firebase.auth.GoogleAuthProvider.PROVIDER_ID,
