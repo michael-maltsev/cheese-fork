@@ -771,7 +771,7 @@ $(document).ready(function() {
         var year_from = parseInt(current_semester.slice(0, 4), 10);
         var year_to = year_from + 2;
 
-        var rrule = {'freq': 'WEEKLY', until: year_to + '-01-01T00:00:00'};
+        var rrule = {freq: 'WEEKLY', until: year_to + '-01-01T00:00:00Z'};
 
         var count = 0;
 
@@ -799,8 +799,8 @@ $(document).ready(function() {
                     }
                 }
 
-                var begin = event.start.format();
-                var end = event.end.format();
+                var begin = moment(event.start).add(event.start.utcOffset(), 'm').format();
+                var end = moment(event.end).add(event.end.utcOffset(), 'm').format();
 
                 ics_cal.addEvent(subject, description, location, begin, end, rrule);
                 count++;
