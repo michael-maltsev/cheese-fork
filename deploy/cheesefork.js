@@ -799,8 +799,8 @@ $(document).ready(function() {
                     }
                 }
 
-                var begin = moment(event.start).add(event.start.utcOffset(), 'm').format();
-                var end = moment(event.end).add(event.end.utcOffset(), 'm').format();
+                var begin = moment(event.start).add(moment(event.start).local().utcOffset(), 'm').format();
+                var end = moment(event.end).add(moment(event.end).local().utcOffset(), 'm').format();
 
                 ics_cal.addEvent(subject, description, location, begin, end, rrule);
                 count++;
