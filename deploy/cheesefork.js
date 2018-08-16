@@ -1039,19 +1039,19 @@ $(document).ready(function() {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    available_semesters.forEach(function (semester) {
+        $('#select-semester').append($('<option>', {
+            value: semester,
+            text: semester_friendly_name(semester)
+        }));
+    });
+
     $('#select-semester').val(current_semester).change(function () {
         window.location = '?semester=' + this.value;
     });
 
     $('#save-as-ics').click(function () {
         save_as_ics();
-    });
-
-    available_semesters.forEach(function (semester) {
-        $('#select-semester').append($('<option>', {
-            value: semester,
-            text: semester_friendly_name(semester)
-        }));
     });
 
     courses_from_rishum.forEach(function (item) {
