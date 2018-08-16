@@ -764,6 +764,58 @@ $(document).ready(function() {
         $('#course-button-list').append(button);
     }
 
+    function save_as_ics() {
+        var calendar = $('#calendar');
+        var ics_cal = ics();
+
+        var year_from = parseInt(current_semester.slice(0, 4), 10);
+        var year_to = year_from + 2;
+
+        var rrule = {'freq': 'WEEKLY', until: year_to + '-01-01T00:00:00'};
+
+        var count = 0;
+
+        calendar.fullCalendar('clientEvents', function (event) {
+            if (event.start.week() === 1 && event.selected) {
+                var general = courses_hashmap[event.courseNumber].general;
+                var lesson = event.lessonData;
+
+                var subject = lesson['סוג'] + ' ' + lesson['מס.'];
+                if (lesson['סוג'] === 'sadna') {
+                    subject = 'סדנה';
+                }
+                subject += ' - ' + general['שם מקצוע'];
+
+                var description = '';
+                if (lesson['מרצה/מתרגל'] !== '') {
+                    description = lesson['מרצה/מתרגל'];
+                }
+
+                var location = '';
+                if (lesson['בניין'] !== '') {
+                    location = lesson['בניין'];
+                    if (lesson['חדר'] !== '') {
+                        location += ' ' + lesson['חדר'];
+                    }
+                }
+
+                var begin = event.start.format();
+                var end = event.end.format();
+
+                ics_cal.addEvent(subject, description, location, begin, end, rrule);
+                count++;
+            }
+
+            return false;
+        });
+
+        if (count > 0) {
+            ics_cal.download(semester_friendly_name(current_semester));
+        } else {
+            alert('המערכת ריקה');
+        }
+    }
+
     function selected_course_save(course) {
         var semesterCoursesKey = current_semester + '_courses';
         var courseKey = current_semester + '_' + course;
@@ -987,15 +1039,19 @@ $(document).ready(function() {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    $('#select-semester').val(current_semester).change(function () {
+        window.location = '?semester=' + this.value;
+    });
+
+    $('#save-as-ics').click(function () {
+        save_as_ics();
+    });
+
     available_semesters.forEach(function (semester) {
         $('#select-semester').append($('<option>', {
             value: semester,
             text: semester_friendly_name(semester)
         }));
-    });
-
-    $('#select-semester').val(current_semester).change(function () {
-        window.location = '?semester=' + this.value;
     });
 
     courses_from_rishum.forEach(function (item) {
