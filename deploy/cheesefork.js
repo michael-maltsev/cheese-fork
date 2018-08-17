@@ -996,8 +996,6 @@ $(document).ready(function() {
 
         // Initialize the FirebaseUI Widget using Firebase.
         var firebaseUI = new firebaseui.auth.AuthUI(firebase.auth());
-        // The start method will wait until the DOM is loaded.
-        firebaseUI.start('#firebaseui-auth-container', uiConfig);
 
         var auth_initialized = false;
 
