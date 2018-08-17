@@ -991,7 +991,9 @@ $(document).ready(function() {
             // Terms of service url.
             tosUrl: 'https://policies.google.com/terms',
             // Privacy policy url.
-            privacyPolicyUrl: 'https://policies.google.com/privacy'
+            privacyPolicyUrl: 'https://policies.google.com/privacy',
+            // Disable accountchooser.com which is enabled by default.
+            credentialHelper: firebaseui.auth.CredentialHelper.NONE
         };
 
         // Initialize the FirebaseUI Widget using Firebase.
