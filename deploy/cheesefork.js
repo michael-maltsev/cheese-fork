@@ -49,7 +49,7 @@ $(document).ready(function() {
         if (match === null) {
             return null;
         }
-        return moment.utc(match[3] + '-' + match[2] + '-' + match[1] + 'T00:00:00');
+        return match[3] + '-' + match[2] + '-' + match[1] + 'T00:00:00';
     }
 
     function get_lesson_type(course_number, lesson) {
@@ -263,7 +263,7 @@ $(document).ready(function() {
             if (general.propertyIsEnumerable(moed_name)) {
                 var date = rishum_exam_date_parse(general[moed_name]);
                 if (date !== null) {
-                    moed_dates[course] = date;
+                    moed_dates[course] = moment.utc(date);
                 }
             }
         });
@@ -451,8 +451,8 @@ $(document).ready(function() {
             var lesson_day = lesson['יום'].charCodeAt(0) - 'א'.charCodeAt(0) + 1;
             var lesson_start_end = rishum_time_parse(lesson['שעה']);
             var event_start_end = {
-                start: moment.utc('2017-01-0' + lesson_day + 'T' + lesson_start_end['start'] + ':00'),
-                end: moment.utc('2017-01-0' + lesson_day + 'T' + lesson_start_end['end'] + ':00')
+                start: calendar.fullCalendar('getCalendar').moment('2017-01-0' + lesson_day + 'T' + lesson_start_end['start'] + ':00'),
+                end: calendar.fullCalendar('getCalendar').moment('2017-01-0' + lesson_day + 'T' + lesson_start_end['end'] + ':00')
             };
 
             var event_id = course + '.' + lesson['מס.'] + '.' + lesson_type;
@@ -799,8 +799,8 @@ $(document).ready(function() {
                     }
                 }
 
-                var begin = moment(event.start).subtract(moment(event.start).local().utcOffset(), 'm').format();
-                var end = moment(event.end).subtract(moment(event.end).local().utcOffset(), 'm').format();
+                var begin = event.start.format();
+                var end = event.end.format();
 
                 ics_cal.addEvent(subject, description, location, begin, end, rrule);
                 count++;
