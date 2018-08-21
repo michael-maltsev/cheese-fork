@@ -728,7 +728,6 @@ $(document).ready(function() {
         var badge = $('<span class="badge badge-pill badge-secondary float-right">i</span>');
         var color = color_hash.hex(course);
         button.css({ 'background-color': color, 'border-color': color }).click(function () {
-                $(this).tooltip('disable');
                 on_course_button_click($(this), course);
                 return false;
             }).hover(
@@ -740,7 +739,6 @@ $(document).ready(function() {
                     $(this).removeClass('list-group-item-same-course-as-hovered');
                     $('.exam-days-item-course-' + course).removeClass('exam-days-item-same-course-as-hovered');
                     change_course_previewed_status(course, false);
-                    $(this).tooltip('enable');
                 }
             ).text(get_course_title(course))
             .append(badge);
