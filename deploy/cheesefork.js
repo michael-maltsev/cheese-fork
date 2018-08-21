@@ -1064,6 +1064,27 @@ $(document).ready(function() {
     $('#select-course').selectize({
         //searchConjunction: 'or',
         maxOptions: 200,
+        render: {
+            option: function(item, escape) {
+                var course = item.value;
+                var general = courses_hashmap[course].general;
+
+                var course_description_html = $('<div>').text(get_course_description(course)).html().replace(/\n/g, '<br>');
+
+                var course_number = $('<abbr>').text(general['מספר מקצוע'])
+                    .prop('title', course_description_html)
+                    .attr({
+                        'data-toggle': 'tooltip',
+                        'data-html': 'true',
+                        'data-placement': 'right',
+                        'data-template': '<div class="tooltip" role="tooltip"><div class="arrow"></div><div class="tooltip-inner course-description-tooltip-inner"></div></div>',
+                        'data-boundary': 'viewport'
+                    });
+
+                return $('<div>').append(course_number)
+                    .append(document.createTextNode(' - ' + general['שם מקצוע'])).get(0);
+            }
+        },
         onItemAdd: function (course) {
             if (!courses_chosen.propertyIsEnumerable(course)) {
                 courses_chosen[course] = true;
@@ -1096,6 +1117,8 @@ $(document).ready(function() {
             }
         }
     });
+
+    $('.selectize-control .selectize-dropdown').tooltip({ selector: "[data-toggle=tooltip]" });
 
     $('#calendar').fullCalendar({
         defaultDate: '2017-01-01',
