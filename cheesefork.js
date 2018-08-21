@@ -728,9 +728,10 @@ $(document).ready(function () {
         var badge = $('<span class="badge badge-pill badge-secondary float-right">i</span>');
         var color = color_hash.hex(course);
         var course_title = get_course_title(course);
-        button.css({ 'background-color': color, 'border-color': color }).click(function () {
+        button.css({ 'background-color': color, 'border-color': color })
+            .click(function (e) {
+                e.preventDefault(); // don't follow the link "#"
                 on_course_button_click($(this), course);
-                return false;
             }).hover(
                 function () {
                     $(this).addClass('list-group-item-same-course-as-hovered');
@@ -756,12 +757,13 @@ $(document).ready(function () {
                     $(this).addClass('badge-secondary');
                 }
             ).click(function (e) {
+                e.stopPropagation(); // don't execute parent button onclick
+                e.preventDefault(); // don't follow the link "#"
                 $(this).tooltip('hide');
                 BootstrapDialog.show({
                     title: course_title,
                     message: course_description
                 });
-                e.stopPropagation();
             }).prop('title', course_description_html)
             .attr('data-toggle', 'tooltip')
             .tooltip({
