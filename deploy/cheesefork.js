@@ -727,6 +727,7 @@ $(document).ready(function () {
             + '</a>');
         var badge = $('<span class="badge badge-pill badge-secondary float-right">i</span>');
         var color = color_hash.hex(course);
+        var course_title = get_course_title(course);
         button.css({ 'background-color': color, 'border-color': color }).click(function () {
                 on_course_button_click($(this), course);
                 return false;
@@ -740,9 +741,12 @@ $(document).ready(function () {
                     $('.exam-days-item-course-' + course).removeClass('exam-days-item-same-course-as-hovered');
                     change_course_previewed_status(course, false);
                 }
-            ).text(get_course_title(course))
+            ).text(course_title)
             .append(badge);
-        var course_description_html = $('<div>').text(get_course_description(course)).html().replace(/\n/g, '<br>');
+
+        // Add tooltip to badge.
+        var course_description = get_course_description(course);
+        var course_description_html = $('<div>').text(course_description).html().replace(/\n/g, '<br>');
         badge.hover(
                 function () {
                     $(this).removeClass('badge-secondary');
@@ -751,7 +755,14 @@ $(document).ready(function () {
                     $(this).removeClass('badge-primary');
                     $(this).addClass('badge-secondary');
                 }
-            ).prop('title', course_description_html)
+            ).click(function (e) {
+                $(this).tooltip('hide');
+                BootstrapDialog.show({
+                    title: course_title,
+                    message: course_description
+                });
+                e.stopPropagation();
+            }).prop('title', course_description_html)
             .attr('data-toggle', 'tooltip')
             .tooltip({
                 html: true,
