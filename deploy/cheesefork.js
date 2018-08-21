@@ -1,4 +1,4 @@
-$(document).ready(function() {
+$(document).ready(function () {
     'use strict';
 
     var courses_hashmap = {};
@@ -41,7 +41,7 @@ $(document).ready(function() {
         }
         var end = end_hour + ':' + end_minute;
 
-        return {'start': start, 'end': end};
+        return { start: start, end: end };
     }
 
     function rishum_exam_date_parse(date) {
@@ -243,10 +243,10 @@ $(document).ready(function() {
     }
 
     function string_hex_encode(str) {
-        var result = "";
+        var result = '';
         for (var i=0; i<str.length; i++) {
             var hex = str.charCodeAt(i).toString(16);
-            result += ("000"+hex).slice(-4);
+            result += ('000'+hex).slice(-4);
         }
         return result;
     }
@@ -290,11 +290,11 @@ $(document).ready(function() {
             var color = color_hash.hex(course);
             days_text.css('background-color', color);
             days_text.hover(
-                function() {
+                function () {
                     $(this).addClass('exam-days-item-same-course-as-hovered');
                     change_course_previewed_status(course, true);
                     $('.list-group-item-course-' + course).addClass('list-group-item-same-course-as-hovered');
-                }, function() {
+                }, function () {
                     $(this).removeClass('exam-days-item-same-course-as-hovered');
                     change_course_previewed_status(course, false);
                     $('.list-group-item-course-' + course).removeClass('list-group-item-same-course-as-hovered');
@@ -731,11 +731,11 @@ $(document).ready(function() {
                 on_course_button_click($(this), course);
                 return false;
             }).hover(
-                function() {
+                function () {
                     $(this).addClass('list-group-item-same-course-as-hovered');
                     $('.exam-days-item-course-' + course).addClass('exam-days-item-same-course-as-hovered');
                     change_course_previewed_status(course, true);
-                }, function() {
+                }, function () {
                     $(this).removeClass('list-group-item-same-course-as-hovered');
                     $('.exam-days-item-course-' + course).removeClass('exam-days-item-same-course-as-hovered');
                     change_course_previewed_status(course, false);
@@ -744,10 +744,10 @@ $(document).ready(function() {
             .append(badge);
         var course_description_html = $('<div>').text(get_course_description(course)).html().replace(/\n/g, '<br>');
         badge.hover(
-                function() {
+                function () {
                     $(this).removeClass('badge-secondary');
                     $(this).addClass('badge-primary');
-                }, function() {
+                }, function () {
                     $(this).removeClass('badge-primary');
                     $(this).addClass('badge-secondary');
                 }
@@ -769,7 +769,7 @@ $(document).ready(function() {
         var year_from = parseInt(current_semester.slice(0, 4), 10);
         var year_to = year_from + 2;
 
-        var rrule = {freq: 'WEEKLY', until: year_to + '-01-01T00:00:00Z'};
+        var rrule = { freq: 'WEEKLY', until: year_to + '-01-01T00:00:00Z' };
 
         var count = 0;
 
@@ -823,7 +823,7 @@ $(document).ready(function() {
             var input = {};
             input[semesterCoursesKey] = firebase.firestore.FieldValue.arrayUnion(course);
             input[courseKey] = {};
-            doc.set(input, {merge: true});
+            doc.set(input, { merge: true });
         } else {
             var courses = JSON.parse(localStorage.getItem(semesterCoursesKey) || '[]');
             courses.push(course);
@@ -891,7 +891,7 @@ $(document).ready(function() {
                 apply_saved(doc.exists ? doc.data() : {});
                 on_loaded_func();
             }, function (error) {
-                alert("Error loading data from server: " + error);
+                alert('Error loading data from server: ' + error);
             });
         } else {
             var data = {};
@@ -946,7 +946,7 @@ $(document).ready(function() {
 
     function firestore_auth_user_doc() {
         if (typeof firebase !== 'undefined' && firebase.auth().currentUser !== null) {
-            return firestore_db.collection("users").doc(firebase.auth().currentUser.uid);
+            return firestore_db.collection('users').doc(firebase.auth().currentUser.uid);
         }
         return null;
     }
@@ -954,18 +954,18 @@ $(document).ready(function() {
     function firebase_init(after_init_func) {
         // Initialize Firebase.
         var config = {
-            apiKey: "AIzaSyAfKPyTM83mkLgdQTdx9YS9UXywiswwIYI",
-            authDomain: "cheesefork-de9af.firebaseapp.com",
-            databaseURL: "https://cheesefork-de9af.firebaseio.com",
-            projectId: "cheesefork-de9af",
-            storageBucket: "cheesefork-de9af.appspot.com",
-            messagingSenderId: "916559682433"
+            apiKey: 'AIzaSyAfKPyTM83mkLgdQTdx9YS9UXywiswwIYI',
+            authDomain: 'cheesefork-de9af.firebaseapp.com',
+            databaseURL: 'https://cheesefork-de9af.firebaseio.com',
+            projectId: 'cheesefork-de9af',
+            storageBucket: 'cheesefork-de9af.appspot.com',
+            messagingSenderId: '916559682433'
         };
         firebase.initializeApp(config);
 
         // Initialize Firestore.
         firestore_db = firebase.firestore();
-        firestore_db.settings({timestampsInSnapshots: true}); // silence a warning
+        firestore_db.settings({ timestampsInSnapshots: true }); // silence a warning
 
         // FirebaseUI config.
         var uiConfig = {
@@ -1065,7 +1065,7 @@ $(document).ready(function() {
         //searchConjunction: 'or',
         maxOptions: 200,
         render: {
-            option: function(item, escape) {
+            option: function (item, escape) {
                 var course = item.value;
                 var general = courses_hashmap[course].general;
 
@@ -1118,7 +1118,7 @@ $(document).ready(function() {
         }
     });
 
-    $('.selectize-control .selectize-dropdown').tooltip({ selector: "[data-toggle=tooltip]" });
+    $('.selectize-control .selectize-dropdown').tooltip({ selector: '[data-toggle=tooltip]' });
 
     $('#calendar').fullCalendar({
         defaultDate: '2017-01-01',
