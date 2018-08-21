@@ -131,3 +131,12 @@
     transform: rotate(135deg);
     -webkit-transform: rotate(135deg);
 }
+
+/* bootstrap4-dialog RTL fix */
+.bootstrap-dialog .bootstrap-dialog-header {
+    width: 100%;
+}
+
+.bootstrap-dialog .bootstrap-dialog-close-button {
+    float: left;
+}
