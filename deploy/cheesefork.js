@@ -162,15 +162,23 @@ $(document).ready(function () {
         max_time = max_time.format('HH:mm:ss');
         var hidden_days = friday ? [6] : [5, 6];
 
-        // The check avoids re-rendering if not needed, which is very slow.
-        if (min_time !== calendar.fullCalendar('option', 'minTime') ||
-            max_time !== calendar.fullCalendar('option', 'maxTime') ||
-            JSON.stringify(hidden_days) !== JSON.stringify(calendar.fullCalendar('option', 'hiddenDays'))) {
-            calendar.fullCalendar('option', {
-                minTime: min_time,
-                maxTime: max_time,
-                hiddenDays: hidden_days
-            });
+        // Only apply options that changed, avoids re-rendering if not needed, which is very slow.
+        var new_options = {};
+
+        if (min_time !== calendar.fullCalendar('option', 'minTime')) {
+            new_options['minTime'] = min_time;
+        }
+
+        if (max_time !== calendar.fullCalendar('option', 'maxTime')) {
+            new_options['maxTime'] = max_time;
+        }
+
+        if (JSON.stringify(hidden_days) !== JSON.stringify(calendar.fullCalendar('option', 'hiddenDays'))) {
+            new_options['hiddenDays'] = hidden_days;
+        }
+
+        if (Object.keys(new_options).length > 0) {
+            calendar.fullCalendar('option', new_options);
         }
     }
 
