@@ -20,7 +20,11 @@
 }
 
 #course-button-list {
-    margin: 20px 0 100px;
+    margin-top: 20px;
+}
+
+#course-button-list .list-group-item:last-child {
+    margin-bottom: 100px;
 }
 
 #exam-info {
