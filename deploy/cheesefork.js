@@ -158,11 +158,20 @@ $(document).ready(function () {
             }
         });
 
-        calendar.fullCalendar('option', {
-            minTime: min_time.format('HH:mm:ss'),
-            maxTime: max_time.format('HH:mm:ss'),
-            hiddenDays: friday ? [6] : [5, 6]
-        });
+        min_time = min_time.format('HH:mm:ss');
+        max_time = max_time.format('HH:mm:ss');
+        var hidden_days = friday ? [6] : [5, 6];
+
+        // The check avoids re-rendering if not needed, which is very slow.
+        if (min_time !== calendar.fullCalendar('option', 'minTime') ||
+            max_time !== calendar.fullCalendar('option', 'maxTime') ||
+            JSON.stringify(hidden_days) !== JSON.stringify(calendar.fullCalendar('option', 'hiddenDays'))) {
+            calendar.fullCalendar('option', {
+                minTime: min_time,
+                maxTime: max_time,
+                hiddenDays: hidden_days
+            });
+        }
     }
 
     function get_course_description(course) {
