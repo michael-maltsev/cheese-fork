@@ -56,18 +56,20 @@
 
     <div class="row">
         <div id="right-content-bar" class="col-md-2 invisible">
-            <select id="select-course" placeholder="לחצו לבחירת מקצוע...">
-                <option value="">לחצו לבחירת מקצוע...</option>
-            </select>
-
-            <div id="general-info"></div>
-
-            <div id="course-button-list" class="list-group"></div>
-
-            <div id="exam-info" class="d-none">
-                <div>מספר ימי למידה למבחנים:</div>
-                <div id="exams-moed-a" class="exams-moed-content">מועדי א': <span id="exams-moed-a-list"></span></div>
-                <div id="exams-moed-b" class="exams-moed-content">מועדי ב': <span id="exams-moed-b-list"></span></div>
+            <div class="d-flex flex-column h-100">
+                <select id="select-course" placeholder="לחצו לבחירת מקצוע...">
+                    <option value="">לחצו לבחירת מקצוע...</option>
+                </select>
+            
+                <div id="general-info"></div>
+            
+                <div id="course-button-list" class="list-group"></div>
+            
+                <div id="exam-info" class="mt-auto d-none">
+                    <div>מספר ימי למידה למבחנים:</div>
+                    <div id="exams-moed-a" class="exams-moed-content">מועדי א': <span id="exams-moed-a-list"></span></div>
+                    <div id="exams-moed-b" class="exams-moed-content">מועדי ב': <span id="exams-moed-b-list"></span></div>
+                </div>
             </div>
         </div>
         <div id="calendar" class="col-md-10"></div>
