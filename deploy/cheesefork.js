@@ -158,8 +158,8 @@ $(document).ready(function () {
             }
         });
 
-        min_time = min_time.format('HH:mm:ss');
-        max_time = max_time.format('HH:mm:ss');
+        min_time = min_time.format('kk:mm:ss');
+        max_time = max_time.format('kk:mm:ss');
         var hidden_days = friday ? [6] : [5, 6];
 
         // Only apply options that changed, avoids re-rendering if not needed, which is very slow.
