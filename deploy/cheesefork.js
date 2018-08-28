@@ -855,10 +855,10 @@ $(document).ready(function () {
             input[courseKey] = {};
             doc.set(input, { merge: true });
         } else {
-            var courses = JSON.parse(localStorage.getItem(semesterCoursesKey) || '[]');
+            var courses = JSON.parse(localStorage && localStorage.getItem(semesterCoursesKey) || '[]');
             courses.push(course);
-            localStorage.setItem(semesterCoursesKey, JSON.stringify(courses));
-            localStorage.removeItem(courseKey);
+            localStorage && localStorage.setItem(semesterCoursesKey, JSON.stringify(courses));
+            localStorage && localStorage.removeItem(courseKey);
         }
     }
 
@@ -873,12 +873,12 @@ $(document).ready(function () {
             input[courseKey] = firebase.firestore.FieldValue.delete();
             doc.update(input);
         } else {
-            var courses = JSON.parse(localStorage.getItem(semesterCoursesKey) || '[]');
+            var courses = JSON.parse(localStorage && localStorage.getItem(semesterCoursesKey) || '[]');
             courses = courses.filter(function (item) {
                 return item !== course;
             });
-            localStorage.setItem(semesterCoursesKey, JSON.stringify(courses));
-            localStorage.removeItem(courseKey);
+            localStorage && localStorage.setItem(semesterCoursesKey, JSON.stringify(courses));
+            localStorage && localStorage.removeItem(courseKey);
         }
     }
 
@@ -891,9 +891,9 @@ $(document).ready(function () {
             input[courseKey + '.' + lesson_type] = lesson_number;
             doc.update(input);
         } else {
-            var lessons = JSON.parse(localStorage.getItem(courseKey) || '{}');
+            var lessons = JSON.parse(localStorage && localStorage.getItem(courseKey) || '{}');
             lessons[lesson_type] = lesson_number;
-            localStorage.setItem(courseKey, JSON.stringify(lessons));
+            localStorage && localStorage.setItem(courseKey, JSON.stringify(lessons));
         }
     }
 
@@ -906,9 +906,9 @@ $(document).ready(function () {
             input[courseKey + '.' + lesson_type] = firebase.firestore.FieldValue.delete();
             doc.update(input);
         } else {
-            var lessons = JSON.parse(localStorage.getItem(courseKey) || '{}');
+            var lessons = JSON.parse(localStorage && localStorage.getItem(courseKey) || '{}');
             delete lessons[lesson_type];
-            localStorage.setItem(courseKey, JSON.stringify(lessons));
+            localStorage && localStorage.setItem(courseKey, JSON.stringify(lessons));
         }
     }
 
@@ -925,10 +925,10 @@ $(document).ready(function () {
             });
         } else {
             var data = {};
-            data[semesterCoursesKey] = JSON.parse(localStorage.getItem(semesterCoursesKey) || '[]');
+            data[semesterCoursesKey] = JSON.parse(localStorage && localStorage.getItem(semesterCoursesKey) || '[]');
             data[semesterCoursesKey].forEach(function (course) {
                 var courseKey = current_semester + '_' + course;
-                data[courseKey] = JSON.parse(localStorage.getItem(courseKey) || '{}');
+                data[courseKey] = JSON.parse(localStorage && localStorage.getItem(courseKey) || '{}');
             });
             apply_saved(data);
             on_loaded_func();
