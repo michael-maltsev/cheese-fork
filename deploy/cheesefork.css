@@ -19,6 +19,7 @@
 }
 
 .selectize-control.select-course .selectize-input {
+    min-height: initial;
     padding: 0.5rem 0.75rem;
 }
 
