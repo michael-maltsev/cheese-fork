@@ -1181,12 +1181,20 @@ $(document).ready(function () {
     $('#right-content-bar').removeClass('invisible');
 
     if (typeof firebase !== 'undefined') {
-        firebase_init(function () {
-            load_saved_courses_and_lessons(function () {
-                $('#page-loader').hide();
+        // Firebase UI doesn't work on Edge/IE in private mode.
+        // Fall back to offline mode.
+        try {
+            firebase_init(function () {
+                load_saved_courses_and_lessons(function () {
+                    $('#page-loader').hide();
+                });
             });
-        });
-    } else {
+        } catch(e) {
+            firebase = undefined;
+        }
+    }
+
+    if (typeof firebase === 'undefined') {
         document.getElementById('firebase-sign-in').style.display = 'none';
         load_saved_courses_and_lessons(function () {
             $('#page-loader').hide();
