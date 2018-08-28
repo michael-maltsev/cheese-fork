@@ -1007,19 +1007,22 @@
 	 * @returns {int}
 	 */
 	var measureString = function(str, $parent) {
+		var body, offScreenDir;
+	
 		if (!str) {
 			return 0;
 		}
 	
 		if (!Selectize.$testInput) {
+			body = $('body');
+			offScreenDir = body.css('direction') === 'rtl' ? 'right' : 'left';
 			Selectize.$testInput = $('<span />').css({
 				position: 'absolute',
 				top: -99999,
-				left: -99999,
 				width: 'auto',
 				padding: 0,
 				whiteSpace: 'pre'
-			}).appendTo('body');
+			}).css(offScreenDir, -99999).appendTo(body);
 		}
 	
 		Selectize.$testInput.text(str);
@@ -2684,6 +2687,7 @@
 				if ($item.hasClass('active')) {
 					idx = self.$activeItems.indexOf($item[0]);
 					self.$activeItems.splice(idx, 1);
+					$item.removeClass('active');
 				}
 	
 				self.items.splice(i, 1);
