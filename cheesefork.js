@@ -1111,7 +1111,7 @@ $(document).ready(function () {
                         'data-boundary': 'viewport'
                     });
 
-                return $('<div>').append(course_number)
+                return $('<div>').addClass('option').append(course_number)
                     .append(document.createTextNode(' - ' + general['שם מקצוע'])).get(0);
             }
         },
