@@ -15,7 +15,7 @@
 }
 
 .selectize-control.select-course {
-    font-size: small;
+    font-size: .8rem;
 }
 
 .selectize-control.select-course .selectize-input {
@@ -23,7 +23,7 @@
 }
 
 #general-info {
-    font-size: small;
+    font-size: .8rem;
     text-align: center;
 }
 
@@ -106,7 +106,7 @@
 
 /* Overrides list-group-item from Bootstrap */
 .list-group-item {
-    font-size: small;
+    font-size: .8rem;
     cursor: default;
 }
 
