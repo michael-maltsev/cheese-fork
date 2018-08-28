@@ -46,10 +46,11 @@
     font-size: calc(-0.3em + 3.1vh);
 }
 
-/* Dynamic event text size, RTL direction */
+/* Dynamic event text size, RTL direction, default cursor for IE/Edge */
 #calendar .fc-event {
     font-size: calc(0.1em + 1.3vh);
     direction: rtl;
+    cursor: default;
 }
 
 /* Center event text vertically */
