@@ -18,6 +18,10 @@
     font-size: small;
 }
 
+.selectize-control.select-course .selectize-input {
+    padding: 0.5rem 0.75rem;
+}
+
 #general-info {
     font-size: small;
     text-align: center;
