@@ -273,7 +273,7 @@ $(document).ready(function () {
             return courses_chosen[course];
         }).concat(extra_courses).forEach(function (course) {
             var general = courses_hashmap[course].general;
-            if (general.propertyIsEnumerable(moed_name)) {
+            if (general.propertyIsEnumerable(moed_name) && general[moed_name].length > 0) {
                 var date = rishum_exam_date_parse(general[moed_name]);
                 if (date !== null) {
                     moed_dates[course] = moment.utc(date);
