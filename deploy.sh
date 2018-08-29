@@ -15,8 +15,8 @@ function fetch_semester {
 	cd ..
 
 	local src_file=technion-ug-info-fetcher/$courses_file.json
-	local dest_file_min=deploy/$courses_file.min.js
-	local dest_file=deploy/$courses_file.js
+	local dest_file_min=deploy/courses/$courses_file.min.js
+	local dest_file=deploy/courses/$courses_file.js
 
 	echo -n 'var courses_from_rishum = ' > $dest_file_min
 	cat $src_file >> $dest_file_min
