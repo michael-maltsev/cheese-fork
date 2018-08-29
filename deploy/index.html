@@ -7,11 +7,11 @@
     <title>CheeseFork - Your Cheesy Scheduler</title>
     <link rel="shortcut icon" type="image/png" href="favicon.ico">
     <link rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/3.3.0/firebase-ui-auth-rtl.css">
-    <link rel="stylesheet" href="bootstrap_rtl/css/bootstrap.min.css">
-    <link rel="stylesheet" href="bootstrap4-dialog/css/bootstrap-dialog.min.css">
-    <link rel="stylesheet" href="fullcalendar/fullcalendar.min.css">
-    <link rel="stylesheet" media="print" href="fullcalendar/fullcalendar.print.min.css">
-    <link rel="stylesheet" href="selectize/css/selectize.bootstrap4.css">
+    <link rel="stylesheet" href="modules/bootstrap-rtl/css/bootstrap.min.css">
+    <link rel="stylesheet" href="modules/bootstrap4-dialog/css/bootstrap-dialog.min.css">
+    <link rel="stylesheet" href="modules/fullcalendar/fullcalendar.min.css">
+    <link rel="stylesheet" media="print" href="modules/fullcalendar/fullcalendar.print.min.css">
+    <link rel="stylesheet" href="modules/selectize/css/selectize.bootstrap4.css">
     <link rel="stylesheet" href="loader.css">
     <link rel="stylesheet" href="cheesefork.css">
 </head>
@@ -90,16 +90,16 @@
     gtag('js', new Date());
     gtag('config', 'UA-115440973-1');
 </script>
-<script src="fullcalendar/lib/jquery.min.js"></script>
-<script src="popper/popper.js"></script>
-<script src="bootstrap_rtl/js/bootstrap.min.js"></script>
-<script src="bootstrap4-dialog/js/bootstrap-dialog.min.js"></script>
-<script src="fullcalendar/lib/moment.min.js"></script>
-<script src="fullcalendar/fullcalendar.min.js"></script>
-<script src='fullcalendar/locale/he.js'></script>
-<script src="selectize/js/standalone/selectize.min.js"></script>
-<script src="color-hash/color-hash.js"></script>
-<script src="ics.js/ics.deps.min.js"></script>
+<script src="modules/fullcalendar/lib/jquery.min.js"></script>
+<script src="modules/popper/popper.js"></script>
+<script src="modules/bootstrap-rtl/js/bootstrap.min.js"></script>
+<script src="modules/bootstrap4-dialog/js/bootstrap-dialog.min.js"></script>
+<script src="modules/fullcalendar/lib/moment.min.js"></script>
+<script src="modules/fullcalendar/fullcalendar.min.js"></script>
+<script src='modules/fullcalendar/locale/he.js'></script>
+<script src="modules/selectize/js/standalone/selectize.min.js"></script>
+<script src="modules/color-hash/color-hash.js"></script>
+<script src="modules/ics.js/ics.deps.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/5.3.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/5.3.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/5.3.1/firebase-firestore.js"></script>
@@ -127,7 +127,7 @@
             current_semester = '201801';
         }
         var script = document.createElement('script');
-        script.src = 'courses_' + current_semester + '.min.js';
+        script.src = 'courses/courses_' + current_semester + '.min.js';
         document.write(script.outerHTML);
     })();
 </script>
