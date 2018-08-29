@@ -191,11 +191,7 @@ $(document).ready(function () {
         }
 
         if (general.propertyIsEnumerable('נקודות') && general['נקודות'].length > 0) {
-            var points = general['נקודות'];
-            if (points.indexOf('.') < 0) {
-                points += '.0';
-            }
-            text += '\nנקודות: ' + points;
+            text += '\nנקודות: ' + general['נקודות'];
         }
 
         if (general.propertyIsEnumerable('סילבוס') && general['סילבוס'].length > 0) {
