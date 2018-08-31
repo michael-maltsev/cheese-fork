@@ -13,6 +13,7 @@
     <link rel="stylesheet" media="print" href="modules/fullcalendar/fullcalendar.print.min.css">
     <link rel="stylesheet" href="modules/selectize/css/selectize.bootstrap4.css">
     <link rel="stylesheet" href="loader.css">
+    <link rel="stylesheet" href="components/courses-exam-info/courses-exam-info.css">
     <link rel="stylesheet" href="cheesefork.css">
 </head>
 <body class="bg-light">
@@ -65,11 +66,7 @@
             
                 <div id="course-button-list" class="list-group"></div>
             
-                <div id="exam-info" class="mt-auto d-none">
-                    <div>מספר ימי למידה למבחנים:</div>
-                    <div id="exams-moed-a" class="exams-moed-content">מועדי א': <span id="exams-moed-a-list"></span></div>
-                    <div id="exams-moed-b" class="exams-moed-content">מועדי ב': <span id="exams-moed-b-list"></span></div>
-                </div>
+                <div id="courses-exam-info" class="mt-auto"></div>
             </div>
         </div>
         <div id="calendar" class="col-md-10"></div>
@@ -131,6 +128,7 @@
         document.write(script.outerHTML);
     })();
 </script>
+<script src="components/courses-exam-info/courses-exam-info.js"></script>
 <script src="cheesefork.js"></script>
 </body>
 </html>
