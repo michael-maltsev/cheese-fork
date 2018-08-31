@@ -1006,7 +1006,7 @@ $(document).ready(function () {
         }));
     });
 
-    coursesExamInfo = new CoursesExamInfo($('#courses-exam-info'), {
+    coursesExamInfo = new CoursesExamInfo($('#course-exam-info'), {
         allCourses: coursesHashmap,
         onHoverIn: function (course) {
             changeCoursePreviewedStatus(course, true);
