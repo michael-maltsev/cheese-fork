@@ -5,6 +5,7 @@ $(document).ready(function () {
     var courses_chosen = {};
     var color_hash = new ColorHash();
     var firestore_db = null;
+    var coursesExamInfo = null;
 
     function semester_friendly_name(semester) {
         var year = parseInt(semester.slice(0, 4), 10);
@@ -264,94 +265,12 @@ $(document).ready(function () {
         return result;
     }
 
-    function update_moed_exam_info(moed, div_content, span_exam_list, extra_courses) {
-        var moed_names = ['מועד א', 'מועד ב'];
-        var moed_name = moed_names[moed - 1];
-        var moed_dates = {};
-
-        Object.keys(courses_chosen).filter(function (course) {
-            return courses_chosen[course];
-        }).concat(extra_courses).forEach(function (course) {
-            var general = courses_hashmap[course].general;
-            if (general.propertyIsEnumerable(moed_name) && general[moed_name].length > 0) {
-                var date = rishum_exam_date_parse(general[moed_name]);
-                if (date !== null) {
-                    moed_dates[course] = moment.utc(date);
-                }
-            }
-        });
-
-        var moed_courses = Object.keys(moed_dates);
-        if (moed_courses.length === 0) {
-            div_content.hide();
-            return false;
-        }
-
-        div_content.show();
-
-        moed_courses.sort(function (left_course, right_course) {
-            var left = moed_dates[left_course];
-            var right = moed_dates[right_course];
-            var diff = left.diff(right);
-            return diff !== 0 ? diff : left_course - right_course;
-        });
-
-        span_exam_list.empty();
-
-        moed_courses.forEach(function (course, i) {
-            var days_text = $('<span class="exam-days-item exam-days-item-course-' + course + '"></span>');
-            var color = color_hash.hex(course);
-            days_text.css('background-color', color);
-            days_text.hover(
-                function () {
-                    $(this).addClass('exam-days-item-same-course-as-hovered');
-                    change_course_previewed_status(course, true);
-                    $('.list-group-item-course-' + course).addClass('list-group-item-same-course-as-hovered');
-                }, function () {
-                    $(this).removeClass('exam-days-item-same-course-as-hovered');
-                    change_course_previewed_status(course, false);
-                    $('.list-group-item-course-' + course).removeClass('list-group-item-same-course-as-hovered');
-                }
-            );
-
-            var date = moed_dates[course].format('DD/MM');
-
-            if (i === 0) {
-                days_text.text(date);
-                span_exam_list.append(days_text);
-            } else {
-                days_text
-                    .prop('title', date)
-                    .attr('data-toggle', 'tooltip')
-                    .tooltip({
-                        placement: (moed === 1 ? 'top' : 'bottom'),
-                        template: '<div class="tooltip" role="tooltip"><div class="tooltip-inner"></div></div>'
-                    });
-                var left = moed_dates[moed_courses[i - 1]];
-                var right = moed_dates[course];
-                var diff = right.diff(left, 'days');
-                days_text.text(diff);
-                if (diff === 0) {
-                    days_text.addClass('exam-days-item-conflicted');
-                }
-                //span_exam_list.append('🢀\u00AD');
-                span_exam_list.append('<i class="exam-days-left-arrow"></i> ');
-                span_exam_list.append(days_text);
-            }
-        });
-
-        return true;
-    }
-
     function update_exam_info(extra_courses) {
-        var moed_a_added = update_moed_exam_info(1, $('#exams-moed-a'), $('#exams-moed-a-list'), extra_courses);
-        var moed_b_added = update_moed_exam_info(2, $('#exams-moed-b'), $('#exams-moed-b-list'), extra_courses);
+        var courses = Object.keys(courses_chosen).filter(function (course) {
+            return courses_chosen[course];
+        }).concat(extra_courses);
 
-        if (moed_a_added || moed_b_added) {
-            $('#exam-info').removeClass('d-none');
-        } else {
-            $('#exam-info').addClass('d-none');
-        }
+        coursesExamInfo.renderCourses(courses);
     }
 
     function update_course_conflicted_status(course) {
@@ -683,14 +602,14 @@ $(document).ready(function () {
 
     function on_event_mouseover(event) {
         $('.list-group-item-course-' + event.courseNumber).addClass('list-group-item-same-course-as-hovered');
-        $('.exam-days-item-course-' + event.courseNumber).addClass('exam-days-item-same-course-as-hovered');
+        coursesExamInfo.setHovered(event.courseNumber);
         $('.calendar-item-course-' + event.courseNumber).addClass('calendar-item-same-course-as-hovered');
         $('.calendar-item-course-' + event.courseNumber + '-type-' + get_event_lesson_type(event)).addClass('calendar-item-same-type-as-hovered');
     }
 
     function on_event_mouseout(event) {
         $('.list-group-item-course-' + event.courseNumber).removeClass('list-group-item-same-course-as-hovered');
-        $('.exam-days-item-course-' + event.courseNumber).removeClass('exam-days-item-same-course-as-hovered');
+        coursesExamInfo.removeHovered(event.courseNumber);
         $('.calendar-item-course-' + event.courseNumber).removeClass('calendar-item-same-course-as-hovered');
         $('.calendar-item-course-' + event.courseNumber + '-type-' + get_event_lesson_type(event)).removeClass('calendar-item-same-type-as-hovered');
     }
@@ -748,11 +667,11 @@ $(document).ready(function () {
             }).hover(
                 function () {
                     $(this).addClass('list-group-item-same-course-as-hovered');
-                    $('.exam-days-item-course-' + course).addClass('exam-days-item-same-course-as-hovered');
+                    coursesExamInfo.setHovered(course);
                     change_course_previewed_status(course, true);
                 }, function () {
                     $(this).removeClass('list-group-item-same-course-as-hovered');
-                    $('.exam-days-item-course-' + course).removeClass('exam-days-item-same-course-as-hovered');
+                    coursesExamInfo.removeHovered(course);
                     change_course_previewed_status(course, false);
                 }
             ).text(course_title)
@@ -1087,6 +1006,21 @@ $(document).ready(function () {
         }));
     });
 
+    coursesExamInfo = new CoursesExamInfo($('#courses-exam-info'), {
+        allCourses: courses_hashmap,
+        onHoverIn: function (course) {
+            change_course_previewed_status(course, true);
+            $('.list-group-item-course-' + course).addClass('list-group-item-same-course-as-hovered');
+        },
+        onHoverOut: function (course) {
+            change_course_previewed_status(course, false);
+            $('.list-group-item-course-' + course).removeClass('list-group-item-same-course-as-hovered');
+        },
+        colorGenerator: function (course) {
+            return color_hash.hex(course);
+        }
+    });
+
     $('#select-course').selectize({
         //searchConjunction: 'or',
         maxOptions: 200,
@@ -1128,7 +1062,7 @@ $(document).ready(function () {
                 add_course_to_calendar(course);
                 update_calendar_max_day_and_time([course]);
                 update_exam_info([course]);
-                $('.exam-days-item-course-' + course).addClass('exam-days-item-same-course-as-hovered');
+                coursesExamInfo.setHighlighted(course);
             }
             change_course_previewed_status(course, true);
         },

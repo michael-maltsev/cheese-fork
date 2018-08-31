@@ -112,40 +112,6 @@
     cursor: default;
 }
 
-/* Exam dates items */
-.exams-moed-content {
-    margin: 6px 0 6px;
-}
-
-.exam-days-item {
-    color: white;
-    padding: 5px;
-    border-radius: 6px;
-    cursor: default;
-}
-
-.exam-days-item-same-course-as-hovered {
-    -webkit-box-shadow: inset 0 0 0 3px #CC0000;
-    -moz-box-shadow: inset 0 0 0 3px #CC0000;
-    box-shadow: inset 0 0 0 3px #CC0000;
-    font-weight: bold;
-}
-
-.exam-days-item-conflicted {
-    color: red;
-    font-weight: bold;
-    text-shadow: 0 0 10px black;
-}
-
-.exam-days-left-arrow {
-    border: solid black;
-    border-width: 0 3px 3px 0;
-    display: inline-block;
-    padding: 3px;
-    transform: rotate(135deg);
-    -webkit-transform: rotate(135deg);
-}
-
 /* bootstrap4-dialog RTL fix */
 .bootstrap-dialog .bootstrap-dialog-header {
     width: 100%;
