@@ -5,7 +5,7 @@ $(document).ready(function () {
     var coursesChosen = {};
     var colorHash = new ColorHash();
     var firestoreDb = null;
-    var coursesExamInfo = null;
+    var courseExamInfo = null;
 
     function semesterFriendlyName(semester) {
         var year = parseInt(semester.slice(0, 4), 10);
@@ -59,7 +59,7 @@ $(document).ready(function () {
     }
 
     function updateCalendarMaxDayAndTime() {
-        var calendar = $('#calendar');
+        var calendar = $('#course-calendar');
         var minTime = calendar.fullCalendar('getCalendar').moment('2017-01-01T08:30:00');
         var maxTime = calendar.fullCalendar('getCalendar').moment('2017-01-01T18:30:00');
         var friday = false;
@@ -163,11 +163,11 @@ $(document).ready(function () {
             return coursesChosen[course];
         }).concat(extraCourses);
 
-        coursesExamInfo.renderCourses(courses);
+        courseExamInfo.renderCourses(courses);
     }
 
     function updateCourseConflictedStatus(course) {
-        var calendar = $('#calendar');
+        var calendar = $('#course-calendar');
 
         var availableOptionsPerType = {};
 
@@ -241,7 +241,7 @@ $(document).ready(function () {
             return;
         }
 
-        var calendar = $('#calendar');
+        var calendar = $('#course-calendar');
 
         var lessonsAdded = {};
         var events = [];
@@ -328,7 +328,7 @@ $(document).ready(function () {
     }
 
     function removeCourseFromCalendar(course) {
-        var calendar = $('#calendar');
+        var calendar = $('#course-calendar');
 
         // Show conflicting events which can now be selected.
         var conflictedIds = {};
@@ -375,7 +375,7 @@ $(document).ready(function () {
     }
 
     function changeCoursePreviewedStatus(course, previewed) {
-        var calendar = $('#calendar');
+        var calendar = $('#course-calendar');
         if (previewed) {
             var conflictedEvents = calendar.fullCalendar('clientEvents', function (event) {
                 return event.courseNumber === course && event.start.week() > 1;
@@ -415,7 +415,7 @@ $(document).ready(function () {
     }
 
     function onEventClick(event) {
-        var calendar = $('#calendar');
+        var calendar = $('#course-calendar');
 
         var selectingEvent = !event.selected;
         var conflictedCourses = {};
@@ -497,14 +497,14 @@ $(document).ready(function () {
 
     function onEventMouseover(event) {
         $('.list-group-item-course-' + event.courseNumber).addClass('list-group-item-same-course-as-hovered');
-        coursesExamInfo.setHovered(event.courseNumber);
+        courseExamInfo.setHovered(event.courseNumber);
         $('.calendar-item-course-' + event.courseNumber).addClass('calendar-item-same-course-as-hovered');
         $('.calendar-item-course-' + event.courseNumber + '-type-' + getEventLessonType(event)).addClass('calendar-item-same-type-as-hovered');
     }
 
     function onEventMouseout(event) {
         $('.list-group-item-course-' + event.courseNumber).removeClass('list-group-item-same-course-as-hovered');
-        coursesExamInfo.removeHovered(event.courseNumber);
+        courseExamInfo.removeHovered(event.courseNumber);
         $('.calendar-item-course-' + event.courseNumber).removeClass('calendar-item-same-course-as-hovered');
         $('.calendar-item-course-' + event.courseNumber + '-type-' + getEventLessonType(event)).removeClass('calendar-item-same-type-as-hovered');
     }
@@ -557,11 +557,11 @@ $(document).ready(function () {
             }).hover(
                 function () {
                     $(this).addClass('list-group-item-same-course-as-hovered');
-                    coursesExamInfo.setHovered(course);
+                    courseExamInfo.setHovered(course);
                     changeCoursePreviewedStatus(course, true);
                 }, function () {
                     $(this).removeClass('list-group-item-same-course-as-hovered');
-                    coursesExamInfo.removeHovered(course);
+                    courseExamInfo.removeHovered(course);
                     changeCoursePreviewedStatus(course, false);
                 }
             ).text(courseTitle)
@@ -598,7 +598,7 @@ $(document).ready(function () {
     }
 
     function saveAsIcs() {
-        var calendar = $('#calendar');
+        var calendar = $('#course-calendar');
         var icsCal = ics();
 
         var yearFrom = parseInt(current_semester.slice(0, 4), 10);
@@ -767,7 +767,7 @@ $(document).ready(function () {
 
     function reloadSavedCoursesAndLessons(onLoadedFunc) {
         $('#course-button-list').empty();
-        $('#calendar').fullCalendar('removeEvents', function (event) {
+        $('#course-calendar').fullCalendar('removeEvents', function (event) {
             return true;
         });
         coursesChosen = {};
@@ -895,7 +895,7 @@ $(document).ready(function () {
         }));
     });
 
-    coursesExamInfo = new CoursesExamInfo($('#course-exam-info'), {
+    courseExamInfo = new CourseExamInfo($('#course-exam-info'), {
         courseManager: courseManager,
         onHoverIn: function (course) {
             changeCoursePreviewedStatus(course, true);
@@ -951,7 +951,7 @@ $(document).ready(function () {
                 addCourseToCalendar(course);
                 updateCalendarMaxDayAndTime();
                 updateExamInfo([course]);
-                coursesExamInfo.setHighlighted(course);
+                courseExamInfo.setHighlighted(course);
             }
             changeCoursePreviewedStatus(course, true);
         },
@@ -969,7 +969,7 @@ $(document).ready(function () {
 
     $('.selectize-control .selectize-dropdown').tooltip({ selector: '[data-toggle=tooltip]' });
 
-    $('#calendar').fullCalendar({
+    $('#course-calendar').fullCalendar({
         defaultDate: '2017-01-01',
         //editable: true,
         //eventLimit: true, // allow "more" link when too many events
