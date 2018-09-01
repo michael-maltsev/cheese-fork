@@ -1,12 +1,12 @@
-function CoursesExamInfo(element, options) {
+function CourseExamInfo(element, options) {
     this.element = element;
     this.courseManager = options.courseManager;
+    this.colorGenerator = options.colorGenerator;
     this.onHoverIn = options.onHoverIn;
     this.onHoverOut = options.onHoverOut;
-    this.colorGenerator = options.colorGenerator;
 }
 
-CoursesExamInfo.prototype.renderCourses = function (courses, options) {
+CourseExamInfo.prototype.renderCourses = function (courses, options) {
     var that = this;
 
     if (typeof options === 'undefined') {
@@ -131,18 +131,18 @@ CoursesExamInfo.prototype.renderCourses = function (courses, options) {
     }
 };
 
-CoursesExamInfo.prototype.setHovered = function (course) {
+CourseExamInfo.prototype.setHovered = function (course) {
     $('.exam-info-item-course-' + course).addClass('exam-info-item-hovered');
 };
 
-CoursesExamInfo.prototype.removeHovered = function (course) {
+CourseExamInfo.prototype.removeHovered = function (course) {
     $('.exam-info-item-course-' + course).removeClass('exam-info-item-hovered');
 };
 
-CoursesExamInfo.prototype.setHighlighted = function (course) {
+CourseExamInfo.prototype.setHighlighted = function (course) {
     $('.exam-info-item-course-' + course).addClass('exam-info-item-highlighted');
 };
 
-CoursesExamInfo.prototype.removeHighlighted = function (course) {
+CourseExamInfo.prototype.removeHighlighted = function (course) {
     $('.exam-info-item-course-' + course).removeClass('exam-info-item-highlighted');
 };
