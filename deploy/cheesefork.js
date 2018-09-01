@@ -58,36 +58,34 @@ $(document).ready(function () {
         return getLessonType(event.courseNumber, event.lessonData);
     }
 
-    function updateCalendarMaxDayAndTime() {
+    function updateCalendarMaxDayAndTime(extraCourses) {
         var calendar = $('#course-calendar');
-        var minTime = calendar.fullCalendar('getCalendar').moment('2017-01-01T08:30:00');
-        var maxTime = calendar.fullCalendar('getCalendar').moment('2017-01-01T18:30:00');
+        var minTime = moment.utc('2017-01-01T08:30:00');
+        var maxTime = moment.utc('2017-01-01T18:30:00');
         var friday = false;
 
-        calendar.fullCalendar('clientEvents', function (event) {
-            if (event.start.week() === 1) {
-                if (event.start.day() === 5) {
+        Object.keys(coursesChosen).filter(function (course) {
+            return coursesChosen[course];
+        }).concat(extraCourses).forEach(function (course) {
+            var schedule = courseManager.getSchedule(course);
+            for (var i = 0; i < schedule.length; i++) {
+                var lesson = schedule[i];
+                var lessonDay = lesson['יום'].charCodeAt(0) - 'א'.charCodeAt(0) + 1;
+                if (lessonDay === 6) {
                     friday = true;
                 }
 
-                var start = event.start.clone().day(0);
-                var end = event.end.clone().day(0);
-
-                // Fix-up for 24:00 which is treated as 00:00 of the next day.
-                if (end.hour() === 0 && end.minute() === 0) {
-                    end.hour(24);
+                var lessonStartEnd = rishumTimeParse(lesson['שעה']);
+                var eventStart = moment.utc('2017-01-01T' + lessonStartEnd['start'] + ':00');
+                if (minTime.isAfter(eventStart)) {
+                    minTime = eventStart;
                 }
 
-                if (minTime.isAfter(start)) {
-                    minTime = start;
-                }
-
-                if (maxTime.isBefore(end)) {
-                    maxTime = end;
+                var eventEnd = moment.utc('2017-01-01T' + lessonStartEnd['end'] + ':00');
+                if (maxTime.isBefore(eventEnd)) {
+                    maxTime = eventEnd;
                 }
             }
-
-            return false;
         });
 
         minTime = minTime.format('kk:mm:ss');
@@ -461,8 +459,6 @@ $(document).ready(function () {
             updateCourseConflictedStatus(conflictedCourse);
         });
 
-        updateCalendarMaxDayAndTime();
-
         function handleConflictedEvents(event) {
             var conflictedIds = {};
 
@@ -527,7 +523,7 @@ $(document).ready(function () {
             selectedCourseUnsave(course);
             coursesChosen[course] = false;
             updateGeneralInfoLine();
-            updateCalendarMaxDayAndTime();
+            updateCalendarMaxDayAndTime([]);
             updateExamInfo([]);
         } else {
             addCourseToCalendar(course);
@@ -538,7 +534,7 @@ $(document).ready(function () {
             selectedCourseSave(course);
             coursesChosen[course] = true;
             updateGeneralInfoLine();
-            updateCalendarMaxDayAndTime();
+            updateCalendarMaxDayAndTime([]);
             updateExamInfo([]);
         }
     }
@@ -760,7 +756,7 @@ $(document).ready(function () {
             });
 
             updateGeneralInfoLine();
-            updateCalendarMaxDayAndTime();
+            updateCalendarMaxDayAndTime([]);
             updateExamInfo([]);
         }
     }
@@ -773,7 +769,7 @@ $(document).ready(function () {
         coursesChosen = {};
 
         updateGeneralInfoLine();
-        updateCalendarMaxDayAndTime();
+        updateCalendarMaxDayAndTime([]);
         updateExamInfo([]);
 
         loadSavedCoursesAndLessons(onLoadedFunc);
@@ -941,7 +937,7 @@ $(document).ready(function () {
                 addCourseToCalendar(course);
                 selectedCourseSave(course);
                 updateGeneralInfoLine();
-                updateCalendarMaxDayAndTime();
+                updateCalendarMaxDayAndTime([]);
                 updateExamInfo([]);
             }
             this.clear();
@@ -949,7 +945,7 @@ $(document).ready(function () {
         onDropdownItemActivate: function (course) {
             if (!coursesChosen.propertyIsEnumerable(course)) {
                 addCourseToCalendar(course);
-                updateCalendarMaxDayAndTime();
+                updateCalendarMaxDayAndTime([course]);
                 updateExamInfo([course]);
                 courseExamInfo.setHighlighted(course);
             }
@@ -958,7 +954,7 @@ $(document).ready(function () {
         onDropdownItemDeactivate: function (course) {
             if (!coursesChosen.propertyIsEnumerable(course)) {
                 removeCourseFromCalendar(course);
-                updateCalendarMaxDayAndTime();
+                updateCalendarMaxDayAndTime([]);
                 updateExamInfo([]);
             } else {
                 // Remove highlight
