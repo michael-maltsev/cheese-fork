@@ -6,6 +6,7 @@ $(document).ready(function () {
     var colorHash = new ColorHash();
     var firestoreDb = null;
     var courseExamInfo = null;
+    var courseCalendar = null;
 
     function semesterFriendlyName(semester) {
         var year = parseInt(semester.slice(0, 4), 10);
@@ -23,92 +24,6 @@ $(document).ready(function () {
 
             default:
                 return semester;
-        }
-    }
-
-    function rishumTimeParse(time) {
-        var match = /^(\d+)(:\d+)? - (\d+)(:\d+)?$/.exec(time);
-        var startHour = ('00' + match[1]).slice(-2);
-        var startMinute = '00';
-        if (match[2] !== undefined) {
-            startMinute = (match[2] + '00').slice(1, 3);
-        }
-        var start = startHour + ':' + startMinute;
-
-        var endHour = ('00' + match[3]).slice(-2);
-        var endMinute = '00';
-        if (match[4] !== undefined) {
-            endMinute = (match[4] + '00').slice(1, 3);
-        }
-        var end = endHour + ':' + endMinute;
-
-        return { start: start, end: end };
-    }
-
-    function getLessonType(courseNumber, lesson) {
-        // Sport courses have a non-standard format, treat all of the lessons as the same type.
-        if (/^394[89]\d\d$/.test(courseNumber)) {
-            return 'sport';
-        } else {
-            return stringHexEncode(lesson['סוג']);
-        }
-    }
-
-    function getEventLessonType(event) {
-        return getLessonType(event.courseNumber, event.lessonData);
-    }
-
-    function updateCalendarMaxDayAndTime(extraCourses) {
-        var calendar = $('#course-calendar');
-        var minTime = moment.utc('2017-01-01T08:30:00');
-        var maxTime = moment.utc('2017-01-01T18:30:00');
-        var friday = false;
-
-        Object.keys(coursesChosen).filter(function (course) {
-            return coursesChosen[course];
-        }).concat(extraCourses).forEach(function (course) {
-            var schedule = courseManager.getSchedule(course);
-            for (var i = 0; i < schedule.length; i++) {
-                var lesson = schedule[i];
-                var lessonDay = lesson['יום'].charCodeAt(0) - 'א'.charCodeAt(0) + 1;
-                if (lessonDay === 6) {
-                    friday = true;
-                }
-
-                var lessonStartEnd = rishumTimeParse(lesson['שעה']);
-                var eventStart = moment.utc('2017-01-01T' + lessonStartEnd['start'] + ':00');
-                if (minTime.isAfter(eventStart)) {
-                    minTime = eventStart;
-                }
-
-                var eventEnd = moment.utc('2017-01-01T' + lessonStartEnd['end'] + ':00');
-                if (maxTime.isBefore(eventEnd)) {
-                    maxTime = eventEnd;
-                }
-            }
-        });
-
-        minTime = minTime.format('kk:mm:ss');
-        maxTime = maxTime.format('kk:mm:ss');
-        var hiddenDays = friday ? [6] : [5, 6];
-
-        // Only apply options that changed, avoids re-rendering if not needed, which is very slow.
-        var newOptions = {};
-
-        if (minTime !== calendar.fullCalendar('option', 'minTime')) {
-            newOptions['minTime'] = minTime;
-        }
-
-        if (maxTime !== calendar.fullCalendar('option', 'maxTime')) {
-            newOptions['maxTime'] = maxTime;
-        }
-
-        if (JSON.stringify(hiddenDays) !== JSON.stringify(calendar.fullCalendar('option', 'hiddenDays'))) {
-            newOptions['hiddenDays'] = hiddenDays;
-        }
-
-        if (Object.keys(newOptions).length > 0) {
-            calendar.fullCalendar('option', newOptions);
         }
     }
 
@@ -147,15 +62,6 @@ $(document).ready(function () {
         $('#general-info').text(text);
     }
 
-    function stringHexEncode(str) {
-        var result = '';
-        for (var i=0; i<str.length; i++) {
-            var hex = str.charCodeAt(i).toString(16);
-            result += ('000'+hex).slice(-4);
-        }
-        return result;
-    }
-
     function updateExamInfo(extraCourses) {
         var courses = Object.keys(coursesChosen).filter(function (course) {
             return coursesChosen[course];
@@ -164,377 +70,24 @@ $(document).ready(function () {
         courseExamInfo.renderCourses(courses);
     }
 
-    function updateCourseConflictedStatus(course) {
-        var calendar = $('#course-calendar');
-
-        var availableOptionsPerType = {};
-
-        calendar.fullCalendar('clientEvents', function (event) {
-            if (event.courseNumber !== course) {
-                return false;
-            }
-
-            var type = getLessonType(course, event.lessonData);
-            if (!availableOptionsPerType.propertyIsEnumerable(type)) {
-                availableOptionsPerType[type] = 0;
-            }
-
-            if (event.start.week() === 1) {
-                availableOptionsPerType[type]++;
-            }
-
-            return false;
-        });
-
-        var conflicted = false;
-
-        Object.keys(availableOptionsPerType).some(function (type) {
-            if (availableOptionsPerType[type] === 0) {
-                conflicted = true;
-                return true;
-            }
-            return false;
-        });
-
-        if (conflicted) {
-            $('.list-group-item-course-' + course).addClass('list-group-item-conflicted');
-        } else {
-            $('.list-group-item-course-' + course).removeClass('list-group-item-conflicted');
-        }
-    }
-
-    function myUpdateEvents(calendar, events) {
-        events = events.slice(); // make a copy
-        events.forEach(function (value, index) {
-            events[index] = $.extend({}, events[index]); // make a copy
-
-            // Delete properties which are not shared among events with the same id.
-            delete events[index].title;
-            delete events[index].lessonData;
-        });
-        calendar.fullCalendar('updateEvents', events);
-    }
-
-    function myUpdateEvent(calendar, event) {
-        myUpdateEvents(calendar, [event]);
-    }
-
-    function areEventsOverlapping(event1, event2) {
-        if (event1.start.day() !== event2.start.day()) {
-            return false;
-        }
-
-        var startTime1 = event1.start.clone().year(0).month(0).date(1);
-        var endTime1 = event1.end.clone().year(0).month(0).date(1);
-        var startTime2 = event2.start.clone().year(0).month(0).date(1);
-        var endTime2 = event2.end.clone().year(0).month(0).date(1);
-
-        return startTime1.isBefore(endTime2) && endTime1.isAfter(startTime2);
-    }
-
-    function addCourseToCalendar(course) {
-        var general = courseManager.getGeneralInfo(course);
-        var schedule = courseManager.getSchedule(course);
-        if (schedule.length === 0) {
-            return;
-        }
-
-        var calendar = $('#course-calendar');
-
-        var lessonsAdded = {};
-        var events = [];
-        var conflictedIds = {};
-
-        for (var i = 0; i < schedule.length; i++) {
-            var lesson = schedule[i];
-            if (lessonsAdded.propertyIsEnumerable(lesson['מס.']) && lessonsAdded[lesson['מס.']] !== lesson['קבוצה']) {
-                continue;
-            }
-
-            events.push(makeLessonEvent(lesson));
-            lessonsAdded[lesson['מס.']] = lesson['קבוצה'];
-        }
-
-        for (i = 0; i < events.length; i++) {
-            if (conflictedIds.propertyIsEnumerable(events[i].id)) {
-                var weeks = conflictedIds[events[i].id];
-                events[i].start.add(7*weeks, 'days');
-                events[i].end.add(7*weeks, 'days');
-            }
-        }
-
-        calendar.fullCalendar('renderEvents', events);
-
-        if (Object.keys(conflictedIds).length > 0) {
-            updateCourseConflictedStatus(course);
-        }
-
-        function makeLessonEvent(lesson) {
-            var lessonType = getLessonType(course, lesson);
-            var lessonDay = lesson['יום'].charCodeAt(0) - 'א'.charCodeAt(0) + 1;
-            var lessonStartEnd = rishumTimeParse(lesson['שעה']);
-            var eventStartEnd = {
-                start: calendar.fullCalendar('getCalendar').moment('2017-01-0' + lessonDay + 'T' + lessonStartEnd['start'] + ':00'),
-                end: calendar.fullCalendar('getCalendar').moment('2017-01-0' + lessonDay + 'T' + lessonStartEnd['end'] + ':00')
-            };
-
-            var eventId = course + '.' + lesson['מס.'] + '.' + lessonType;
-
-            var title = lesson['סוג'] + ' ' + lesson['מס.'];
-            if (lesson['סוג'] === 'sadna') {
-                title = 'סדנה';
-            }
-            if (lesson['בניין'] !== '') {
-                title += '\n' + lesson['בניין'];
-                if (lesson['חדר'] !== '') {
-                    title += ' ' + lesson['חדר'];
-                }
-            }
-            if (lesson['מרצה/מתרגל'] !== '') {
-                title += '\n' + lesson['מרצה/מתרגל'];
-            }
-            title += '\n' + general['שם מקצוע'];
-
-            // Mark conflicting events which cannot be selected.
-            calendar.fullCalendar('clientEvents', function (cbEvent) {
-                if (cbEvent.selected && areEventsOverlapping(cbEvent, eventStartEnd)) {
-                    if (!conflictedIds.propertyIsEnumerable(eventId)) {
-                        conflictedIds[eventId] = 0;
-                    }
-                    conflictedIds[eventId]++;
-                }
-                return false;
-            });
-
-            return {
-                id: eventId,
-                title: title,
-                start: eventStartEnd.start,
-                end: eventStartEnd.end,
-                backgroundColor: '#F8F9FA',
-                textColor: 'black',
-                borderColor: 'black',
-                className: 'calendar-item-course-' + course
-                    + ' calendar-item-course-' + course + '-type-' + lessonType
-                    + ' calendar-item-course-' + course + '-lesson-' + lesson['מס.'],
-                courseNumber: course,
-                lessonData: lesson,
-                selected: false,
-                temporary: false
-            };
-        }
-    }
-
-    function removeCourseFromCalendar(course) {
-        var calendar = $('#course-calendar');
-
-        // Show conflicting events which can now be selected.
-        var conflictedIds = {};
-
-        var conflictedEvents = calendar.fullCalendar('clientEvents', function (event) {
-            if (event.courseNumber !== course && isConflicted(event, course)) {
-                if (!conflictedIds.propertyIsEnumerable(event.id)) {
-                    conflictedIds[event.id] = 1;
-                    return true;
-                }
-                conflictedIds[event.id]++;
-                return false;
-            }
-
-            return false;
-        });
-
-        var conflictedCourses = {};
-
-        for (var i = 0; i < conflictedEvents.length; i++) {
-            var weeks = conflictedIds[conflictedEvents[i].id];
-            conflictedEvents[i].start.add(-7*weeks, 'days');
-            conflictedEvents[i].end.add(-7*weeks, 'days');
-            conflictedCourses[conflictedEvents[i].courseNumber] = true;
-        }
-
-        myUpdateEvents(calendar, conflictedEvents);
-        calendar.fullCalendar('removeEvents', function (event) {
-            return event.courseNumber === course;
-        });
-
-        Object.keys(conflictedCourses).forEach(function (conflictedCourse) {
-            updateCourseConflictedStatus(conflictedCourse);
-        });
-
-        // True if the event cannot be selected because of the given course.
-        function isConflicted(event, course) {
-            var conflictingEvent = calendar.fullCalendar('clientEvents', function (cbEvent) {
-                return cbEvent.courseNumber === course && cbEvent.selected && areEventsOverlapping(cbEvent, event);
-            });
-
-            return conflictingEvent.length > 0;
-        }
-    }
-
-    function changeCoursePreviewedStatus(course, previewed) {
-        var calendar = $('#course-calendar');
-        if (previewed) {
-            var conflictedEvents = calendar.fullCalendar('clientEvents', function (event) {
-                return event.courseNumber === course && event.start.week() > 1;
-            });
-
-            var temporaryEvents = [];
-
-            for (var i = 0; i < conflictedEvents.length; i++) {
-                var conf = conflictedEvents[i];
-                var temp = {
-                    id: 'temp_' + conf.id,
-                    title: conf.title,
-                    start: conf.start.clone().week(1),
-                    end: conf.end.clone().week(1),
-                    backgroundColor: conf.backgroundColor,
-                    textColor: conf.textColor,
-                    borderColor: conf.borderColor,
-                    className: conf.className,
-                    courseNumber: conf.courseNumber,
-                    lessonData: conf.lessonData,
-                    selected: conf.selected,
-                    temporary: true
-                };
-
-                temporaryEvents.push(temp);
-            }
-
-            calendar.fullCalendar('renderEvents', temporaryEvents);
-
-            $('.calendar-item-course-' + course).addClass('calendar-item-previewed');
-        } else {
-            $('.calendar-item-course-' + course).removeClass('calendar-item-previewed');
-            calendar.fullCalendar('removeEvents', function (event) {
-                return event.temporary;
-            });
-        }
-    }
-
-    function onEventClick(event) {
-        var calendar = $('#course-calendar');
-
-        var selectingEvent = !event.selected;
-        var conflictedCourses = {};
-
-        if (selectingEvent) {
-            selectedLessonSave(event.courseNumber, event.lessonData['מס.'], getEventLessonType(event));
-            event.selected = true;
-            event.backgroundColor = colorHash.hex(event.courseNumber);
-            event.textColor = 'white';
-            event.borderColor = 'white';
-        } else {
-            selectedLessonUnsave(event.courseNumber, event.lessonData['מס.'], getEventLessonType(event));
-            event.selected = false;
-            event.backgroundColor = '#F8F9FA';
-            event.textColor = 'black';
-            event.borderColor = 'black';
-        }
-        myUpdateEvent(calendar, event);
-
-        var sameCourseTypeEvents = calendar.fullCalendar('clientEvents', function (cbEvent) {
-            if (cbEvent.courseNumber === event.courseNumber &&
-                getEventLessonType(cbEvent) === getEventLessonType(event)) {
-
-                if (cbEvent.lessonData['מס.'] === event.lessonData['מס.']) {
-                    // There might be multiple events for the same course, type, and number, process them all.
-                    handleConflictedEvents(cbEvent);
-                    return false;
-                } else {
-                    return true;
-                }
-            }
-            return false;
-        });
-
-        for (var i = 0; i < sameCourseTypeEvents.length; i++) {
-            sameCourseTypeEvents[i].start.add(selectingEvent ? 7 : -7, 'days');
-            sameCourseTypeEvents[i].end.add(selectingEvent ? 7 : -7, 'days');
-        }
-
-        myUpdateEvents(calendar, sameCourseTypeEvents);
-
-        Object.keys(conflictedCourses).forEach(function (conflictedCourse) {
-            updateCourseConflictedStatus(conflictedCourse);
-        });
-
-        function handleConflictedEvents(event) {
-            var conflictedIds = {};
-
-            var conflictedEvents = calendar.fullCalendar('clientEvents', function (cbEvent) {
-                if (cbEvent.courseNumber === event.courseNumber &&
-                    getEventLessonType(cbEvent) === getEventLessonType(event)) {
-                    return false;
-                }
-
-                if (areEventsOverlapping(cbEvent, event)) {
-                    if (!conflictedIds.propertyIsEnumerable(cbEvent.id)) {
-                        conflictedIds[cbEvent.id] = 1;
-                        return true;
-                    }
-                    conflictedIds[cbEvent.id]++;
-                    return false;
-                }
-
-                return false;
-            });
-
-            for (var i = 0; i < conflictedEvents.length; i++) {
-                var weeks = conflictedIds[conflictedEvents[i].id];
-                conflictedEvents[i].start.add((selectingEvent ? 7 : -7)*weeks, 'days');
-                conflictedEvents[i].end.add((selectingEvent ? 7 : -7)*weeks, 'days');
-                conflictedCourses[conflictedEvents[i].courseNumber] = true;
-            }
-
-            myUpdateEvents(calendar, conflictedEvents);
-        }
-    }
-
-    function onEventMouseover(event) {
-        $('.list-group-item-course-' + event.courseNumber).addClass('list-group-item-same-course-as-hovered');
-        courseExamInfo.setHovered(event.courseNumber);
-        $('.calendar-item-course-' + event.courseNumber).addClass('calendar-item-same-course-as-hovered');
-        $('.calendar-item-course-' + event.courseNumber + '-type-' + getEventLessonType(event)).addClass('calendar-item-same-type-as-hovered');
-    }
-
-    function onEventMouseout(event) {
-        $('.list-group-item-course-' + event.courseNumber).removeClass('list-group-item-same-course-as-hovered');
-        courseExamInfo.removeHovered(event.courseNumber);
-        $('.calendar-item-course-' + event.courseNumber).removeClass('calendar-item-same-course-as-hovered');
-        $('.calendar-item-course-' + event.courseNumber + '-type-' + getEventLessonType(event)).removeClass('calendar-item-same-type-as-hovered');
-    }
-
-    function afterEventRender(event, element) {
-        if (!event.selected) {
-            var sameType = $('.calendar-item-course-' + event.courseNumber + '-type-' + getEventLessonType(event))
-                .not('.calendar-item-course-' + event.courseNumber + '-lesson-' + event.lessonData['מס.']);
-            if (sameType.length === 0) {
-                element.addClass('calendar-item-last-choice');
-            }
-        }
-    }
-
     function onCourseButtonClick(button, course) {
         if (button.hasClass('active')) {
-            removeCourseFromCalendar(course);
+            courseCalendar.removeCourse(course);
             button.removeClass('active').removeClass('list-group-item-conflicted');
             button.css({ 'background-color': '', 'border-color': '' });
             selectedCourseUnsave(course);
             coursesChosen[course] = false;
             updateGeneralInfoLine();
-            updateCalendarMaxDayAndTime([]);
             updateExamInfo([]);
         } else {
-            addCourseToCalendar(course);
-            changeCoursePreviewedStatus(course, true);
+            courseCalendar.addCourse(course);
+            courseCalendar.previewCourse(course);
             button.addClass('active');
             var color = colorHash.hex(course);
             button.css({ 'background-color': color, 'border-color': color });
             selectedCourseSave(course);
             coursesChosen[course] = true;
             updateGeneralInfoLine();
-            updateCalendarMaxDayAndTime([]);
             updateExamInfo([]);
         }
     }
@@ -554,11 +107,11 @@ $(document).ready(function () {
                 function () {
                     $(this).addClass('list-group-item-same-course-as-hovered');
                     courseExamInfo.setHovered(course);
-                    changeCoursePreviewedStatus(course, true);
+                    courseCalendar.previewCourse(course);
                 }, function () {
                     $(this).removeClass('list-group-item-same-course-as-hovered');
                     courseExamInfo.removeHovered(course);
-                    changeCoursePreviewedStatus(course, false);
+                    courseCalendar.unpreviewCourse(course);
                 }
             ).text(courseTitle)
             .append(badge);
@@ -591,58 +144,6 @@ $(document).ready(function () {
                 trigger: 'hover'
             });
         $('#course-button-list').append(button);
-    }
-
-    function saveAsIcs() {
-        var calendar = $('#course-calendar');
-        var icsCal = ics();
-
-        var yearFrom = parseInt(current_semester.slice(0, 4), 10);
-        var yearTo = yearFrom + 2;
-
-        var rrule = { freq: 'WEEKLY', until: yearTo + '-01-01T00:00:00Z' };
-
-        var count = 0;
-
-        calendar.fullCalendar('clientEvents', function (event) {
-            if (event.start.week() === 1 && event.selected) {
-                var general = courseManager.getGeneralInfo(event.courseNumber);
-                var lesson = event.lessonData;
-
-                var subject = lesson['סוג'] + ' ' + lesson['מס.'];
-                if (lesson['סוג'] === 'sadna') {
-                    subject = 'סדנה';
-                }
-                subject += ' - ' + general['שם מקצוע'];
-
-                var description = '';
-                if (lesson['מרצה/מתרגל'] !== '') {
-                    description = lesson['מרצה/מתרגל'];
-                }
-
-                var location = '';
-                if (lesson['בניין'] !== '') {
-                    location = lesson['בניין'];
-                    if (lesson['חדר'] !== '') {
-                        location += ' ' + lesson['חדר'];
-                    }
-                }
-
-                var begin = event.start.format();
-                var end = event.end.format();
-
-                icsCal.addEvent(subject, description, location, begin, end, rrule);
-                count++;
-            }
-
-            return false;
-        });
-
-        if (count > 0) {
-            icsCal.download(semesterFriendlyName(current_semester));
-        } else {
-            alert('המערכת ריקה');
-        }
     }
 
     function selectedCourseSave(course) {
@@ -742,7 +243,7 @@ $(document).ready(function () {
                 if (!coursesChosen.propertyIsEnumerable(course) && courseManager.doesExist(course)) {
                     coursesChosen[course] = true;
                     addCourseToListGroup(course);
-                    addCourseToCalendar(course);
+                    courseCalendar.addCourse(course);
 
                     var courseKey = current_semester + '_' + course;
 
@@ -756,20 +257,16 @@ $(document).ready(function () {
             });
 
             updateGeneralInfoLine();
-            updateCalendarMaxDayAndTime([]);
             updateExamInfo([]);
         }
     }
 
     function reloadSavedCoursesAndLessons(onLoadedFunc) {
         $('#course-button-list').empty();
-        $('#course-calendar').fullCalendar('removeEvents', function (event) {
-            return true;
-        });
+        courseCalendar.removeAll();
         coursesChosen = {};
 
         updateGeneralInfoLine();
-        updateCalendarMaxDayAndTime([]);
         updateExamInfo([]);
 
         loadSavedCoursesAndLessons(onLoadedFunc);
@@ -880,7 +377,9 @@ $(document).ready(function () {
     });
 
     $('#save-as-ics').click(function () {
-        saveAsIcs();
+        if (!courseCalendar.saveAsIcs()) {
+            alert('המערכת ריקה');
+        }
     });
 
     courseManager.getAllCourses().sort().forEach(function (course) {
@@ -894,11 +393,11 @@ $(document).ready(function () {
     courseExamInfo = new CourseExamInfo($('#course-exam-info'), {
         courseManager: courseManager,
         onHoverIn: function (course) {
-            changeCoursePreviewedStatus(course, true);
+            courseCalendar.previewCourse(course);
             $('.list-group-item-course-' + course).addClass('list-group-item-same-course-as-hovered');
         },
         onHoverOut: function (course) {
-            changeCoursePreviewedStatus(course, false);
+            courseCalendar.unpreviewCourse(course);
             $('.list-group-item-course-' + course).removeClass('list-group-item-same-course-as-hovered');
         },
         colorGenerator: function (course) {
@@ -934,60 +433,61 @@ $(document).ready(function () {
             if (!coursesChosen.propertyIsEnumerable(course)) {
                 coursesChosen[course] = true;
                 addCourseToListGroup(course);
-                addCourseToCalendar(course);
+                courseCalendar.addCourse(course);
                 selectedCourseSave(course);
                 updateGeneralInfoLine();
-                updateCalendarMaxDayAndTime([]);
                 updateExamInfo([]);
             }
             this.clear();
         },
         onDropdownItemActivate: function (course) {
             if (!coursesChosen.propertyIsEnumerable(course)) {
-                addCourseToCalendar(course);
-                updateCalendarMaxDayAndTime([course]);
+                courseCalendar.addCourse(course);
                 updateExamInfo([course]);
                 courseExamInfo.setHighlighted(course);
             }
-            changeCoursePreviewedStatus(course, true);
+            courseCalendar.previewCourse(course);
         },
         onDropdownItemDeactivate: function (course) {
             if (!coursesChosen.propertyIsEnumerable(course)) {
-                removeCourseFromCalendar(course);
-                updateCalendarMaxDayAndTime([]);
+                courseCalendar.removeCourse(course);
                 updateExamInfo([]);
             } else {
                 // Remove highlight
-                changeCoursePreviewedStatus(course, false);
+                courseCalendar.unpreviewCourse(course);
             }
         }
     });
 
     $('.selectize-control .selectize-dropdown').tooltip({ selector: '[data-toggle=tooltip]' });
 
-    $('#course-calendar').fullCalendar({
-        defaultDate: '2017-01-01',
-        //editable: true,
-        //eventLimit: true, // allow "more" link when too many events
-        defaultView: 'agendaWeek',
-        header: false,
-        allDaySlot: false,
-        minTime: '08:30:00',
-        maxTime: '18:30:00',
-        height: 'auto',
-        contentHeight: 'auto',
-        columnFormat: 'dddd',
-        locale: 'he',
-        slotEventOverlap: false,
-        displayEventTime: false,
-        eventClick: onEventClick,
-        eventMouseover: onEventMouseover,
-        eventMouseout: onEventMouseout,
-        eventAfterRender: afterEventRender
-    }).fullCalendar('option', {
-        // Set afterwards as a bug workaround.
-        // https://github.com/fullcalendar/fullcalendar/issues/4102
-        hiddenDays: [5, 6]
+    courseCalendar = new CourseCalendar($('#course-calendar'), {
+        courseManager: courseManager,
+        colorGenerator: function (course) {
+            return colorHash.hex(course);
+        },
+        icsFileName: semesterFriendlyName(current_semester),
+        onCourseHoverIn: function (course) {
+            $('.list-group-item-course-' + course).addClass('list-group-item-same-course-as-hovered');
+            courseExamInfo.setHovered(course);
+        },
+        onCourseHoverOut: function (course) {
+            $('.list-group-item-course-' + course).removeClass('list-group-item-same-course-as-hovered');
+            courseExamInfo.removeHovered(course);
+        },
+        onCourseConflictedStatusChanged: function (course, conflicted) {
+            if (conflicted) {
+                $('.list-group-item-course-' + course).addClass('list-group-item-conflicted');
+            } else {
+                $('.list-group-item-course-' + course).removeClass('list-group-item-conflicted');
+            }
+        },
+        onLessonSelected: function (course, lessonNumber, lessonType) {
+            selectedLessonSave(course, lessonNumber, lessonType);
+        },
+        onLessonUnselected: function (course, lessonNumber, lessonType) {
+            selectedLessonUnsave(course, lessonNumber, lessonType);
+        }
     });
 
     $('#footer-semester-name').text(semesterFriendlyName(current_semester));

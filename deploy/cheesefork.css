@@ -41,53 +41,6 @@
     cursor: default;
 }
 
-/* Dynamic calendar table height */
-#course-calendar .fc-time-grid .fc-slats td {
-    font-size: calc(-0.3em + 3.1vh);
-}
-
-/* Dynamic event text size, RTL direction, default cursor for IE/Edge */
-#course-calendar .fc-event {
-    font-size: calc(0.1em + 1.3vh);
-    direction: rtl;
-    cursor: default;
-}
-
-/* Center event text vertically */
-#course-calendar .fc-time-grid-event {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Center event text horizontally */
-#course-calendar .fc-content {
-    text-align: center !important;
-}
-
-/* Calendar items */
-.calendar-item-previewed {
-    border: 3px solid #1565C0 !important;
-}
-
-.calendar-item-same-course-as-hovered {
-    border: 3px solid #1565C0 !important;
-}
-
-.calendar-item-same-type-as-hovered {
-    border: 3px solid #CC0000 !important;
-}
-
-.calendar-item-previewed .fc-content,
-.calendar-item-same-course-as-hovered .fc-content,
-.calendar-item-same-type-as-hovered .fc-content {
-    font-weight: bold;
-}
-
-.calendar-item-last-choice .fc-content {
-    color: #AA66CC;
-}
-
 /* List group items */
 .list-group-item-same-course-as-hovered {
     -webkit-box-shadow: inset 0 0 0 3px #CC0000;
