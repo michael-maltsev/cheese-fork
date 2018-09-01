@@ -79,15 +79,15 @@ CourseExamInfo.prototype.renderCourses = function (courses, options) {
             } else if (course === options.highlighted) {
                 daysText.addClass('exam-info-item-highlighted');
             }
-            var color = that.colorGenerator ? that.colorGenerator(course) : 'black';
+            var color = that.colorGenerator(course);
             daysText.css('background-color', color);
             daysText.hover(
                 function () {
                     $(this).addClass('exam-info-item-hovered');
-                    that.onHoverIn && that.onHoverIn(course);
+                    that.onHoverIn(course);
                 }, function () {
                     $(this).removeClass('exam-info-item-hovered');
-                    that.onHoverOut && that.onHoverOut(course);
+                    that.onHoverOut(course);
                 }
             );
 
