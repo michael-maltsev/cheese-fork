@@ -200,13 +200,13 @@ var CourseCalendar = (function () {
         var conflictedCourses = {};
 
         if (selectingEvent) {
-            that.onLessonSelected && that.onLessonSelected(event.courseNumber, event.lessonData['מס.'], getEventLessonType(event));
+            that.onLessonSelected(event.courseNumber, event.lessonData['מס.'], getEventLessonType(event));
             event.selected = true;
             event.backgroundColor = that.colorGenerator(event.courseNumber);
             event.textColor = 'white';
             event.borderColor = 'white';
         } else {
-            that.onLessonUnselected && that.onLessonUnselected(event.courseNumber, event.lessonData['מס.'], getEventLessonType(event));
+            that.onLessonUnselected(event.courseNumber, event.lessonData['מס.'], getEventLessonType(event));
             event.selected = false;
             event.backgroundColor = '#F8F9FA';
             event.textColor = 'black';
@@ -238,7 +238,7 @@ var CourseCalendar = (function () {
 
         Object.keys(conflictedCourses).forEach(function (conflictedCourse) {
             var conflicted = getCourseConflictedStatus(calendar, conflictedCourse);
-            that.onCourseConflictedStatusChanged && that.onCourseConflictedStatusChanged(conflictedCourse, conflicted);
+            that.onCourseConflictedStatusChanged(conflictedCourse, conflicted);
         });
 
         function handleConflictedEvents(event) {
@@ -276,13 +276,13 @@ var CourseCalendar = (function () {
     function onEventMouseover(event) {
         $('.calendar-item-course-' + event.courseNumber).addClass('calendar-item-same-course-as-hovered');
         $('.calendar-item-course-' + event.courseNumber + '-type-' + getEventLessonType(event)).addClass('calendar-item-same-type-as-hovered');
-        this.onCourseHoverIn && this.onCourseHoverIn(event.courseNumber);
+        this.onCourseHoverIn(event.courseNumber);
     }
 
     function onEventMouseout(event) {
         $('.calendar-item-course-' + event.courseNumber).removeClass('calendar-item-same-course-as-hovered');
         $('.calendar-item-course-' + event.courseNumber + '-type-' + getEventLessonType(event)).removeClass('calendar-item-same-type-as-hovered');
-        this.onCourseHoverOut && this.onCourseHoverOut(event.courseNumber);
+        this.onCourseHoverOut(event.courseNumber);
     }
 
     function afterEventRender(event, element) {
@@ -331,7 +331,7 @@ var CourseCalendar = (function () {
         calendar.fullCalendar('renderEvents', events);
 
         if (Object.keys(conflictedIds).length > 0 && getCourseConflictedStatus(calendar, course)) {
-            that.onCourseConflictedStatusChanged && that.onCourseConflictedStatusChanged(course, true);
+            that.onCourseConflictedStatusChanged(course, true);
         }
 
         updateCalendarMaxDayAndTime(calendar);
@@ -428,7 +428,7 @@ var CourseCalendar = (function () {
 
         Object.keys(conflictedCourses).forEach(function (conflictedCourse) {
             var conflicted = getCourseConflictedStatus(calendar, conflictedCourse);
-            that.onCourseConflictedStatusChanged && that.onCourseConflictedStatusChanged(conflictedCourse, conflicted);
+            that.onCourseConflictedStatusChanged(conflictedCourse, conflicted);
         });
 
         updateCalendarMaxDayAndTime(calendar);
