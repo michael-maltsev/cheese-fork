@@ -38,9 +38,17 @@ CoursesExamInfo.prototype.renderCourses = function (courses, options) {
         courses.forEach(function (course) {
             var general = that.courseManager.getGeneralInfo(course);
             if (general[moedName]) {
-                var match = /^בתאריך (\d+)\.(\d+)\.(\d+) /.exec(general[moedName]);
+                var match = /^בתאריך (\d+)\.(\d+)\.(\d+) (?:יום [א-ו] משעה (\d+)(:\d+)? עד השעה (\d+)(:\d+)?)?/.exec(general[moedName]);
                 if (match !== null) {
-                    moedDates[course] = moment.utc(match[3] + '-' + match[2] + '-' + match[1] + 'T00:00:00');
+                    var startHour = '00';
+                    if (match[4] !== undefined) {
+                        startHour = ('00' + match[4]).slice(-2);
+                    }
+                    var startMinute = '00';
+                    if (match[5] !== undefined) {
+                        startMinute = (match[5] + '00').slice(1, 3);
+                    }
+                    moedDates[course] = moment.utc(match[3] + '-' + match[2] + '-' + match[1] + 'T' + startHour + ':' + startMinute + ':00');
                 }
             }
         });
@@ -60,6 +68,11 @@ CoursesExamInfo.prototype.renderCourses = function (courses, options) {
         var spanExamList = $('<span>');
 
         moedCourses.forEach(function (course, i) {
+            if (i !== 0) {
+                //spanExamList.append('🢀\u00AD');
+                spanExamList.append('<i class="exam-info-left-arrow"></i> ');
+            }
+
             var daysText = $('<span class="exam-info-item exam-info-item-course-' + course + '"></span>');
             if (course === options.hovered) {
                 daysText.addClass('exam-info-item-hovered');
@@ -79,18 +92,18 @@ CoursesExamInfo.prototype.renderCourses = function (courses, options) {
             );
 
             var date = moedDates[course].format('DD/MM');
+            var dateWithTime = null;
+            if (moedDates[course].hour() !== 0) {
+                dateWithTime = moedDates[course].format('DD/MM HH:mm');
+            }
 
+            var tooltipText = null;
             if (i === 0) {
                 daysText.text(date);
-                spanExamList.append(daysText);
+                if (dateWithTime) {
+                    tooltipText = dateWithTime;
+                }
             } else {
-                daysText
-                    .prop('title', date)
-                    .attr('data-toggle', 'tooltip')
-                    .tooltip({
-                        placement: (moed === 1 ? 'top' : 'bottom'),
-                        template: '<div class="tooltip" role="tooltip"><div class="tooltip-inner"></div></div>'
-                    });
                 var left = moedDates[moedCourses[i - 1]];
                 var right = moedDates[course];
                 var diff = right.diff(left, 'days');
@@ -98,10 +111,20 @@ CoursesExamInfo.prototype.renderCourses = function (courses, options) {
                 if (diff === 0) {
                     daysText.addClass('exam-info-item-conflicted');
                 }
-                //spanExamList.append('🢀\u00AD');
-                spanExamList.append('<i class="exam-info-left-arrow"></i> ');
-                spanExamList.append(daysText);
+                tooltipText = dateWithTime || date;
             }
+
+            if (tooltipText) {
+                daysText
+                    .prop('title', tooltipText)
+                    .attr('data-toggle', 'tooltip')
+                    .tooltip({
+                        placement: (moed === 1 ? 'top' : 'bottom'),
+                        template: '<div class="tooltip" role="tooltip"><div class="tooltip-inner"></div></div>'
+                    });
+            }
+
+            spanExamList.append(daysText);
         });
 
         return spanExamList;
