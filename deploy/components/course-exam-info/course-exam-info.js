@@ -1,6 +1,6 @@
 function CoursesExamInfo(element, options) {
     this.element = element;
-    this.allCourses = options.allCourses;
+    this.courseManager = options.courseManager;
     this.onHoverIn = options.onHoverIn;
     this.onHoverOut = options.onHoverOut;
     this.colorGenerator = options.colorGenerator;
@@ -30,25 +30,17 @@ CoursesExamInfo.prototype.renderCourses = function (courses, options) {
         }
     }
 
-    function rishumExamDateParse(date) {
-        var match = /^בתאריך (\d+)\.(\d+)\.(\d+) /.exec(date);
-        if (match === null) {
-            return null;
-        }
-        return match[3] + '-' + match[2] + '-' + match[1] + 'T00:00:00';
-    }
-
     function makeExamInfoSpan(moed, courses, options) {
         var moedNames = ['מועד א', 'מועד ב'];
         var moedName = moedNames[moed - 1];
         var moedDates = {};
 
         courses.forEach(function (course) {
-            var general = that.allCourses[course].general;
-            if (general.propertyIsEnumerable(moedName) && general[moedName].length > 0) {
-                var date = rishumExamDateParse(general[moedName]);
-                if (date !== null) {
-                    moedDates[course] = moment.utc(date);
+            var general = that.courseManager.getGeneralInfo(course);
+            if (general[moedName]) {
+                var match = /^בתאריך (\d+)\.(\d+)\.(\d+) /.exec(general[moedName]);
+                if (match !== null) {
+                    moedDates[course] = moment.utc(match[3] + '-' + match[2] + '-' + match[1] + 'T00:00:00');
                 }
             }
         });

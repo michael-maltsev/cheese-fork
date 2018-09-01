@@ -1,7 +1,7 @@
 $(document).ready(function () {
     'use strict';
 
-    var coursesHashmap = {};
+    var courseManager = new CourseManager(courses_from_rishum);
     var coursesChosen = {};
     var colorHash = new ColorHash();
     var firestoreDb = null;
@@ -45,14 +45,6 @@ $(document).ready(function () {
         return { start: start, end: end };
     }
 
-    function rishumExamDateParse(date) {
-        var match = /^בתאריך (\d+)\.(\d+)\.(\d+) /.exec(date);
-        if (match === null) {
-            return null;
-        }
-        return match[3] + '-' + match[2] + '-' + match[1] + 'T00:00:00';
-    }
-
     function getLessonType(courseNumber, lesson) {
         // Sport courses have a non-standard format, treat all of the lessons as the same type.
         if (/^394[89]\d\d$/.test(courseNumber)) {
@@ -66,69 +58,6 @@ $(document).ready(function () {
         return getLessonType(event.courseNumber, event.lessonData);
     }
 
-    function getCourseSchedule(course) {
-        var general = coursesHashmap[course].general;
-        var schedule = coursesHashmap[course].schedule;
-
-        if (general.propertyIsEnumerable('הערות') && general['הערות'].length > 0) {
-            // Extract sadnaot from course comments.
-            var comment = general['הערות'];
-            var commentLines = comment.split('\n');
-            for (var i = 0; i < commentLines.length; i++) {
-                var line = commentLines[i];
-                if (line.lastIndexOf('סדנאות', 0) === 0 || line.lastIndexOf('סדנת', 0) === 0) {
-                    var sadnaotTa = '';
-                    match = /^מתרגל[ית]? הסדנ(?:א|ה|אות).*?:\s*(.*?)$/m.exec(comment);
-                    if (match !== null) {
-                        sadnaotTa = match[1];
-                    }
-
-                    var sadnaot = [];
-                    var sadnaId = 101;
-                    var match;
-                    for (i++; i < commentLines.length; i++) {
-                        line = commentLines[i];
-                        match = /^ימי ([א-ו])' (\d+)\.(\d+)-(\d+)\.(\d+)\s*,\s*(.*?) (\d+)(?:\s*,\s*(.*?))?$/.exec(line);
-                        if (match === null) {
-                            break;
-                        }
-
-                        var building = match[6];
-                        switch (building) {
-                            case 'פ\'':
-                                building = 'פישבך';
-                                break;
-
-                            case 'מ\'':
-                                building = 'מאייר';
-                                break;
-                        }
-
-                        sadnaot.push({
-                            'קבוצה': sadnaId,
-                            'מס.': sadnaId,
-                            'סוג': 'sadna',
-                            'מרצה\/מתרגל': match[8] || sadnaotTa,
-                            'יום': match[1],
-                            'שעה': match[2] + ':' + match[3] + ' - ' + match[4] + ':' + match[5],
-                            'בניין': building,
-                            'חדר': match[7]
-                        });
-                        sadnaId++;
-                    }
-
-                    if (sadnaot.length > 0) {
-                        schedule = schedule.concat(sadnaot);
-                    }
-
-                    break;
-                }
-            }
-        }
-
-        return schedule;
-    }
-
     function updateCalendarMaxDayAndTime(extraCourses) {
         var calendar = $('#calendar');
         var minTime = moment.utc('2017-01-01T08:30:00');
@@ -138,7 +67,7 @@ $(document).ready(function () {
         Object.keys(coursesChosen).filter(function (course) {
             return coursesChosen[course];
         }).concat(extraCourses).forEach(function (course) {
-            var schedule = getCourseSchedule(course);
+            var schedule = courseManager.getSchedule(course);
             for (var i = 0; i < schedule.length; i++) {
                 var lesson = schedule[i];
                 var lessonDay = lesson['יום'].charCodeAt(0) - 'א'.charCodeAt(0) + 1;
@@ -183,44 +112,6 @@ $(document).ready(function () {
         }
     }
 
-    function getCourseDescription(course) {
-        var general = coursesHashmap[course].general;
-        var text = general['מספר מקצוע'] + ' - ' + general['שם מקצוע'];
-
-        if (general.propertyIsEnumerable('פקולטה') && general['פקולטה'].length > 0) {
-            text += '\nפקולטה: ' + general['פקולטה'];
-        }
-
-        if (general.propertyIsEnumerable('נקודות') && general['נקודות'].length > 0) {
-            text += '\nנקודות: ' + general['נקודות'];
-        }
-
-        if (general.propertyIsEnumerable('סילבוס') && general['סילבוס'].length > 0) {
-            text += '\n\n' + general['סילבוס'];
-        }
-
-        if (general.propertyIsEnumerable('אחראים') && general['אחראים'].length > 0) {
-            text += '\n\nאחראים: ' + general['אחראים'];
-        }
-
-        if ((general.propertyIsEnumerable('מועד א') && general['מועד א'].length > 0) ||
-            (general.propertyIsEnumerable('מועד ב') && general['מועד ב'].length > 0)) {
-            text += '\n';
-            if (general.propertyIsEnumerable('מועד א') && general['מועד א'].length > 0) {
-                text += '\nמועד א\': ' + general['מועד א'];
-            }
-            if (general.propertyIsEnumerable('מועד ב') && general['מועד ב'].length > 0) {
-                text += '\nמועד ב\': ' + general['מועד ב'];
-            }
-        }
-
-        if (general.propertyIsEnumerable('הערות') && general['הערות'].length > 0) {
-            text += '\n\nהערות: ' + general['הערות'];
-        }
-
-        return text;
-    }
-
     function updateGeneralInfoLine() {
         var courses = 0;
         var points = 0;
@@ -228,7 +119,7 @@ $(document).ready(function () {
         Object.keys(coursesChosen).filter(function (course) {
             return coursesChosen[course];
         }).forEach(function (course) {
-            var general = coursesHashmap[course].general;
+            var general = courseManager.getGeneralInfo(course);
             courses++;
             points += parseFloat(general['נקודות']);
         });
@@ -342,8 +233,8 @@ $(document).ready(function () {
     }
 
     function addCourseToCalendar(course) {
-        var general = coursesHashmap[course].general;
-        var schedule = getCourseSchedule(course);
+        var general = courseManager.getGeneralInfo(course);
+        var schedule = courseManager.getSchedule(course);
         if (schedule.length === 0) {
             return;
         }
@@ -624,11 +515,6 @@ $(document).ready(function () {
         }
     }
 
-    function getCourseTitle(course) {
-        var general = coursesHashmap[course].general;
-        return general['מספר מקצוע'] + ' - ' + general['שם מקצוע'];
-    }
-
     function onCourseButtonClick(button, course) {
         if (button.hasClass('active')) {
             removeCourseFromCalendar(course);
@@ -659,7 +545,7 @@ $(document).ready(function () {
             + '</a>');
         var badge = $('<span class="badge badge-pill badge-secondary float-right">i</span>');
         var color = colorHash.hex(course);
-        var courseTitle = getCourseTitle(course);
+        var courseTitle = courseManager.getTitle(course);
         button.css({ 'background-color': color, 'border-color': color })
             .click(function (e) {
                 e.preventDefault(); // don't follow the link "#"
@@ -678,7 +564,7 @@ $(document).ready(function () {
             .append(badge);
 
         // Add tooltip to badge.
-        var courseDescription = getCourseDescription(course);
+        var courseDescription = courseManager.getDescription(course);
         var courseDescriptionHtml = $('<div>').text(courseDescription).html().replace(/\n/g, '<br>');
         badge.hover(
                 function () {
@@ -720,7 +606,7 @@ $(document).ready(function () {
 
         calendar.fullCalendar('clientEvents', function (event) {
             if (event.start.week() === 1 && event.selected) {
-                var general = coursesHashmap[event.courseNumber].general;
+                var general = courseManager.getGeneralInfo(event.courseNumber);
                 var lesson = event.lessonData;
 
                 var subject = lesson['סוג'] + ' ' + lesson['מס.'];
@@ -853,7 +739,7 @@ $(document).ready(function () {
             var courses = data[semesterCoursesKey] || [];
 
             courses.forEach(function (course) {
-                if (!coursesChosen.propertyIsEnumerable(course) && coursesHashmap.propertyIsEnumerable(course)) {
+                if (!coursesChosen.propertyIsEnumerable(course) && courseManager.doesExist(course)) {
                     coursesChosen[course] = true;
                     addCourseToListGroup(course);
                     addCourseToCalendar(course);
@@ -997,17 +883,16 @@ $(document).ready(function () {
         saveAsIcs();
     });
 
-    courses_from_rishum.forEach(function (item) {
-        var courseNumber = item.general['מספר מקצוע'];
-        coursesHashmap[courseNumber] = item;
+    courseManager.getAllCourses().sort().forEach(function (course) {
+        var general = courseManager.getGeneralInfo(course);
         $('#select-course').append($('<option>', {
-            value: courseNumber,
-            text: courseNumber + ' - ' + item.general['שם מקצוע']
+            value: course,
+            text: course + ' - ' + general['שם מקצוע']
         }));
     });
 
     coursesExamInfo = new CoursesExamInfo($('#course-exam-info'), {
-        allCourses: coursesHashmap,
+        courseManager: courseManager,
         onHoverIn: function (course) {
             changeCoursePreviewedStatus(course, true);
             $('.list-group-item-course-' + course).addClass('list-group-item-same-course-as-hovered');
@@ -1027,9 +912,9 @@ $(document).ready(function () {
         render: {
             option: function (item, escape) {
                 var course = item.value;
-                var general = coursesHashmap[course].general;
+                var general = courseManager.getGeneralInfo(course);
 
-                var courseDescriptionHtml = $('<div>').text(getCourseDescription(course)).html().replace(/\n/g, '<br>');
+                var courseDescriptionHtml = $('<div>').text(courseManager.getDescription(course)).html().replace(/\n/g, '<br>');
 
                 var courseNumber = $('<abbr>').text(general['מספר מקצוע'])
                     .prop('title', courseDescriptionHtml)
