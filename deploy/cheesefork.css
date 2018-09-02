@@ -36,6 +36,11 @@
     margin-bottom: 10px;
 }
 
+#course-exam-info {
+    position: sticky;
+    bottom: 20px;
+}
+
 /* Set selectize dropdown cursor to be pointer instead of text selection */
 .selectize-dropdown .option {
     cursor: default;
