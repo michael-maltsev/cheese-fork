@@ -307,8 +307,15 @@
     });
 
     $('#save-as-ics').click(function () {
-        if (!courseCalendar.saveAsIcs()) {
+        var icsCal = ics();
+
+        var yearFrom = parseInt(currentSemester.slice(0, 4), 10);
+        var yearTo = yearFrom + 2;
+
+        if (courseCalendar.saveAsIcs(icsCal, yearFrom, yearTo) === 0) {
             alert('המערכת ריקה');
+        } else {
+            icsCal.download(semesterFriendlyName(currentSemester));
         }
     });
 
@@ -324,7 +331,7 @@
         //searchConjunction: 'or',
         maxOptions: 200,
         render: {
-            option: function (item, escape) {
+            option: function (item) {
                 var course = item.value;
                 var general = courseManager.getGeneralInfo(course);
 
@@ -443,7 +450,6 @@
         colorGenerator: function (course) {
             return colorHash.hex(course);
         },
-        icsFileName: semesterFriendlyName(currentSemester),
         onCourseHoverIn: function (course) {
             courseButtonList.setHovered(course);
             courseExamInfo.setHovered(course);
