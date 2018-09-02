@@ -19,7 +19,7 @@ CourseButtonList.prototype.addCourse = function (course) {
     var badge = $('<span class="badge badge-pill badge-secondary float-right">i</span>');
     var color = that.colorGenerator(course);
     var courseTitle = that.courseManager.getTitle(course);
-    button.css({ 'background-color': color, 'border-color': color })
+    button.css({'background-color': color, 'border-color': color})
         .click(function (e) {
             e.preventDefault(); // don't follow the link "#"
             onCourseButtonClick($(this), course);
@@ -64,12 +64,12 @@ CourseButtonList.prototype.addCourse = function (course) {
     function onCourseButtonClick(button, course) {
         if (button.hasClass('active')) {
             button.removeClass('active').removeClass('course-button-list-item-conflicted');
-            button.css({ 'background-color': '', 'border-color': '' });
+            button.css({'background-color': '', 'border-color': ''});
             that.onDisableCourse(course);
         } else {
             button.addClass('active');
             var color = that.colorGenerator(course);
-            button.css({ 'background-color': color, 'border-color': color });
+            button.css({'background-color': color, 'border-color': color});
             that.onEnableCourse(course);
         }
     }
