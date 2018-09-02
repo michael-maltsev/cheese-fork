@@ -53,7 +53,7 @@
 
 /* bootstrap4-dialog RTL fix */
 .bootstrap-dialog .bootstrap-dialog-header {
-    width: 100%;
+    flex-grow: 1;
 }
 
 .bootstrap-dialog .bootstrap-dialog-close-button {

@@ -77,7 +77,7 @@
     }
 
     function selectedCourseSave(course) {
-        var semesterCoursesKey = currentSemester + 'Courses';
+        var semesterCoursesKey = currentSemester + '_courses';
         var courseKey = currentSemester + '_' + course;
 
         var doc = firestoreAuthUserDoc();
@@ -85,7 +85,7 @@
             var input = {};
             input[semesterCoursesKey] = firebase.firestore.FieldValue.arrayUnion(course);
             input[courseKey] = {};
-            doc.set(input, { merge: true });
+            doc.set(input, {merge: true});
         } else {
             var courses = JSON.parse(localStorage && localStorage.getItem(semesterCoursesKey) || '[]');
             courses.push(course);
@@ -95,7 +95,7 @@
     }
 
     function selectedCourseUnsave(course) {
-        var semesterCoursesKey = currentSemester + 'Courses';
+        var semesterCoursesKey = currentSemester + '_courses';
         var courseKey = currentSemester + '_' + course;
 
         var doc = firestoreAuthUserDoc();
@@ -145,7 +145,7 @@
     }
 
     function loadSavedCoursesAndLessons(onLoadedFunc) {
-        var semesterCoursesKey = currentSemester + 'Courses';
+        var semesterCoursesKey = currentSemester + '_courses';
 
         var doc = firestoreAuthUserDoc();
         if (doc) {
@@ -222,7 +222,7 @@
 
         // Initialize Firestore.
         firestoreDb = firebase.firestore();
-        firestoreDb.settings({ timestampsInSnapshots: true }); // silence a warning
+        firestoreDb.settings({timestampsInSnapshots: true}); // silence a warning
 
         // FirebaseUI config.
         var uiConfig = {
@@ -271,7 +271,8 @@
                 });
             } else {
                 // Fast reload.
-                reloadSavedCoursesAndLessons(function () {});
+                reloadSavedCoursesAndLessons(function () {
+                });
             }
         });
 
@@ -378,7 +379,7 @@
         }
     });
 
-    $('.selectize-control .selectize-dropdown').tooltip({ selector: '[data-toggle=tooltip]' });
+    $('.selectize-control .selectize-dropdown').tooltip({selector: '[data-toggle=tooltip]'});
 
     courseButtonList = new CourseButtonList($('#course-button-list'), {
         courseManager: courseManager,
@@ -480,7 +481,7 @@
                     $('#page-loader').hide();
                 });
             });
-        } catch(e) {
+        } catch (e) {
             firebase = undefined;
         }
     }

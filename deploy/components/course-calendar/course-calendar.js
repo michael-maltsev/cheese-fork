@@ -54,14 +54,14 @@ var CourseCalendar = (function () {
         }
         var end = endHour + ':' + endMinute;
 
-        return { start: start, end: end };
+        return {start: start, end: end};
     }
 
     function stringHexEncode(str) {
         var result = '';
-        for (var i=0; i<str.length; i++) {
+        for (var i = 0; i < str.length; i++) {
             var hex = str.charCodeAt(i).toString(16);
-            result += ('000'+hex).slice(-4);
+            result += ('000' + hex).slice(-4);
         }
         return result;
     }
@@ -138,8 +138,8 @@ var CourseCalendar = (function () {
                 friday = true;
             }
 
-            var start = event.start.clone().set({ year: 2017, month: 0, date: 1 });
-            var end = event.end.clone().set({ year: 2017, month: 0, date: 1 });
+            var start = event.start.clone().set({year: 2017, month: 0, date: 1});
+            var end = event.end.clone().set({year: 2017, month: 0, date: 1});
 
             // Fix-up for 24:00 which is treated as 00:00 of the next day.
             if (end.hour() === 0 && end.minute() === 0) {
@@ -266,8 +266,8 @@ var CourseCalendar = (function () {
 
             for (var i = 0; i < conflictedEvents.length; i++) {
                 var weeks = conflictedIds[conflictedEvents[i].id];
-                conflictedEvents[i].start.add((selectingEvent ? 7 : -7)*weeks, 'days');
-                conflictedEvents[i].end.add((selectingEvent ? 7 : -7)*weeks, 'days');
+                conflictedEvents[i].start.add((selectingEvent ? 7 : -7) * weeks, 'days');
+                conflictedEvents[i].end.add((selectingEvent ? 7 : -7) * weeks, 'days');
                 conflictedCourses[conflictedEvents[i].courseNumber] = true;
             }
 
@@ -299,7 +299,7 @@ var CourseCalendar = (function () {
 
     CourseCalendar.prototype.addCourse = function (course) {
         var that = this;
-        
+
         var general = that.courseManager.getGeneralInfo(course);
         var schedule = that.courseManager.getSchedule(course);
         if (schedule.length === 0) {
@@ -325,8 +325,8 @@ var CourseCalendar = (function () {
         for (i = 0; i < events.length; i++) {
             if (conflictedIds.propertyIsEnumerable(events[i].id)) {
                 var weeks = conflictedIds[events[i].id];
-                events[i].start.add(7*weeks, 'days');
-                events[i].end.add(7*weeks, 'days');
+                events[i].start.add(7 * weeks, 'days');
+                events[i].end.add(7 * weeks, 'days');
             }
         }
 
@@ -418,8 +418,8 @@ var CourseCalendar = (function () {
 
         for (var i = 0; i < conflictedEvents.length; i++) {
             var weeks = conflictedIds[conflictedEvents[i].id];
-            conflictedEvents[i].start.add(-7*weeks, 'days');
-            conflictedEvents[i].end.add(-7*weeks, 'days');
+            conflictedEvents[i].start.add(-7 * weeks, 'days');
+            conflictedEvents[i].end.add(-7 * weeks, 'days');
             conflictedCourses[conflictedEvents[i].courseNumber] = true;
         }
 
@@ -448,7 +448,7 @@ var CourseCalendar = (function () {
     CourseCalendar.prototype.previewCourse = function (course) {
         var that = this;
         var calendar = that.element;
-        
+
         var conflictedEvents = calendar.fullCalendar('clientEvents', function (event) {
             return event.courseNumber === course && event.start.week() > 1;
         });
@@ -514,13 +514,13 @@ var CourseCalendar = (function () {
     CourseCalendar.prototype.saveAsIcs = function () {
         var that = this;
         var calendar = that.element;
-        
+
         var icsCal = ics();
 
         var yearFrom = parseInt(current_semester.slice(0, 4), 10);
         var yearTo = yearFrom + 2;
 
-        var rrule = { freq: 'WEEKLY', until: yearTo + '-01-01T00:00:00Z' };
+        var rrule = {freq: 'WEEKLY', until: yearTo + '-01-01T00:00:00Z'};
 
         var count = 0;
 
