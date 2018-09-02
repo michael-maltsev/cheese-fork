@@ -1,12 +1,13 @@
-$(document).ready(function () {
-    'use strict';
+'use strict';
 
+$(document).ready(function () {
     var courseManager = new CourseManager(courses_from_rishum);
     var coursesChosen = {};
     var colorHash = new ColorHash();
-    var firestoreDb = null;
     var courseExamInfo = null;
     var courseCalendar = null;
+    var previewingFromSelectControl = null;
+    var firestoreDb = null;
 
     function semesterFriendlyName(semester) {
         var year = parseInt(semester.slice(0, 4), 10);
@@ -63,6 +64,10 @@ $(document).ready(function () {
     }
 
     function updateExamInfo(extraCourses) {
+        if (typeof extraCourses === 'undefined') {
+            extraCourses = [];
+        }
+
         var courses = Object.keys(coursesChosen).filter(function (course) {
             return coursesChosen[course];
         }).concat(extraCourses);
@@ -78,7 +83,7 @@ $(document).ready(function () {
             selectedCourseUnsave(course);
             coursesChosen[course] = false;
             updateGeneralInfoLine();
-            updateExamInfo([]);
+            updateExamInfo();
         } else {
             courseCalendar.addCourse(course);
             courseCalendar.previewCourse(course);
@@ -88,7 +93,7 @@ $(document).ready(function () {
             selectedCourseSave(course);
             coursesChosen[course] = true;
             updateGeneralInfoLine();
-            updateExamInfo([]);
+            updateExamInfo();
         }
     }
 
@@ -107,11 +112,17 @@ $(document).ready(function () {
                 function () {
                     $(this).addClass('list-group-item-same-course-as-hovered');
                     courseExamInfo.setHovered(course);
+                    if (previewingFromSelectControl) {
+                        courseCalendar.unpreviewCourse(previewingFromSelectControl);
+                    }
                     courseCalendar.previewCourse(course);
                 }, function () {
                     $(this).removeClass('list-group-item-same-course-as-hovered');
                     courseExamInfo.removeHovered(course);
                     courseCalendar.unpreviewCourse(course);
+                    if (previewingFromSelectControl) {
+                        courseCalendar.previewCourse(previewingFromSelectControl);
+                    }
                 }
             ).text(courseTitle)
             .append(badge);
@@ -250,14 +261,13 @@ $(document).ready(function () {
                     var lessons = data[courseKey] || {};
                     Object.keys(lessons).forEach(function (lessonType) {
                         var lessonNumber = lessons[lessonType];
-                        $('.calendar-item-course-' + course + '-type-' + lessonType
-                            + '.calendar-item-course-' + course + '-lesson-' + lessonNumber).first().click();
+                        courseCalendar.toggleLesson(course, lessonType, lessonNumber);
                     });
                 }
             });
 
             updateGeneralInfoLine();
-            updateExamInfo([]);
+            updateExamInfo();
         }
     }
 
@@ -267,7 +277,7 @@ $(document).ready(function () {
         coursesChosen = {};
 
         updateGeneralInfoLine();
-        updateExamInfo([]);
+        updateExamInfo();
 
         loadSavedCoursesAndLessons(onLoadedFunc);
     }
@@ -393,11 +403,17 @@ $(document).ready(function () {
     courseExamInfo = new CourseExamInfo($('#course-exam-info'), {
         courseManager: courseManager,
         onHoverIn: function (course) {
+            if (previewingFromSelectControl) {
+                courseCalendar.unpreviewCourse(previewingFromSelectControl);
+            }
             courseCalendar.previewCourse(course);
             $('.list-group-item-course-' + course).addClass('list-group-item-same-course-as-hovered');
         },
         onHoverOut: function (course) {
             courseCalendar.unpreviewCourse(course);
+            if (previewingFromSelectControl) {
+                courseCalendar.previewCourse(previewingFromSelectControl);
+            }
             $('.list-group-item-course-' + course).removeClass('list-group-item-same-course-as-hovered');
         },
         colorGenerator: function (course) {
@@ -436,26 +452,31 @@ $(document).ready(function () {
                 courseCalendar.addCourse(course);
                 selectedCourseSave(course);
                 updateGeneralInfoLine();
-                updateExamInfo([]);
+                updateExamInfo();
             }
             this.clear();
         },
         onDropdownItemActivate: function (course) {
+            previewingFromSelectControl = course;
+
             if (!coursesChosen.propertyIsEnumerable(course)) {
                 courseCalendar.addCourse(course);
                 updateExamInfo([course]);
-                courseExamInfo.setHighlighted(course);
             }
+            courseExamInfo.setHighlighted(course);
             courseCalendar.previewCourse(course);
         },
         onDropdownItemDeactivate: function (course) {
             if (!coursesChosen.propertyIsEnumerable(course)) {
                 courseCalendar.removeCourse(course);
-                updateExamInfo([]);
+                updateExamInfo();
             } else {
                 // Remove highlight
+                courseExamInfo.removeHighlighted(course);
                 courseCalendar.unpreviewCourse(course);
             }
+
+            previewingFromSelectControl = null;
         }
     });
 

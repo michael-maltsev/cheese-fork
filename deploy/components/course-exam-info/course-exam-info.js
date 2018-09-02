@@ -1,3 +1,5 @@
+'use strict';
+
 function CourseExamInfo(element, options) {
     this.element = element;
     this.courseManager = options.courseManager;
