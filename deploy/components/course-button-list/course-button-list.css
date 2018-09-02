@@ -2,6 +2,20 @@
     -webkit-appearance: button;
 }
 
+.course-button-list-item .content-wrapper {
+    position: relative;
+    z-index: -1; /* prevent hovering the information badge */
+}
+
+.course-button-list-item .content-absolute {
+    position: absolute;
+}
+
+.course-button-list-item .content-bold-hidden {
+    font-weight: bold;
+    visibility: hidden;
+}
+
 .course-button-list-item-hovered {
     -webkit-box-shadow: inset 0 0 0 3px #CC0000;
     -moz-box-shadow: inset 0 0 0 3px #CC0000;

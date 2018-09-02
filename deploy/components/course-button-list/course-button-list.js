@@ -13,24 +13,31 @@ function CourseButtonList(element, options) {
 CourseButtonList.prototype.addCourse = function (course) {
     var that = this;
 
+    var courseTitle = that.courseManager.getTitle(course);
+
+    // A wrapper div for proper word wrapping of the content text.
+    var spanAbsolute = $('<div class="content-wrapper">').html($('<span class="content-absolute">').text(courseTitle));
+    var spanBoldHidden = $('<span class="content-bold-hidden">').text(courseTitle);
+
     var button = $('<li'
         + ' class="list-group-item active course-button-list-item course-button-list-item-course-' + course + '">'
         + '</li>');
     var badge = $('<span class="badge badge-pill badge-secondary float-right">i</span>');
     var color = that.colorGenerator(course);
-    var courseTitle = that.courseManager.getTitle(course);
     button.css({'background-color': color, 'border-color': color})
         .click(function (e) {
             e.preventDefault(); // don't follow the link "#"
             onCourseButtonClick($(this), course);
-        }).hover(function () {
-            $(this).addClass('course-button-list-item-hovered');
-            that.onHoverIn(course);
-        }, function () {
-            $(this).removeClass('course-button-list-item-hovered');
-            that.onHoverOut(course);
-        }).text(courseTitle)
-        .append(badge);
+        })
+        .hover(function () {
+                $(this).addClass('course-button-list-item-hovered');
+                that.onHoverIn(course);
+            },
+            function () {
+                $(this).removeClass('course-button-list-item-hovered');
+                that.onHoverOut(course);
+            })
+        .append(spanAbsolute, spanBoldHidden, badge);
 
     // Add tooltip to badge.
     var courseDescription = that.courseManager.getDescription(course);
