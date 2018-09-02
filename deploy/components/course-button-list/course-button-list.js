@@ -13,9 +13,9 @@ function CourseButtonList(element, options) {
 CourseButtonList.prototype.addCourse = function (course) {
     var that = this;
 
-    var button = $('<a href="#" type="button"'
-        + ' class="list-group-item active course-button-list-item-course-' + course + '">'
-        + '</a>');
+    var button = $('<li'
+        + ' class="list-group-item active course-button-list-item course-button-list-item-course-' + course + '">'
+        + '</li>');
     var badge = $('<span class="badge badge-pill badge-secondary float-right">i</span>');
     var color = that.colorGenerator(course);
     var courseTitle = that.courseManager.getTitle(course);
