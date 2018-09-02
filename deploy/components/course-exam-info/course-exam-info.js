@@ -108,8 +108,7 @@ CourseExamInfo.prototype.renderCourses = function (courses) {
                 tooltipText = dateWithTime || date;
             }
 
-            // Two spans for spanAbsolute to be able to center the text: https://stackoverflow.com/a/1777282
-            var spanAbsolute = $('<span class="content-absolute">').html($('<span class="content-inner">').text(elementText));
+            var spanAbsolute = $('<span class="content-absolute">').text(elementText);
             var spanBoldHidden = $('<span class="content-bold-hidden">').text(elementText);
 
             daysText.append(spanAbsolute, spanBoldHidden);

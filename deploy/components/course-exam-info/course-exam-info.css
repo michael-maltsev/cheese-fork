@@ -10,12 +10,9 @@
 
 .exam-info-item .content-absolute {
     position: absolute;
+    /* Center the element: https://stackoverflow.com/a/23384995 */
     left: 50%;
-}
-
-.exam-info-item .content-inner {
-    position: relative;
-    left: -50%;
+    transform: translate(-50%, 0);
 }
 
 .exam-info-item .content-bold-hidden {
