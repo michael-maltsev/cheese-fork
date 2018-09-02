@@ -1,6 +1,6 @@
 'use strict';
 
-$(document).ready(function () {
+(function () {
     var courseManager = new CourseManager(courses_from_rishum);
     var coursesChosen = {};
     var colorHash = new ColorHash();
@@ -491,4 +491,4 @@ $(document).ready(function () {
             $('#page-loader').hide();
         });
     }
-});
+})();
