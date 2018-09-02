@@ -77,8 +77,8 @@
     }
 
     function selectedCourseSave(course) {
-        var semesterCoursesKey = current_semester + 'Courses';
-        var courseKey = current_semester + '_' + course;
+        var semesterCoursesKey = currentSemester + 'Courses';
+        var courseKey = currentSemester + '_' + course;
 
         var doc = firestoreAuthUserDoc();
         if (doc) {
@@ -95,8 +95,8 @@
     }
 
     function selectedCourseUnsave(course) {
-        var semesterCoursesKey = current_semester + 'Courses';
-        var courseKey = current_semester + '_' + course;
+        var semesterCoursesKey = currentSemester + 'Courses';
+        var courseKey = currentSemester + '_' + course;
 
         var doc = firestoreAuthUserDoc();
         if (doc) {
@@ -115,7 +115,7 @@
     }
 
     function selectedLessonSave(course, lessonNumber, lessonType) {
-        var courseKey = current_semester + '_' + course;
+        var courseKey = currentSemester + '_' + course;
 
         var doc = firestoreAuthUserDoc();
         if (doc) {
@@ -130,7 +130,7 @@
     }
 
     function selectedLessonUnsave(course, lessonNumber, lessonType) {
-        var courseKey = current_semester + '_' + course;
+        var courseKey = currentSemester + '_' + course;
 
         var doc = firestoreAuthUserDoc();
         if (doc) {
@@ -145,7 +145,7 @@
     }
 
     function loadSavedCoursesAndLessons(onLoadedFunc) {
-        var semesterCoursesKey = current_semester + 'Courses';
+        var semesterCoursesKey = currentSemester + 'Courses';
 
         var doc = firestoreAuthUserDoc();
         if (doc) {
@@ -159,7 +159,7 @@
             var data = {};
             data[semesterCoursesKey] = JSON.parse(localStorage && localStorage.getItem(semesterCoursesKey) || '[]');
             data[semesterCoursesKey].forEach(function (course) {
-                var courseKey = current_semester + '_' + course;
+                var courseKey = currentSemester + '_' + course;
                 data[courseKey] = JSON.parse(localStorage && localStorage.getItem(courseKey) || '{}');
             });
             applySaved(data);
@@ -175,7 +175,7 @@
                     courseButtonList.addCourse(course);
                     courseCalendar.addCourse(course);
 
-                    var courseKey = current_semester + '_' + course;
+                    var courseKey = currentSemester + '_' + course;
 
                     var lessons = data[courseKey] || {};
                     Object.keys(lessons).forEach(function (lessonType) {
@@ -294,14 +294,14 @@
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    available_semesters.forEach(function (semester) {
+    availableSemesters.forEach(function (semester) {
         $('#select-semester').append($('<option>', {
             value: semester,
             text: semesterFriendlyName(semester)
         }));
     });
 
-    $('#select-semester').val(current_semester).change(function () {
+    $('#select-semester').val(currentSemester).change(function () {
         window.location = '?semester=' + this.value;
     });
 
@@ -442,7 +442,7 @@
         colorGenerator: function (course) {
             return colorHash.hex(course);
         },
-        icsFileName: semesterFriendlyName(current_semester),
+        icsFileName: semesterFriendlyName(currentSemester),
         onCourseHoverIn: function (course) {
             courseButtonList.setHovered(course);
             courseExamInfo.setHovered(course);
@@ -466,7 +466,7 @@
         }
     });
 
-    $('#footer-semester-name').text(semesterFriendlyName(current_semester));
+    $('#footer-semester-name').text(semesterFriendlyName(currentSemester));
     $('#footer-semester').removeClass('d-none');
 
     $('#right-content-bar').removeClass('invisible');

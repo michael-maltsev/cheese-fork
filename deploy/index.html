@@ -104,11 +104,11 @@
 <script src="https://www.gstatic.com/firebasejs/5.3.1/firebase-firestore.js"></script>
 <script src="https://www.gstatic.com/firebasejs/ui/3.3.0/firebase-ui-auth__iw.js"></script>
 <script>
-    var available_semesters = [
+    var availableSemesters = [
         '201701', '201702', '201703',
         '201801'
     ];
-    var current_semester;
+    var currentSemester;
     (function() {
         // https://stackoverflow.com/a/901144
         function getParameterByName(name, url) {
@@ -121,12 +121,12 @@
             return decodeURIComponent(results[2].replace(/\+/g, " "));
         }
 
-        current_semester = getParameterByName('semester');
-        if (available_semesters.indexOf(current_semester) === -1) {
-            current_semester = '201801';
+        currentSemester = getParameterByName('semester');
+        if (availableSemesters.indexOf(currentSemester) === -1) {
+            currentSemester = '201801';
         }
         var script = document.createElement('script');
-        script.src = 'courses/courses_' + current_semester + '.min.js';
+        script.src = 'courses/courses_' + currentSemester + '.min.js';
         document.write(script.outerHTML);
     })();
 </script>
