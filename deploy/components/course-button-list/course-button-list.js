@@ -1,0 +1,96 @@
+'use strict';
+
+function CourseButtonList(element, options) {
+    this.element = element;
+    this.courseManager = options.courseManager;
+    this.colorGenerator = options.colorGenerator;
+    this.onHoverIn = options.onHoverIn;
+    this.onHoverOut = options.onHoverOut;
+    this.onEnableCourse = options.onEnableCourse;
+    this.onDisableCourse = options.onDisableCourse;
+}
+
+CourseButtonList.prototype.addCourse = function (course) {
+    var that = this;
+
+    var button = $('<a href="#" type="button"'
+        + ' class="list-group-item active course-button-list-item-course-' + course + '">'
+        + '</a>');
+    var badge = $('<span class="badge badge-pill badge-secondary float-right">i</span>');
+    var color = that.colorGenerator(course);
+    var courseTitle = that.courseManager.getTitle(course);
+    button.css({ 'background-color': color, 'border-color': color })
+        .click(function (e) {
+            e.preventDefault(); // don't follow the link "#"
+            onCourseButtonClick($(this), course);
+        }).hover(function () {
+            $(this).addClass('course-button-list-item-hovered');
+            that.onHoverIn(course);
+        }, function () {
+            $(this).removeClass('course-button-list-item-hovered');
+            that.onHoverOut(course);
+        }).text(courseTitle)
+        .append(badge);
+
+    // Add tooltip to badge.
+    var courseDescription = that.courseManager.getDescription(course);
+    var courseDescriptionHtml = $('<div>').text(courseDescription).html().replace(/\n/g, '<br>');
+    badge.hover(
+        function () {
+            $(this).removeClass('badge-secondary');
+            $(this).addClass('badge-primary');
+        }, function () {
+            $(this).removeClass('badge-primary');
+            $(this).addClass('badge-secondary');
+        }
+    ).click(function (e) {
+        e.stopPropagation(); // don't execute parent button onclick
+        e.preventDefault(); // don't follow the link "#"
+        $(this).tooltip('hide');
+        BootstrapDialog.show({
+            title: courseTitle,
+            message: courseDescription
+        });
+    }).prop('title', courseDescriptionHtml)
+        .attr('data-toggle', 'tooltip')
+        .tooltip({
+            html: true,
+            placement: 'right',
+            template: '<div class="tooltip" role="tooltip"><div class="arrow"></div><div class="tooltip-inner course-description-tooltip-inner"></div></div>',
+            trigger: 'hover'
+        });
+    that.element.append(button);
+
+    function onCourseButtonClick(button, course) {
+        if (button.hasClass('active')) {
+            button.removeClass('active').removeClass('course-button-list-item-conflicted');
+            button.css({ 'background-color': '', 'border-color': '' });
+            that.onDisableCourse(course);
+        } else {
+            button.addClass('active');
+            var color = that.colorGenerator(course);
+            button.css({ 'background-color': color, 'border-color': color });
+            that.onEnableCourse(course);
+        }
+    }
+};
+
+CourseButtonList.prototype.setHovered = function (course) {
+    $('.course-button-list-item-course-' + course, this.element).addClass('course-button-list-item-hovered');
+};
+
+CourseButtonList.prototype.removeHovered = function (course) {
+    $('.course-button-list-item-course-' + course, this.element).removeClass('course-button-list-item-hovered');
+};
+
+CourseButtonList.prototype.setConflicted = function (course) {
+    $('.course-button-list-item-course-' + course, this.element).addClass('course-button-list-item-conflicted');
+};
+
+CourseButtonList.prototype.removeConflicted = function (course) {
+    $('.course-button-list-item-course-' + course, this.element).removeClass('course-button-list-item-conflicted');
+};
+
+CourseButtonList.prototype.clear = function (course) {
+    this.element.empty();
+};

@@ -4,6 +4,7 @@ $(document).ready(function () {
     var courseManager = new CourseManager(courses_from_rishum);
     var coursesChosen = {};
     var colorHash = new ColorHash();
+    var courseButtonList = null;
     var courseExamInfo = null;
     var courseCalendar = null;
     var previewingFromSelectControl = null;
@@ -73,88 +74,6 @@ $(document).ready(function () {
         }).concat(extraCourses);
 
         courseExamInfo.renderCourses(courses);
-    }
-
-    function onCourseButtonClick(button, course) {
-        if (button.hasClass('active')) {
-            courseCalendar.removeCourse(course);
-            button.removeClass('active').removeClass('list-group-item-conflicted');
-            button.css({ 'background-color': '', 'border-color': '' });
-            selectedCourseUnsave(course);
-            coursesChosen[course] = false;
-            updateGeneralInfoLine();
-            updateExamInfo();
-        } else {
-            courseCalendar.addCourse(course);
-            courseCalendar.previewCourse(course);
-            button.addClass('active');
-            var color = colorHash.hex(course);
-            button.css({ 'background-color': color, 'border-color': color });
-            selectedCourseSave(course);
-            coursesChosen[course] = true;
-            updateGeneralInfoLine();
-            updateExamInfo();
-        }
-    }
-
-    function addCourseToListGroup(course) {
-        var button = $('<a href="#" type="button"'
-            + ' class="list-group-item active list-group-item-course-' + course + '">'
-            + '</a>');
-        var badge = $('<span class="badge badge-pill badge-secondary float-right">i</span>');
-        var color = colorHash.hex(course);
-        var courseTitle = courseManager.getTitle(course);
-        button.css({ 'background-color': color, 'border-color': color })
-            .click(function (e) {
-                e.preventDefault(); // don't follow the link "#"
-                onCourseButtonClick($(this), course);
-            }).hover(
-                function () {
-                    $(this).addClass('list-group-item-same-course-as-hovered');
-                    courseExamInfo.setHovered(course);
-                    if (previewingFromSelectControl) {
-                        courseCalendar.unpreviewCourse(previewingFromSelectControl);
-                    }
-                    courseCalendar.previewCourse(course);
-                }, function () {
-                    $(this).removeClass('list-group-item-same-course-as-hovered');
-                    courseExamInfo.removeHovered(course);
-                    courseCalendar.unpreviewCourse(course);
-                    if (previewingFromSelectControl) {
-                        courseCalendar.previewCourse(previewingFromSelectControl);
-                    }
-                }
-            ).text(courseTitle)
-            .append(badge);
-
-        // Add tooltip to badge.
-        var courseDescription = courseManager.getDescription(course);
-        var courseDescriptionHtml = $('<div>').text(courseDescription).html().replace(/\n/g, '<br>');
-        badge.hover(
-                function () {
-                    $(this).removeClass('badge-secondary');
-                    $(this).addClass('badge-primary');
-                }, function () {
-                    $(this).removeClass('badge-primary');
-                    $(this).addClass('badge-secondary');
-                }
-            ).click(function (e) {
-                e.stopPropagation(); // don't execute parent button onclick
-                e.preventDefault(); // don't follow the link "#"
-                $(this).tooltip('hide');
-                BootstrapDialog.show({
-                    title: courseTitle,
-                    message: courseDescription
-                });
-            }).prop('title', courseDescriptionHtml)
-            .attr('data-toggle', 'tooltip')
-            .tooltip({
-                html: true,
-                placement: 'right',
-                template: '<div class="tooltip" role="tooltip"><div class="arrow"></div><div class="tooltip-inner course-description-tooltip-inner"></div></div>',
-                trigger: 'hover'
-            });
-        $('#course-button-list').append(button);
     }
 
     function selectedCourseSave(course) {
@@ -253,7 +172,7 @@ $(document).ready(function () {
             courses.forEach(function (course) {
                 if (!coursesChosen.propertyIsEnumerable(course) && courseManager.doesExist(course)) {
                     coursesChosen[course] = true;
-                    addCourseToListGroup(course);
+                    courseButtonList.addCourse(course);
                     courseCalendar.addCourse(course);
 
                     var courseKey = current_semester + '_' + course;
@@ -272,7 +191,7 @@ $(document).ready(function () {
     }
 
     function reloadSavedCoursesAndLessons(onLoadedFunc) {
-        $('#course-button-list').empty();
+        courseButtonList.clear();
         courseCalendar.removeAll();
         coursesChosen = {};
 
@@ -400,27 +319,6 @@ $(document).ready(function () {
         }));
     });
 
-    courseExamInfo = new CourseExamInfo($('#course-exam-info'), {
-        courseManager: courseManager,
-        onHoverIn: function (course) {
-            if (previewingFromSelectControl) {
-                courseCalendar.unpreviewCourse(previewingFromSelectControl);
-            }
-            courseCalendar.previewCourse(course);
-            $('.list-group-item-course-' + course).addClass('list-group-item-same-course-as-hovered');
-        },
-        onHoverOut: function (course) {
-            courseCalendar.unpreviewCourse(course);
-            if (previewingFromSelectControl) {
-                courseCalendar.previewCourse(previewingFromSelectControl);
-            }
-            $('.list-group-item-course-' + course).removeClass('list-group-item-same-course-as-hovered');
-        },
-        colorGenerator: function (course) {
-            return colorHash.hex(course);
-        }
-    });
-
     $('#select-course').selectize({
         //searchConjunction: 'or',
         maxOptions: 200,
@@ -448,7 +346,7 @@ $(document).ready(function () {
         onItemAdd: function (course) {
             if (!coursesChosen.propertyIsEnumerable(course)) {
                 coursesChosen[course] = true;
-                addCourseToListGroup(course);
+                courseButtonList.addCourse(course);
                 courseCalendar.addCourse(course);
                 selectedCourseSave(course);
                 updateGeneralInfoLine();
@@ -482,6 +380,63 @@ $(document).ready(function () {
 
     $('.selectize-control .selectize-dropdown').tooltip({ selector: '[data-toggle=tooltip]' });
 
+    courseButtonList = new CourseButtonList($('#course-button-list'), {
+        courseManager: courseManager,
+        colorGenerator: function (course) {
+            return colorHash.hex(course);
+        },
+        onHoverIn: function (course) {
+            courseExamInfo.setHovered(course);
+            if (previewingFromSelectControl) {
+                courseCalendar.unpreviewCourse(previewingFromSelectControl);
+            }
+            courseCalendar.previewCourse(course);
+        },
+        onHoverOut: function (course) {
+            courseExamInfo.removeHovered(course);
+            courseCalendar.unpreviewCourse(course);
+            if (previewingFromSelectControl) {
+                courseCalendar.previewCourse(previewingFromSelectControl);
+            }
+        },
+        onEnableCourse: function (course) {
+            courseCalendar.addCourse(course);
+            courseCalendar.previewCourse(course);
+            selectedCourseSave(course);
+            coursesChosen[course] = true;
+            updateGeneralInfoLine();
+            updateExamInfo();
+        },
+        onDisableCourse: function (course) {
+            courseCalendar.removeCourse(course);
+            selectedCourseUnsave(course);
+            coursesChosen[course] = false;
+            updateGeneralInfoLine();
+            updateExamInfo();
+        }
+    });
+
+    courseExamInfo = new CourseExamInfo($('#course-exam-info'), {
+        courseManager: courseManager,
+        colorGenerator: function (course) {
+            return colorHash.hex(course);
+        },
+        onHoverIn: function (course) {
+            courseButtonList.setHovered(course);
+            if (previewingFromSelectControl) {
+                courseCalendar.unpreviewCourse(previewingFromSelectControl);
+            }
+            courseCalendar.previewCourse(course);
+        },
+        onHoverOut: function (course) {
+            courseButtonList.removeHovered(course);
+            courseCalendar.unpreviewCourse(course);
+            if (previewingFromSelectControl) {
+                courseCalendar.previewCourse(previewingFromSelectControl);
+            }
+        }
+    });
+
     courseCalendar = new CourseCalendar($('#course-calendar'), {
         courseManager: courseManager,
         colorGenerator: function (course) {
@@ -489,18 +444,18 @@ $(document).ready(function () {
         },
         icsFileName: semesterFriendlyName(current_semester),
         onCourseHoverIn: function (course) {
-            $('.list-group-item-course-' + course).addClass('list-group-item-same-course-as-hovered');
+            courseButtonList.setHovered(course);
             courseExamInfo.setHovered(course);
         },
         onCourseHoverOut: function (course) {
-            $('.list-group-item-course-' + course).removeClass('list-group-item-same-course-as-hovered');
+            courseButtonList.removeHovered(course);
             courseExamInfo.removeHovered(course);
         },
         onCourseConflictedStatusChanged: function (course, conflicted) {
             if (conflicted) {
-                $('.list-group-item-course-' + course).addClass('list-group-item-conflicted');
+                courseButtonList.setConflicted(course);
             } else {
-                $('.list-group-item-course-' + course).removeClass('list-group-item-conflicted');
+                courseButtonList.removeConflicted(course);
             }
         },
         onLessonSelected: function (course, lessonNumber, lessonType) {
