@@ -68,7 +68,7 @@ CourseExamInfo.prototype.renderCourses = function (courses) {
         moedCourses.forEach(function (course, i) {
             if (i !== 0) {
                 //spanExamList.append('🢀\u00AD');
-                spanExamList.append('<i class="exam-info-left-arrow"></i> ');
+                spanExamList.append('<span class="exam-info-left-arrow"></span> ');
             }
 
             var daysText = $('<span class="exam-info-item exam-info-item-course-' + course + '"></span>');
@@ -90,9 +90,10 @@ CourseExamInfo.prototype.renderCourses = function (courses) {
                 dateWithTime = moedDates[course].format('DD/MM HH:mm');
             }
 
+            var elementText;
             var tooltipText = null;
             if (i === 0) {
-                daysText.text(date);
+                elementText = date;
                 if (dateWithTime) {
                     tooltipText = dateWithTime;
                 }
@@ -100,12 +101,18 @@ CourseExamInfo.prototype.renderCourses = function (courses) {
                 var left = moedDates[moedCourses[i - 1]];
                 var right = moedDates[course];
                 var diff = right.diff(left, 'days');
-                daysText.text(diff);
+                elementText = diff;
                 if (diff === 0) {
                     daysText.addClass('exam-info-item-conflicted');
                 }
                 tooltipText = dateWithTime || date;
             }
+
+            // Two spans for spanAbsolute to be able to center the text: https://stackoverflow.com/a/1777282
+            var spanAbsolute = $('<span class="content-absolute">').html($('<span class="content-inner">').text(elementText));
+            var spanBoldHidden = $('<span class="content-bold-hidden">').text(elementText);
+
+            daysText.append(spanAbsolute, spanBoldHidden);
 
             if (tooltipText) {
                 daysText

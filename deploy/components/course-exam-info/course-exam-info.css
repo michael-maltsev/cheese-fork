@@ -1,12 +1,26 @@
-.exam-info-content {
-    margin: 6px 0;
-}
-
 .exam-info-item {
+    position: relative;
+    display: inline-block;
+    white-space: nowrap;
     color: white;
-    padding: 5px;
+    padding: 3px 5px;
     border-radius: 6px;
     cursor: default;
+}
+
+.exam-info-item .content-absolute {
+    position: absolute;
+    left: 50%;
+}
+
+.exam-info-item .content-inner {
+    position: relative;
+    left: -50%;
+}
+
+.exam-info-item .content-bold-hidden {
+    font-weight: bold;
+    visibility: hidden;
 }
 
 .exam-info-item-hovered,
