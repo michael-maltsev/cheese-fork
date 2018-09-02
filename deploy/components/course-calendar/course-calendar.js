@@ -287,7 +287,9 @@ var CourseCalendar = (function () {
     }
 
     function afterEventRender(event, element) {
-        if (!event.selected) {
+        if (event.selected) {
+            element.addClass('calendar-item-selected');
+        } else {
             var sameType = $('.calendar-item-course-' + event.courseNumber + '-type-' + getEventLessonType(event), this.element)
                 .not('.calendar-item-course-' + event.courseNumber + '-lesson-' + event.lessonData['מס.']);
             if (sameType.length === 0) {
