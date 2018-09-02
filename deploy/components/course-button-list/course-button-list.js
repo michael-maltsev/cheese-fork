@@ -25,8 +25,7 @@ CourseButtonList.prototype.addCourse = function (course) {
     var badge = $('<span class="badge badge-pill badge-secondary float-right">i</span>');
     var color = that.colorGenerator(course);
     button.css({'background-color': color, 'border-color': color})
-        .click(function (e) {
-            e.preventDefault(); // don't follow the link "#"
+        .click(function () {
             onCourseButtonClick($(this), course);
         })
         .hover(function () {
@@ -52,7 +51,6 @@ CourseButtonList.prototype.addCourse = function (course) {
         }
     ).click(function (e) {
         e.stopPropagation(); // don't execute parent button onclick
-        e.preventDefault(); // don't follow the link "#"
         $(this).tooltip('hide');
         BootstrapDialog.show({
             title: courseTitle,
