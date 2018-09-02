@@ -1,3 +1,5 @@
+'use strict';
+
 var CourseCalendar = (function () {
     function CourseCalendar(element, options) {
         this.element = element;
@@ -136,8 +138,8 @@ var CourseCalendar = (function () {
                 friday = true;
             }
 
-            var start = event.start.clone().set({ year: 2017, month: 0, date: 0 });
-            var end = event.end.clone().set({ year: 2017, month: 0, date: 0 });
+            var start = event.start.clone().set({ year: 2017, month: 0, date: 1 });
+            var end = event.end.clone().set({ year: 2017, month: 0, date: 1 });
 
             // Fix-up for 24:00 which is treated as 00:00 of the next day.
             if (end.hour() === 0 && end.minute() === 0) {
@@ -489,7 +491,7 @@ var CourseCalendar = (function () {
         var removed = 0;
 
         calendar.fullCalendar('removeEvents', function (event) {
-            if (event.temporary) {
+            if (event.temporary && event.courseNumber === course) {
                 removed++;
                 return true;
             } else {
@@ -502,6 +504,11 @@ var CourseCalendar = (function () {
         if (removed > 0) {
             updateCalendarMaxDayAndTime(calendar);
         }
+    };
+
+    CourseCalendar.prototype.toggleLesson = function (course, lessonType, lessonNumber) {
+        $('.calendar-item-course-' + course + '-type-' + lessonType
+            + '.calendar-item-course-' + course + '-lesson-' + lessonNumber).first().click();
     };
 
     CourseCalendar.prototype.saveAsIcs = function () {

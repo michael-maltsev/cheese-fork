@@ -1,3 +1,5 @@
+'use strict';
+
 function CourseManager(allCourses) {
     var that = this;
 
