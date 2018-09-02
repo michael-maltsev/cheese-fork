@@ -2,6 +2,16 @@
     -webkit-appearance: button;
 }
 
+/* The following two rules are for non-WebKit browsers */
+/* WebKit will ignore it because of the previous rule */
+.course-button-list-item.active {
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.1));
+}
+
+.course-button-list-item.active:active {
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.1));
+}
+
 .course-button-list-item .content-wrapper {
     position: relative;
 }
@@ -18,6 +28,10 @@
 .course-button-list-item .badge {
     /* Prevent hovering the information badge by content-wrapper */
     position: relative;
+    /* Prevent copying the "i" */
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
     user-select: none;
 }
 
