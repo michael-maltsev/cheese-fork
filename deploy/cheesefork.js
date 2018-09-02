@@ -293,209 +293,216 @@
         }
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    function cheeseforkInit() {
+        var semesterSelect = $('#select-semester');
 
-    availableSemesters.forEach(function (semester) {
-        $('#select-semester').append($('<option>', {
-            value: semester,
-            text: semesterFriendlyName(semester)
-        }));
-    });
+        availableSemesters.forEach(function (semester) {
+            semesterSelect.append($('<option>', {
+                value: semester,
+                text: semesterFriendlyName(semester)
+            }));
+        });
 
-    $('#select-semester').val(currentSemester).change(function () {
-        window.location = '?semester=' + this.value;
-    });
+        semesterSelect.val(currentSemester).change(function () {
+            window.location = '?semester=' + this.value;
+        });
 
-    $('#save-as-ics').click(function () {
-        var icsCal = ics();
+        $('#save-as-ics').click(function () {
+            var icsCal = ics();
 
-        var yearFrom = parseInt(currentSemester.slice(0, 4), 10);
-        var yearTo = yearFrom + 2;
+            var yearFrom = parseInt(currentSemester.slice(0, 4), 10);
+            var yearTo = yearFrom + 2;
 
-        if (courseCalendar.saveAsIcs(icsCal, yearFrom, yearTo) === 0) {
-            alert('המערכת ריקה');
-        } else {
-            icsCal.download(semesterFriendlyName(currentSemester));
-        }
-    });
-
-    courseManager.getAllCourses().sort().forEach(function (course) {
-        var general = courseManager.getGeneralInfo(course);
-        $('#select-course').append($('<option>', {
-            value: course,
-            text: course + ' - ' + general['שם מקצוע']
-        }));
-    });
-
-    $('#select-course').selectize({
-        //searchConjunction: 'or',
-        maxOptions: 200,
-        render: {
-            option: function (item) {
-                var course = item.value;
-                var general = courseManager.getGeneralInfo(course);
-
-                var courseDescriptionHtml = $('<div>').text(courseManager.getDescription(course)).html().replace(/\n/g, '<br>');
-
-                var courseNumber = $('<abbr>').text(general['מספר מקצוע'])
-                    .prop('title', courseDescriptionHtml)
-                    .attr({
-                        'data-toggle': 'tooltip',
-                        'data-html': 'true',
-                        'data-placement': 'right',
-                        'data-template': '<div class="tooltip" role="tooltip"><div class="arrow"></div><div class="tooltip-inner course-description-tooltip-inner"></div></div>',
-                        'data-boundary': 'viewport'
-                    });
-
-                return $('<div>').addClass('option').append(courseNumber)
-                    .append(document.createTextNode(' - ' + general['שם מקצוע'])).get(0);
+            if (courseCalendar.saveAsIcs(icsCal, yearFrom, yearTo) === 0) {
+                alert('המערכת ריקה');
+            } else {
+                icsCal.download(semesterFriendlyName(currentSemester));
             }
-        },
-        onItemAdd: function (course) {
-            if (!coursesChosen.propertyIsEnumerable(course)) {
-                coursesChosen[course] = true;
-                courseButtonList.addCourse(course);
+        });
+
+        var courseSelectItems = courseManager.getAllCourses().sort().map(function (course) {
+            var general = courseManager.getGeneralInfo(course);
+            return {
+                value: course,
+                text: course + ' - ' + general['שם מקצוע']
+            };
+        });
+
+        $('#select-course').selectize({
+            //searchConjunction: 'or',
+            options: courseSelectItems,
+            maxOptions: 200,
+            render: {
+                option: function (item) {
+                    var course = item.value;
+                    var general = courseManager.getGeneralInfo(course);
+
+                    var courseDescriptionHtml = $('<div>').text(courseManager.getDescription(course)).html().replace(/\n/g, '<br>');
+
+                    var courseNumber = $('<abbr>').text(general['מספר מקצוע'])
+                        .prop('title', courseDescriptionHtml)
+                        .attr({
+                            'data-toggle': 'tooltip',
+                            'data-html': 'true',
+                            'data-placement': 'right',
+                            'data-template': '<div class="tooltip" role="tooltip"><div class="arrow"></div><div class="tooltip-inner course-description-tooltip-inner"></div></div>',
+                            'data-boundary': 'viewport'
+                        });
+
+                    return $('<div>').addClass('option').append(courseNumber)
+                        .append(document.createTextNode(' - ' + general['שם מקצוע'])).get(0);
+                }
+            },
+            onItemAdd: function (course) {
+                if (!coursesChosen.propertyIsEnumerable(course)) {
+                    coursesChosen[course] = true;
+                    courseButtonList.addCourse(course);
+                    courseCalendar.addCourse(course);
+                    selectedCourseSave(course);
+                    updateGeneralInfoLine();
+                    updateExamInfo();
+                }
+                this.clear();
+            },
+            onDropdownItemActivate: function (course) {
+                previewingFromSelectControl = course;
+
+                if (!coursesChosen.propertyIsEnumerable(course)) {
+                    courseCalendar.addCourse(course);
+                    updateExamInfo([course]);
+                }
+                courseExamInfo.setHighlighted(course);
+                courseCalendar.previewCourse(course);
+            },
+            onDropdownItemDeactivate: function (course) {
+                if (!coursesChosen.propertyIsEnumerable(course)) {
+                    courseCalendar.removeCourse(course);
+                    updateExamInfo();
+                } else {
+                    // Remove highlight
+                    courseExamInfo.removeHighlighted(course);
+                    courseCalendar.unpreviewCourse(course);
+                }
+
+                previewingFromSelectControl = null;
+            }
+        });
+
+        $('.selectize-control .selectize-dropdown').tooltip({selector: '[data-toggle=tooltip]'});
+
+        courseButtonList = new CourseButtonList($('#course-button-list'), {
+            courseManager: courseManager,
+            colorGenerator: function (course) {
+                return colorHash.hex(course);
+            },
+            onHoverIn: function (course) {
+                courseExamInfo.setHovered(course);
+                if (previewingFromSelectControl) {
+                    courseCalendar.unpreviewCourse(previewingFromSelectControl);
+                }
+                courseCalendar.previewCourse(course);
+            },
+            onHoverOut: function (course) {
+                courseExamInfo.removeHovered(course);
+                courseCalendar.unpreviewCourse(course);
+                if (previewingFromSelectControl) {
+                    courseCalendar.previewCourse(previewingFromSelectControl);
+                }
+            },
+            onEnableCourse: function (course) {
                 courseCalendar.addCourse(course);
+                courseCalendar.previewCourse(course);
                 selectedCourseSave(course);
+                coursesChosen[course] = true;
+                updateGeneralInfoLine();
+                updateExamInfo();
+            },
+            onDisableCourse: function (course) {
+                courseCalendar.removeCourse(course);
+                selectedCourseUnsave(course);
+                coursesChosen[course] = false;
                 updateGeneralInfoLine();
                 updateExamInfo();
             }
-            this.clear();
-        },
-        onDropdownItemActivate: function (course) {
-            previewingFromSelectControl = course;
-
-            if (!coursesChosen.propertyIsEnumerable(course)) {
-                courseCalendar.addCourse(course);
-                updateExamInfo([course]);
-            }
-            courseExamInfo.setHighlighted(course);
-            courseCalendar.previewCourse(course);
-        },
-        onDropdownItemDeactivate: function (course) {
-            if (!coursesChosen.propertyIsEnumerable(course)) {
-                courseCalendar.removeCourse(course);
-                updateExamInfo();
-            } else {
-                // Remove highlight
-                courseExamInfo.removeHighlighted(course);
-                courseCalendar.unpreviewCourse(course);
-            }
-
-            previewingFromSelectControl = null;
-        }
-    });
-
-    $('.selectize-control .selectize-dropdown').tooltip({selector: '[data-toggle=tooltip]'});
-
-    courseButtonList = new CourseButtonList($('#course-button-list'), {
-        courseManager: courseManager,
-        colorGenerator: function (course) {
-            return colorHash.hex(course);
-        },
-        onHoverIn: function (course) {
-            courseExamInfo.setHovered(course);
-            if (previewingFromSelectControl) {
-                courseCalendar.unpreviewCourse(previewingFromSelectControl);
-            }
-            courseCalendar.previewCourse(course);
-        },
-        onHoverOut: function (course) {
-            courseExamInfo.removeHovered(course);
-            courseCalendar.unpreviewCourse(course);
-            if (previewingFromSelectControl) {
-                courseCalendar.previewCourse(previewingFromSelectControl);
-            }
-        },
-        onEnableCourse: function (course) {
-            courseCalendar.addCourse(course);
-            courseCalendar.previewCourse(course);
-            selectedCourseSave(course);
-            coursesChosen[course] = true;
-            updateGeneralInfoLine();
-            updateExamInfo();
-        },
-        onDisableCourse: function (course) {
-            courseCalendar.removeCourse(course);
-            selectedCourseUnsave(course);
-            coursesChosen[course] = false;
-            updateGeneralInfoLine();
-            updateExamInfo();
-        }
-    });
-
-    courseExamInfo = new CourseExamInfo($('#course-exam-info'), {
-        courseManager: courseManager,
-        colorGenerator: function (course) {
-            return colorHash.hex(course);
-        },
-        onHoverIn: function (course) {
-            courseButtonList.setHovered(course);
-            if (previewingFromSelectControl) {
-                courseCalendar.unpreviewCourse(previewingFromSelectControl);
-            }
-            courseCalendar.previewCourse(course);
-        },
-        onHoverOut: function (course) {
-            courseButtonList.removeHovered(course);
-            courseCalendar.unpreviewCourse(course);
-            if (previewingFromSelectControl) {
-                courseCalendar.previewCourse(previewingFromSelectControl);
-            }
-        }
-    });
-
-    courseCalendar = new CourseCalendar($('#course-calendar'), {
-        courseManager: courseManager,
-        colorGenerator: function (course) {
-            return colorHash.hex(course);
-        },
-        onCourseHoverIn: function (course) {
-            courseButtonList.setHovered(course);
-            courseExamInfo.setHovered(course);
-        },
-        onCourseHoverOut: function (course) {
-            courseButtonList.removeHovered(course);
-            courseExamInfo.removeHovered(course);
-        },
-        onCourseConflictedStatusChanged: function (course, conflicted) {
-            if (conflicted) {
-                courseButtonList.setConflicted(course);
-            } else {
-                courseButtonList.removeConflicted(course);
-            }
-        },
-        onLessonSelected: function (course, lessonNumber, lessonType) {
-            selectedLessonSave(course, lessonNumber, lessonType);
-        },
-        onLessonUnselected: function (course, lessonNumber, lessonType) {
-            selectedLessonUnsave(course, lessonNumber, lessonType);
-        }
-    });
-
-    $('#footer-semester-name').text(semesterFriendlyName(currentSemester));
-    $('#footer-semester').removeClass('d-none');
-
-    $('#right-content-bar').removeClass('invisible');
-
-    if (typeof firebase !== 'undefined') {
-        // Firebase UI doesn't work on Edge/IE in private mode.
-        // Fall back to offline mode.
-        try {
-            firebaseInit(function () {
-                loadSavedCoursesAndLessons(function () {
-                    $('#page-loader').hide();
-                });
-            });
-        } catch (e) {
-            firebase = undefined;
-        }
-    }
-
-    if (typeof firebase === 'undefined') {
-        document.getElementById('firebase-sign-in').style.display = 'none';
-        loadSavedCoursesAndLessons(function () {
-            $('#page-loader').hide();
         });
+
+        courseExamInfo = new CourseExamInfo($('#course-exam-info'), {
+            courseManager: courseManager,
+            colorGenerator: function (course) {
+                return colorHash.hex(course);
+            },
+            onHoverIn: function (course) {
+                courseButtonList.setHovered(course);
+                if (previewingFromSelectControl) {
+                    courseCalendar.unpreviewCourse(previewingFromSelectControl);
+                }
+                courseCalendar.previewCourse(course);
+            },
+            onHoverOut: function (course) {
+                courseButtonList.removeHovered(course);
+                courseCalendar.unpreviewCourse(course);
+                if (previewingFromSelectControl) {
+                    courseCalendar.previewCourse(previewingFromSelectControl);
+                }
+            }
+        });
+
+        courseCalendar = new CourseCalendar($('#course-calendar'), {
+            courseManager: courseManager,
+            colorGenerator: function (course) {
+                return colorHash.hex(course);
+            },
+            onCourseHoverIn: function (course) {
+                courseButtonList.setHovered(course);
+                courseExamInfo.setHovered(course);
+            },
+            onCourseHoverOut: function (course) {
+                courseButtonList.removeHovered(course);
+                courseExamInfo.removeHovered(course);
+            },
+            onCourseConflictedStatusChanged: function (course, conflicted) {
+                if (conflicted) {
+                    courseButtonList.setConflicted(course);
+                } else {
+                    courseButtonList.removeConflicted(course);
+                }
+            },
+            onLessonSelected: function (course, lessonNumber, lessonType) {
+                selectedLessonSave(course, lessonNumber, lessonType);
+            },
+            onLessonUnselected: function (course, lessonNumber, lessonType) {
+                selectedLessonUnsave(course, lessonNumber, lessonType);
+            }
+        });
+
+        $('#footer-semester-name').text(semesterFriendlyName(currentSemester));
+        $('#footer-semester').removeClass('d-none');
+
+        $('#right-content-bar').removeClass('invisible');
+
+        if (typeof firebase !== 'undefined') {
+            // Firebase UI doesn't work on Edge/IE in private mode.
+            // Fall back to offline mode.
+            try {
+                firebaseInit(function () {
+                    loadSavedCoursesAndLessons(function () {
+                        $('#page-loader').hide();
+                    });
+                });
+            } catch (e) {
+                firebase = undefined;
+            }
+        }
+
+        if (typeof firebase === 'undefined') {
+            document.getElementById('firebase-sign-in').style.display = 'none';
+            loadSavedCoursesAndLessons(function () {
+                $('#page-loader').hide();
+            });
+        }
     }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    cheeseforkInit();
 })();
