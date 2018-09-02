@@ -16,8 +16,9 @@
 }
 
 .course-button-list-item .badge {
-    /* prevent hovering the information badge by content-wrapper */
+    /* Prevent hovering the information badge by content-wrapper */
     position: relative;
+    user-select: none;
 }
 
 .course-button-list-item-hovered {
