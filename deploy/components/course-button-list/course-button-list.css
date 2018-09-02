@@ -4,7 +4,6 @@
 
 .course-button-list-item .content-wrapper {
     position: relative;
-    z-index: -1; /* prevent hovering the information badge */
 }
 
 .course-button-list-item .content-absolute {
@@ -14,6 +13,11 @@
 .course-button-list-item .content-bold-hidden {
     font-weight: bold;
     visibility: hidden;
+}
+
+.course-button-list-item .badge {
+    /* prevent hovering the information badge by content-wrapper */
+    position: relative;
 }
 
 .course-button-list-item-hovered {
