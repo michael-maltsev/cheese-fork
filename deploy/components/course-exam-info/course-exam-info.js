@@ -8,15 +8,11 @@ function CourseExamInfo(element, options) {
     this.onHoverOut = options.onHoverOut;
 }
 
-CourseExamInfo.prototype.renderCourses = function (courses, options) {
+CourseExamInfo.prototype.renderCourses = function (courses) {
     var that = this;
 
-    if (typeof options === 'undefined') {
-        options = {};
-    }
-
-    var moedASpan = makeExamInfoSpan(1, courses, options);
-    var moedBSpan = makeExamInfoSpan(2, courses, options);
+    var moedASpan = makeExamInfoSpan(1, courses);
+    var moedBSpan = makeExamInfoSpan(2, courses);
 
     if (!moedASpan && !moedBSpan) {
         that.element.empty();
@@ -32,7 +28,7 @@ CourseExamInfo.prototype.renderCourses = function (courses, options) {
         }
     }
 
-    function makeExamInfoSpan(moed, courses, options) {
+    function makeExamInfoSpan(moed, courses) {
         var moedNames = ['מועד א', 'מועד ב'];
         var moedName = moedNames[moed - 1];
         var moedDates = {};
@@ -76,11 +72,6 @@ CourseExamInfo.prototype.renderCourses = function (courses, options) {
             }
 
             var daysText = $('<span class="exam-info-item exam-info-item-course-' + course + '"></span>');
-            if (course === options.hovered) {
-                daysText.addClass('exam-info-item-hovered');
-            } else if (course === options.highlighted) {
-                daysText.addClass('exam-info-item-highlighted');
-            }
             var color = that.colorGenerator(course);
             daysText.css('background-color', color);
             daysText.hover(
