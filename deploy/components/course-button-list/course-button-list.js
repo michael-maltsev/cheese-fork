@@ -96,6 +96,6 @@ CourseButtonList.prototype.removeConflicted = function (course) {
     $('.course-button-list-item-course-' + course, this.element).removeClass('course-button-list-item-conflicted');
 };
 
-CourseButtonList.prototype.clear = function (course) {
+CourseButtonList.prototype.clear = function () {
     this.element.empty();
 };

@@ -5,7 +5,6 @@ var CourseCalendar = (function () {
         this.element = element;
         this.courseManager = options.courseManager;
         this.colorGenerator = options.colorGenerator;
-        this.icsFileName = options.icsFileName;
         this.onCourseHoverIn = options.onCourseHoverIn;
         this.onCourseHoverOut = options.onCourseHoverOut;
         this.onCourseConflictedStatusChanged = options.onCourseConflictedStatusChanged;
@@ -511,14 +510,9 @@ var CourseCalendar = (function () {
             + '.calendar-item-course-' + course + '-lesson-' + lessonNumber, this.element).first().click();
     };
 
-    CourseCalendar.prototype.saveAsIcs = function () {
+    CourseCalendar.prototype.saveAsIcs = function (icsCal, yearFrom, yearTo) {
         var that = this;
         var calendar = that.element;
-
-        var icsCal = ics();
-
-        var yearFrom = parseInt(current_semester.slice(0, 4), 10);
-        var yearTo = yearFrom + 2;
 
         var rrule = {freq: 'WEEKLY', until: yearTo + '-01-01T00:00:00Z'};
 
@@ -548,22 +542,22 @@ var CourseCalendar = (function () {
                     }
                 }
 
-                var begin = event.start.format();
-                var end = event.end.format();
+                var begin = event.start.clone().set({year: yearFrom, month: 0, date: 1}).day(event.start.day());
+                var end = event.end.clone().set({year: yearFrom, month: 0, date: 1}).day(event.start.day());
 
-                icsCal.addEvent(subject, description, location, begin, end, rrule);
+                // Fix-up for 24:00 which is treated as 00:00 of the next day.
+                if (end.hour() === 0 && end.minute() === 0) {
+                    end.hour(24);
+                }
+
+                icsCal.addEvent(subject, description, location, begin.format(), end.format(), rrule);
                 count++;
             }
 
             return false;
         });
 
-        if (count === 0) {
-            return false;
-        }
-
-        icsCal.download(that.icsFileName || 'schedule');
-        return true;
+        return count;
     };
 
     CourseCalendar.prototype.removeAll = function () {
