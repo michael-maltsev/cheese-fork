@@ -276,20 +276,20 @@ var CourseCalendar = (function () {
     }
 
     function onEventMouseover(event) {
-        $('.calendar-item-course-' + event.courseNumber).addClass('calendar-item-same-course-as-hovered');
-        $('.calendar-item-course-' + event.courseNumber + '-type-' + getEventLessonType(event)).addClass('calendar-item-same-type-as-hovered');
+        $('.calendar-item-course-' + event.courseNumber, this.element).addClass('calendar-item-same-course-as-hovered');
+        $('.calendar-item-course-' + event.courseNumber + '-type-' + getEventLessonType(event), this.element).addClass('calendar-item-same-type-as-hovered');
         this.onCourseHoverIn(event.courseNumber);
     }
 
     function onEventMouseout(event) {
-        $('.calendar-item-course-' + event.courseNumber).removeClass('calendar-item-same-course-as-hovered');
-        $('.calendar-item-course-' + event.courseNumber + '-type-' + getEventLessonType(event)).removeClass('calendar-item-same-type-as-hovered');
+        $('.calendar-item-course-' + event.courseNumber, this.element).removeClass('calendar-item-same-course-as-hovered');
+        $('.calendar-item-course-' + event.courseNumber + '-type-' + getEventLessonType(event), this.element).removeClass('calendar-item-same-type-as-hovered');
         this.onCourseHoverOut(event.courseNumber);
     }
 
     function afterEventRender(event, element) {
         if (!event.selected) {
-            var sameType = $('.calendar-item-course-' + event.courseNumber + '-type-' + getEventLessonType(event))
+            var sameType = $('.calendar-item-course-' + event.courseNumber + '-type-' + getEventLessonType(event), this.element)
                 .not('.calendar-item-course-' + event.courseNumber + '-lesson-' + event.lessonData['מס.']);
             if (sameType.length === 0) {
                 element.addClass('calendar-item-last-choice');
@@ -477,7 +477,7 @@ var CourseCalendar = (function () {
 
         calendar.fullCalendar('renderEvents', temporaryEvents);
 
-        $('.calendar-item-course-' + course).addClass('calendar-item-previewed');
+        $('.calendar-item-course-' + course, this.element).addClass('calendar-item-previewed');
 
         if (conflictedEvents.length > 0) {
             updateCalendarMaxDayAndTime(calendar);
@@ -499,7 +499,7 @@ var CourseCalendar = (function () {
             }
         });
 
-        $('.calendar-item-course-' + course).removeClass('calendar-item-previewed');
+        $('.calendar-item-course-' + course, this.element).removeClass('calendar-item-previewed');
 
         if (removed > 0) {
             updateCalendarMaxDayAndTime(calendar);
@@ -508,7 +508,7 @@ var CourseCalendar = (function () {
 
     CourseCalendar.prototype.toggleLesson = function (course, lessonType, lessonNumber) {
         $('.calendar-item-course-' + course + '-type-' + lessonType
-            + '.calendar-item-course-' + course + '-lesson-' + lessonNumber).first().click();
+            + '.calendar-item-course-' + course + '-lesson-' + lessonNumber, this.element).first().click();
     };
 
     CourseCalendar.prototype.saveAsIcs = function () {

@@ -125,17 +125,17 @@ CourseExamInfo.prototype.renderCourses = function (courses) {
 };
 
 CourseExamInfo.prototype.setHovered = function (course) {
-    $('.exam-info-item-course-' + course).addClass('exam-info-item-hovered');
+    $('.exam-info-item-course-' + course, this.element).addClass('exam-info-item-hovered');
 };
 
 CourseExamInfo.prototype.removeHovered = function (course) {
-    $('.exam-info-item-course-' + course).removeClass('exam-info-item-hovered');
+    $('.exam-info-item-course-' + course, this.element).removeClass('exam-info-item-hovered');
 };
 
 CourseExamInfo.prototype.setHighlighted = function (course) {
-    $('.exam-info-item-course-' + course).addClass('exam-info-item-highlighted');
+    $('.exam-info-item-course-' + course, this.element).addClass('exam-info-item-highlighted');
 };
 
 CourseExamInfo.prototype.removeHighlighted = function (course) {
-    $('.exam-info-item-course-' + course).removeClass('exam-info-item-highlighted');
+    $('.exam-info-item-course-' + course, this.element).removeClass('exam-info-item-highlighted');
 };
