@@ -13,6 +13,7 @@
     <link rel="stylesheet" media="print" href="modules/fullcalendar/fullcalendar.print.min.css">
     <link rel="stylesheet" href="modules/selectize/css/selectize.bootstrap4.css">
     <link rel="stylesheet" href="loader.css">
+    <link rel="stylesheet" href="components/course-button-list/course-button-list.css">
     <link rel="stylesheet" href="components/course-exam-info/course-exam-info.css">
     <link rel="stylesheet" href="components/course-calendar/course-calendar.css">
     <link rel="stylesheet" href="cheesefork.css">
@@ -62,11 +63,11 @@
                 <select id="select-course" class="select-course" placeholder="לחצו לבחירת מקצוע...">
                     <option value="">לחצו לבחירת מקצוע...</option>
                 </select>
-            
+
                 <div id="general-info"></div>
-            
+
                 <div id="course-button-list" class="list-group"></div>
-            
+
                 <div id="course-exam-info" class="mt-auto"></div>
             </div>
         </div>
@@ -129,6 +130,7 @@
         document.write(script.outerHTML);
     })();
 </script>
+<script src="components/course-button-list/course-button-list.js"></script>
 <script src="components/course-exam-info/course-exam-info.js"></script>
 <script src="components/course-calendar/course-calendar.js"></script>
 <script src="course-manager.js"></script>
