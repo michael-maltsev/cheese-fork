@@ -1,5 +1,7 @@
 'use strict';
 
+/* global BootstrapDialog */
+
 function CourseButtonList(element, options) {
     this.element = element;
     this.courseManager = options.courseManager;
@@ -19,9 +21,9 @@ CourseButtonList.prototype.addCourse = function (course) {
     var spanAbsolute = $('<div class="content-wrapper">').html($('<span class="content-absolute">').text(courseTitle));
     var spanBoldHidden = $('<span class="content-bold-hidden">').text(courseTitle);
 
-    var button = $('<li'
-        + ' class="list-group-item active course-button-list-item course-button-list-item-course-' + course + '">'
-        + '</li>');
+    var button = $('<li' +
+        ' class="list-group-item active course-button-list-item course-button-list-item-course-' + course + '">' +
+        '</li>');
     var badge = $('<span class="badge badge-pill badge-secondary float-right">i</span>');
     var color = that.colorGenerator(course);
     button.css({'background-color': color, 'border-color': color})
