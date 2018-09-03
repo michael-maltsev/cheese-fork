@@ -1,5 +1,7 @@
 'use strict';
 
+/* global moment */
+
 function CourseExamInfo(element, options) {
     this.element = element;
     this.courseManager = options.courseManager;

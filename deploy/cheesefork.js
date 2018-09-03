@@ -1,5 +1,9 @@
 'use strict';
 
+/* global ColorHash, BootstrapDialog, ics, firebase, firebaseui */
+/* global CourseManager, CourseButtonList, CourseExamInfo, CourseCalendar */
+/* global courses_from_rishum, availableSemesters, currentSemester */
+
 (function () {
     var courseManager = new CourseManager(courses_from_rishum);
     var coursesChosen = {};
@@ -9,6 +13,8 @@
     var courseCalendar = null;
     var previewingFromSelectControl = null;
     var firestoreDb = null;
+
+    cheeseforkInit();
 
     function semesterFriendlyName(semester) {
         var year = parseInt(semester.slice(0, 4), 10);
@@ -476,29 +482,27 @@
 
         $('#right-content-bar').removeClass('invisible');
 
+        var firebaseInitialized = false;
+
         if (typeof firebase !== 'undefined') {
-            // Firebase UI doesn't work on Edge/IE in private mode.
-            // Fall back to offline mode.
             try {
                 firebaseInit(function () {
                     loadSavedCoursesAndLessons(function () {
                         $('#page-loader').hide();
                     });
                 });
+                firebaseInitialized = true;
             } catch (e) {
-                firebase = undefined;
+                // Firebase UI doesn't work on Edge/IE in private mode.
+                // Will fall back to offline mode.
             }
         }
 
-        if (typeof firebase === 'undefined') {
+        if (!firebaseInitialized) {
             document.getElementById('firebase-sign-in').style.display = 'none';
             loadSavedCoursesAndLessons(function () {
                 $('#page-loader').hide();
             });
         }
     }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    cheeseforkInit();
 })();

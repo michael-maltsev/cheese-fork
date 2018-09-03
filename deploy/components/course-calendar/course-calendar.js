@@ -1,7 +1,5 @@
 'use strict';
 
-/* global $ */
-
 var CourseCalendar = (function () {
     function CourseCalendar(element, options) {
         this.element = element;
