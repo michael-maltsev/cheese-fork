@@ -93,10 +93,14 @@
             input[courseKey] = {};
             doc.set(input, {merge: true});
         } else {
-            var courses = JSON.parse(localStorage && localStorage.getItem(semesterCoursesKey) || '[]');
-            courses.push(course);
-            localStorage && localStorage.setItem(semesterCoursesKey, JSON.stringify(courses));
-            localStorage && localStorage.removeItem(courseKey);
+            try {
+                var courses = JSON.parse(localStorage.getItem(semesterCoursesKey) || '[]');
+                courses.push(course);
+                localStorage.setItem(semesterCoursesKey, JSON.stringify(courses));
+                localStorage.removeItem(courseKey);
+            } catch (e) {
+                // localStorage is not available in IE/Edge when running from a local file.
+            }
         }
     }
 
@@ -111,12 +115,16 @@
             input[courseKey] = firebase.firestore.FieldValue.delete();
             doc.update(input);
         } else {
-            var courses = JSON.parse(localStorage && localStorage.getItem(semesterCoursesKey) || '[]');
-            courses = courses.filter(function (item) {
-                return item !== course;
-            });
-            localStorage && localStorage.setItem(semesterCoursesKey, JSON.stringify(courses));
-            localStorage && localStorage.removeItem(courseKey);
+            try {
+                var courses = JSON.parse(localStorage.getItem(semesterCoursesKey) || '[]');
+                courses = courses.filter(function (item) {
+                    return item !== course;
+                });
+                localStorage.setItem(semesterCoursesKey, JSON.stringify(courses));
+                localStorage.removeItem(courseKey);
+            } catch (e) {
+                // localStorage is not available in IE/Edge when running from a local file.
+            }
         }
     }
 
@@ -129,9 +137,13 @@
             input[courseKey + '.' + lessonType] = lessonNumber;
             doc.update(input);
         } else {
-            var lessons = JSON.parse(localStorage && localStorage.getItem(courseKey) || '{}');
-            lessons[lessonType] = lessonNumber;
-            localStorage && localStorage.setItem(courseKey, JSON.stringify(lessons));
+            try {
+                var lessons = JSON.parse(localStorage.getItem(courseKey) || '{}');
+                lessons[lessonType] = lessonNumber;
+                localStorage.setItem(courseKey, JSON.stringify(lessons));
+            } catch (e) {
+                // localStorage is not available in IE/Edge when running from a local file.
+            }
         }
     }
 
@@ -144,9 +156,13 @@
             input[courseKey + '.' + lessonType] = firebase.firestore.FieldValue.delete();
             doc.update(input);
         } else {
-            var lessons = JSON.parse(localStorage && localStorage.getItem(courseKey) || '{}');
-            delete lessons[lessonType];
-            localStorage && localStorage.setItem(courseKey, JSON.stringify(lessons));
+            try {
+                var lessons = JSON.parse(localStorage.getItem(courseKey) || '{}');
+                delete lessons[lessonType];
+                localStorage.setItem(courseKey, JSON.stringify(lessons));
+            } catch (e) {
+                // localStorage is not available in IE/Edge when running from a local file.
+            }
         }
     }
 
@@ -163,11 +179,16 @@
             });
         } else {
             var data = {};
-            data[semesterCoursesKey] = JSON.parse(localStorage && localStorage.getItem(semesterCoursesKey) || '[]');
-            data[semesterCoursesKey].forEach(function (course) {
-                var courseKey = currentSemester + '_' + course;
-                data[courseKey] = JSON.parse(localStorage && localStorage.getItem(courseKey) || '{}');
-            });
+            try {
+                data[semesterCoursesKey] = JSON.parse(localStorage.getItem(semesterCoursesKey) || '[]');
+                data[semesterCoursesKey].forEach(function (course) {
+                    var courseKey = currentSemester + '_' + course;
+                    data[courseKey] = JSON.parse(localStorage.getItem(courseKey) || '{}');
+                });
+            } catch (e) {
+                // localStorage is not available in IE/Edge when running from a local file.
+                data[semesterCoursesKey] = [];
+            }
             applySaved(data);
             onLoadedFunc();
         }
