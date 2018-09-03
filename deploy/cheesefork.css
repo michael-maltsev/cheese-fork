@@ -36,6 +36,11 @@
     margin-bottom: 10px;
 }
 
+#course-exam-info-wrapper {
+    /* A workaround to an Edge bug: https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/18883305/ */
+    filter: brightness(1);
+}
+
 #course-exam-info {
     position: sticky;
     bottom: 20px;
