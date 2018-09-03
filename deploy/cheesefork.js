@@ -167,24 +167,21 @@
         }
 
         function applySaved(data) {
-            var courses = data[semesterCoursesKey] || [];
+            var schedule = {};
 
+            var courses = data[semesterCoursesKey] || [];
             courses.forEach(function (course) {
                 if (!coursesChosen.propertyIsEnumerable(course) && courseManager.doesExist(course)) {
                     coursesChosen[course] = true;
                     courseButtonList.addCourse(course);
-                    courseCalendar.addCourse(course);
 
                     var courseKey = currentSemester + '_' + course;
-
                     var lessons = data[courseKey] || {};
-                    Object.keys(lessons).forEach(function (lessonType) {
-                        var lessonNumber = lessons[lessonType];
-                        courseCalendar.toggleLesson(course, lessonType, lessonNumber);
-                    });
+                    schedule[course] = lessons;
                 }
             });
 
+            courseCalendar.loadSavedSchedule(schedule);
             updateGeneralInfoLine();
             updateExamInfo();
         }
@@ -271,8 +268,7 @@
                 });
             } else {
                 // Fast reload.
-                reloadSavedCoursesAndLessons(function () {
-                });
+                reloadSavedCoursesAndLessons(function () {});
             }
         });
 
