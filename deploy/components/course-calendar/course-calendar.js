@@ -37,25 +37,6 @@ var CourseCalendar = (function () {
         });
     }
 
-    function rishumTimeParse(time) {
-        var match = /^(\d+)(:\d+)? - (\d+)(:\d+)?$/.exec(time);
-        var startHour = ('00' + match[1]).slice(-2);
-        var startMinute = '00';
-        if (match[2] !== undefined) {
-            startMinute = (match[2] + '00').slice(1, 3);
-        }
-        var start = startHour + ':' + startMinute;
-
-        var endHour = ('00' + match[3]).slice(-2);
-        var endMinute = '00';
-        if (match[4] !== undefined) {
-            endMinute = (match[4] + '00').slice(1, 3);
-        }
-        var end = endHour + ':' + endMinute;
-
-        return {start: start, end: end};
-    }
-
     function stringHexEncode(str) {
         var result = '';
         for (var i = 0; i < str.length; i++) {
@@ -193,28 +174,27 @@ var CourseCalendar = (function () {
         return startTime1.isBefore(endTime2) && endTime1.isAfter(startTime2);
     }
 
-    function makeLessonEvent(calendar, course, general, lesson, color) {
+    function makeLessonEvent(courseCalendar, course, lesson) {
         var lessonType = getLessonType(course, lesson);
         var lessonDay = lesson['יום'].charCodeAt(0) - 'א'.charCodeAt(0) + 1;
-        var lessonStartEnd = rishumTimeParse(lesson['שעה']);
+        var lessonStartEnd = courseCalendar.courseManager.parseLessonTime(lesson['שעה']);
         var eventStartEnd = {
-            start: calendar.fullCalendar('getCalendar').moment('2017-01-0' + lessonDay + 'T' + lessonStartEnd.start + ':00'),
-            end: calendar.fullCalendar('getCalendar').moment('2017-01-0' + lessonDay + 'T' + lessonStartEnd.end + ':00')
+            start: courseCalendar.element.fullCalendar('getCalendar').moment('2017-01-0' + lessonDay + 'T' + lessonStartEnd.start + ':00'),
+            end: courseCalendar.element.fullCalendar('getCalendar').moment('2017-01-0' + lessonDay + 'T' + lessonStartEnd.end + ':00')
         };
 
         var eventId = course + '.' + lesson['מס.'] + '.' + lessonType;
 
-        var title = lesson['סוג'] + ' ' + lesson['מס.'];
-        if (lesson['סוג'] === 'sadna') {
-            title = 'סדנה';
-        }
-        if (lesson['בניין'] !== '') {
+        var general = courseCalendar.courseManager.getGeneralInfo(course);
+
+        var title = courseCalendar.courseManager.getLessonTypeAndNumber(lesson);
+        if (lesson['בניין']) {
             title += '\n' + lesson['בניין'];
-            if (lesson['חדר'] !== '') {
+            if (lesson['חדר']) {
                 title += ' ' + lesson['חדר'];
             }
         }
-        if (lesson['מרצה/מתרגל'] !== '') {
+        if (lesson['מרצה/מתרגל']) {
             title += '\n' + lesson['מרצה/מתרגל'];
         }
         title += '\n' + general['שם מקצוע'];
@@ -224,7 +204,7 @@ var CourseCalendar = (function () {
             title: title,
             start: eventStartEnd.start,
             end: eventStartEnd.end,
-            backgroundColor: color,
+            backgroundColor: courseCalendar.colorGenerator(course),
             textColor: 'white',
             borderColor: 'white',
             className: 'calendar-item-course-' + course +
@@ -237,7 +217,8 @@ var CourseCalendar = (function () {
         };
     }
 
-    function initCreateCourseEvents(calendar, course, general, schedule, color) {
+    function initCreateCourseEvents(courseCalendar, course) {
+        var schedule = courseCalendar.courseManager.getSchedule(course);
         if (schedule.length === 0) {
             return [];
         }
@@ -251,7 +232,7 @@ var CourseCalendar = (function () {
                 continue;
             }
 
-            events.push(makeLessonEvent(calendar, course, general, lesson, color));
+            events.push(makeLessonEvent(courseCalendar, course, lesson));
             lessonsAdded[lesson['מס.']] = lesson['קבוצה'];
         }
 
@@ -416,14 +397,12 @@ var CourseCalendar = (function () {
     CourseCalendar.prototype.addCourse = function (course) {
         var that = this;
 
-        var general = that.courseManager.getGeneralInfo(course);
         var schedule = that.courseManager.getSchedule(course);
         if (schedule.length === 0) {
             return;
         }
 
         var calendar = that.element;
-        var color = that.colorGenerator(course);
 
         var lessonsAdded = {};
         var events = [];
@@ -435,18 +414,15 @@ var CourseCalendar = (function () {
                 continue;
             }
 
-            var event = makeLessonEvent(calendar, course, general, lesson, color);
+            var event = makeLessonEvent(that, course, lesson);
 
-            // Count the amount of conflicts for the event id.
-            calendar.fullCalendar('clientEvents', function (cbEvent) {
-                if (cbEvent.selected && areEventsOverlapping(cbEvent, event)) {
-                    if (!conflictedIds.propertyIsEnumerable(event.id)) {
-                        conflictedIds[event.id] = 0;
-                    }
-                    conflictedIds[event.id]++;
+            var conflictCount = countEventConflicts(event);
+            if (conflictCount > 0) {
+                if (!conflictedIds.propertyIsEnumerable(event.id)) {
+                    conflictedIds[event.id] = 0;
                 }
-                return false;
-            });
+                conflictedIds[event.id] += conflictCount;
+            }
 
             events.push(event);
 
@@ -468,6 +444,17 @@ var CourseCalendar = (function () {
         }
 
         updateCalendarMaxDayAndTime(calendar);
+
+        function countEventConflicts(event) {
+            var count = 0;
+            calendar.fullCalendar('clientEvents', function (cbEvent) {
+                if (cbEvent.selected && areEventsOverlapping(cbEvent, event)) {
+                    count++;
+                }
+                return false;
+            });
+            return count;
+        }
     };
 
     CourseCalendar.prototype.removeCourse = function (course) {
@@ -592,10 +579,7 @@ var CourseCalendar = (function () {
 
         var events = [];
         Object.keys(schedule).forEach(function (course) {
-            var general = that.courseManager.getGeneralInfo(course);
-            var schedule = that.courseManager.getSchedule(course);
-            var color = that.colorGenerator(course);
-            events = events.concat(initCreateCourseEvents(calendar, course, general, schedule, color));
+            events = events.concat(initCreateCourseEvents(that, course));
         });
 
         Object.keys(schedule).forEach(function (course) {
@@ -629,21 +613,18 @@ var CourseCalendar = (function () {
                 var general = that.courseManager.getGeneralInfo(event.courseNumber);
                 var lesson = event.lessonData;
 
-                var subject = lesson['סוג'] + ' ' + lesson['מס.'];
-                if (lesson['סוג'] === 'sadna') {
-                    subject = 'סדנה';
-                }
+                var subject = that.courseManager.getLessonTypeAndNumber(lesson);
                 subject += ' - ' + general['שם מקצוע'];
 
                 var description = '';
-                if (lesson['מרצה/מתרגל'] !== '') {
+                if (lesson['מרצה/מתרגל']) {
                     description = lesson['מרצה/מתרגל'];
                 }
 
                 var location = '';
-                if (lesson['בניין'] !== '') {
+                if (lesson['בניין']) {
                     location = lesson['בניין'];
-                    if (lesson['חדר'] !== '') {
+                    if (lesson['חדר']) {
                         location += ' ' + lesson['חדר'];
                     }
                 }
