@@ -49,14 +49,13 @@ CourseManager.prototype.getSchedule = function (course) {
                 // https://stackoverflow.com/a/4579228
                 if (line.lastIndexOf('סדנאות', 0) === 0 || line.lastIndexOf('סדנת', 0) === 0) {
                     var sadnaotTa = '';
-                    match = /^מתרגל[ית]? הסדנ(?:א|ה|אות).*?:\s*(.*?)$/m.exec(comment);
+                    var match = /^מתרגל[ית]? הסדנ(?:א|ה|אות).*?:\s*(.*?)$/m.exec(comment);
                     if (match !== null) {
                         sadnaotTa = match[1];
                     }
 
                     var sadnaot = [];
                     var sadnaId = 101;
-                    var match;
                     for (i++; i < commentLines.length; i++) {
                         line = commentLines[i];
                         match = /^ימי ([א-ו])' (\d+)\.(\d+)-(\d+)\.(\d+)\s*,\s*(.*?) (\d+)(?:\s*,\s*(.*?))?$/.exec(line);
@@ -141,4 +140,63 @@ CourseManager.prototype.getDescription = function (course) {
     }
 
     return text;
+};
+
+CourseManager.prototype.getLessonTypeAndNumber = function (lesson) {
+    if (lesson['סוג'] === 'sadna') {
+        // No number since that's our addition to the schedule.
+        // We assume only one sadna can be selected.
+        return 'סדנה';
+    }
+    return lesson['סוג'] + ' ' + lesson['מס.'];
+};
+
+CourseManager.prototype.parseExamDateTime = function (strDate) {
+    var match = /^בתאריך (\d+)\.(\d+)\.(\d+) (?:יום [א-ו] משעה (\d+)(:\d+)? עד השעה (\d+)(:\d+)?)?/.exec(strDate);
+    if (match === null) {
+        return null;
+    }
+
+    var date =  match[3] + '-' + match[2] + '-' + match[1];
+
+    var startHour = '00';
+    if (match[4] !== undefined) {
+        startHour = ('00' + match[4]).slice(-2);
+    }
+    var startMinute = '00';
+    if (match[5] !== undefined) {
+        startMinute = (match[5] + '00').slice(1, 3);
+    }
+    var start = date + 'T' + startHour + ':' + startMinute + ':00';
+
+    var endHour = '00';
+    if (match[6] !== undefined) {
+        endHour = ('00' + match[6]).slice(-2);
+    }
+    var endMinute = '00';
+    if (match[7] !== undefined) {
+        endMinute = (match[7] + '00').slice(1, 3);
+    }
+    var end = date + 'T' + endHour + ':' + endMinute + ':00';
+
+    return {start: start, end: end};
+};
+
+CourseManager.prototype.parseLessonTime = function (strTime) {
+    var match = /^(\d+)(:\d+)? - (\d+)(:\d+)?$/.exec(strTime);
+    var startHour = ('00' + match[1]).slice(-2);
+    var startMinute = '00';
+    if (match[2] !== undefined) {
+        startMinute = (match[2] + '00').slice(1, 3);
+    }
+    var start = startHour + ':' + startMinute;
+
+    var endHour = ('00' + match[3]).slice(-2);
+    var endMinute = '00';
+    if (match[4] !== undefined) {
+        endMinute = (match[4] + '00').slice(1, 3);
+    }
+    var end = endHour + ':' + endMinute;
+
+    return {start: start, end: end};
 };

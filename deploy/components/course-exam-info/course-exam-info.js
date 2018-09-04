@@ -38,17 +38,9 @@ CourseExamInfo.prototype.renderCourses = function (courses) {
         courses.forEach(function (course) {
             var general = that.courseManager.getGeneralInfo(course);
             if (general[moedName]) {
-                var match = /^בתאריך (\d+)\.(\d+)\.(\d+) (?:יום [א-ו] משעה (\d+)(:\d+)? עד השעה (\d+)(:\d+)?)?/.exec(general[moedName]);
-                if (match !== null) {
-                    var startHour = '00';
-                    if (match[4] !== undefined) {
-                        startHour = ('00' + match[4]).slice(-2);
-                    }
-                    var startMinute = '00';
-                    if (match[5] !== undefined) {
-                        startMinute = (match[5] + '00').slice(1, 3);
-                    }
-                    moedDates[course] = moment.utc(match[3] + '-' + match[2] + '-' + match[1] + 'T' + startHour + ':' + startMinute + ':00');
+                var parsedDate = that.courseManager.parseExamDateTime(general[moedName]);
+                if (parsedDate !== null) {
+                    moedDates[course] = moment.utc(parsedDate.start);
                 }
             }
         });
