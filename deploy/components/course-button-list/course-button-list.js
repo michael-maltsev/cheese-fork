@@ -6,6 +6,7 @@ function CourseButtonList(element, options) {
     this.element = element;
     this.courseManager = options.courseManager;
     this.colorGenerator = options.colorGenerator;
+    this.readonly = options.readonly;
     this.onHoverIn = options.onHoverIn;
     this.onHoverOut = options.onHoverOut;
     this.onEnableCourse = options.onEnableCourse;
@@ -28,7 +29,9 @@ CourseButtonList.prototype.addCourse = function (course) {
     var color = that.colorGenerator(course);
     button.css({'background-color': color, 'border-color': color})
         .click(function () {
-            onCourseButtonClick($(this), course);
+            if (!that.readonly) {
+                onCourseButtonClick($(this), course);
+            }
         })
         .hover(function () {
                 $(this).addClass('course-button-list-item-hovered');

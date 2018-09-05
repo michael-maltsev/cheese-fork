@@ -45,7 +45,7 @@
             </div>
         </div>
         <nav class="navbar navbar-light">
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggleExternalContent" aria-controls="navbarToggleExternalContent" aria-expanded="false" aria-label="Toggle navigation">
+            <button id="top-navbar-toggler" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggleExternalContent" aria-controls="navbarToggleExternalContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="mx-auto">
@@ -63,6 +63,11 @@
                 <select id="select-course" class="select-course" placeholder="לחצו לבחירת מקצוע...">
                     <option value="">לחצו לבחירת מקצוע...</option>
                 </select>
+
+                <h3 id="sharing-user-unknown" class="shared-schedule-title d-none">מציג מערכת של משתמש אחר</h3>
+                <h3 id="sharing-user-known" class="shared-schedule-title d-none">
+                    מציג את המערכת של <span id="sharing-user-name" class="font-weight-bold"></span>
+                </h3>
 
                 <div id="general-info"></div>
 
@@ -223,6 +228,7 @@
         '201801'
     ];
     var currentSemester;
+    var scheduleSharingUserId;
     (function () {
         // https://stackoverflow.com/a/901144
         function getParameterByName(name, url) {
@@ -242,6 +248,8 @@
         var script = document.createElement('script');
         script.src = 'courses/courses_' + currentSemester + '.min.js';
         document.write(script.outerHTML);
+
+        scheduleSharingUserId = getParameterByName('uid');
     })();
 </script>
 <script src="components/course-button-list/course-button-list.js"></script>
