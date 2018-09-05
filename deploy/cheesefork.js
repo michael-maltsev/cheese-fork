@@ -14,6 +14,7 @@
     var courseExamInfo = null;
     var courseCalendar = null;
     var previewingFromSelectControl = null;
+    var allCoursesCount = 0, filteredCoursesCount = 0;
     var firestoreDb = null;
 
     cheeseforkInit();
@@ -311,26 +312,36 @@
         }
     }
 
+    function makeCourseSelectOptions(courses) {
+        var items = [{
+            value: 'filter',
+            text: ''
+        }].concat(courses.map(function (course) {
+            var general = courseManager.getGeneralInfo(course);
+            return {
+                value: course,
+                text: course + ' - ' + general['שם מקצוע']
+            };
+        }));
+
+        if (items.length > 202) {
+            items.splice(201, 0, {
+                value: 'partial',
+                text: ''
+            });
+        }
+
+        return items;
+    }
+
     function filterReset() {
         $('#filter-form').trigger('reset');
         $('#filter-faculty').data('selectize').clear(); // selectize doesn't work with reset
 
-        var itemsInSelect = Object.keys(courseSelect.options).length - 1;
-        var allCourses = courseManager.getAllCourses();
-        if (itemsInSelect !== allCourses.length) {
-            var courseSelectItems = [{
-                value: 'filter',
-                text: ''
-            }].concat(allCourses.sort().map(function (course) {
-                var general = courseManager.getGeneralInfo(course);
-                return {
-                    value: course,
-                    text: course + ' - ' + general['שם מקצוע']
-                };
-            }));
-
+        if (filteredCoursesCount < allCoursesCount) {
             courseSelect.clearOptions();
-            courseSelect.addOption(courseSelectItems);
+            courseSelect.addOption(makeCourseSelectOptions(courseManager.getAllCourses().sort()));
+            filteredCoursesCount = allCoursesCount;
         }
 
         if (filterDialog) {
@@ -418,31 +429,18 @@
 
         var selectedCourses = getSelectedCourses();
         if (selectedCourses.length > 0) {
-            filters.coursesCurrent = getSelectedCourses();
+            filters.coursesCurrent = selectedCourses;
         }
 
         var filtered = courseManager.filterCourses(filters);
-
-        var courseSelectItems = [{
-            value: 'filter',
-            text: ''
-        }].concat(filtered.sort().map(function (course) {
-            var general = courseManager.getGeneralInfo(course);
-            return {
-                value: course,
-                text: course + ' - ' + general['שם מקצוע']
-            };
-        }));
+        filteredCoursesCount = filtered.length;
 
         courseSelect.clearOptions();
-        courseSelect.addOption(courseSelectItems);
+        courseSelect.addOption(makeCourseSelectOptions(filtered.sort()));
 
         if (filterDialog) {
-            var totalCount = courseManager.getAllCourses().length;
-            var afterFilterCount = courseSelectItems.length - 1;
-
             var messageElement = filterDialog.getModalFooter().find('#filter-result');
-            messageElement.text('מציג ' + afterFilterCount + ' מתוך ' + totalCount + ' קורסים');
+            messageElement.text('מציג ' + filteredCoursesCount + ' מתוך ' + allCoursesCount + ' קורסים');
         }
     }
 
@@ -638,33 +636,26 @@
             }
         });
 
-        var courseSelectItems = [{
-            value: 'filter',
-            text: ''
-        }].concat(courseManager.getAllCourses().sort().map(function (course) {
-            var general = courseManager.getGeneralInfo(course);
-            return {
-                value: course,
-                text: course + ' - ' + general['שם מקצוע']
-            };
-        }));
+        var allCourses = courseManager.getAllCourses();
+        allCoursesCount = allCourses.length;
+        filteredCoursesCount = allCourses.length;
 
         courseSelect = $('#select-course').selectize({
             //searchConjunction: 'or',
-            options: courseSelectItems,
-            maxOptions: 200,
+            options: makeCourseSelectOptions(allCourses.sort()),
+            maxOptions: 202,
             render: {
                 option: function (item) {
                     if (item.value === 'filter') {
                         var text = 'סינון קורסים';
 
-                        var itemsInSelect = Object.keys(courseSelect.options).length - 1;
-                        var allCoursesCount = courseManager.getAllCourses().length;
-                        if (itemsInSelect !== allCoursesCount) {
-                            text += ' (' + itemsInSelect + '/' + allCoursesCount + ')';
+                        if (filteredCoursesCount < allCoursesCount) {
+                            text += ' (' + filteredCoursesCount + '/' + allCoursesCount + ')';
                         }
 
                         return $('<div>').addClass('option font-weight-bold').text(text);
+                    } else if (item.value === 'partial') {
+                        return $('<div>').addClass('option font-italic').text('מציג 200 קורסים ראשונים');
                     }
 
                     var course = item.value;
@@ -689,6 +680,8 @@
             onItemAdd: function (course) {
                 if (course === 'filter') {
                     filterOpen();
+                } else if (course === 'partial') {
+                    // Do nothing
                 } else if (!coursesChosen.propertyIsEnumerable(course)) {
                     coursesChosen[course] = true;
                     courseButtonList.addCourse(course);
@@ -702,7 +695,7 @@
                 this.clear();
             },
             onDropdownItemActivate: function (course) {
-                if (course === 'filter') {
+                if (course === 'filter' || course === 'partial') {
                     return;
                 }
 
@@ -716,7 +709,7 @@
                 courseCalendar.previewCourse(course);
             },
             onDropdownItemDeactivate: function (course) {
-                if (course === 'filter') {
+                if (course === 'filter' || course === 'partial') {
                     return;
                 }
 
