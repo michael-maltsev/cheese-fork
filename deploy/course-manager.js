@@ -1,5 +1,7 @@
 'use strict';
 
+/* global moment, BooleanExpression */
+
 function CourseManager(allCourses) {
     var that = this;
 
@@ -50,7 +52,7 @@ CourseManager.prototype.getSchedule = function (course) {
                 if (line.lastIndexOf('סדנאות', 0) === 0 || line.lastIndexOf('סדנת', 0) === 0) {
                     var sadnaotTa = '';
                     var match = /^מתרגל[ית]? הסדנ(?:א|ה|אות).*?:\s*(.*?)$/m.exec(comment);
-                    if (match !== null) {
+                    if (match) {
                         sadnaotTa = match[1];
                     }
 
@@ -59,7 +61,7 @@ CourseManager.prototype.getSchedule = function (course) {
                     for (i++; i < commentLines.length; i++) {
                         line = commentLines[i];
                         match = /^ימי ([א-ו])' (\d+)\.(\d+)-(\d+)\.(\d+)\s*,\s*(.*?) (\d+)(?:\s*,\s*(.*?))?$/.exec(line);
-                        if (match === null) {
+                        if (!match) {
                             break;
                         }
 
@@ -153,7 +155,7 @@ CourseManager.prototype.getLessonTypeAndNumber = function (lesson) {
 
 CourseManager.prototype.parseExamDateTime = function (strDate) {
     var match = /^בתאריך (\d+)\.(\d+)\.(\d+) (?:יום [א-ו] משעה (\d+)(:\d+)? עד השעה (\d+)(:\d+)?)?/.exec(strDate);
-    if (match === null) {
+    if (!match) {
         return null;
     }
 
@@ -184,6 +186,10 @@ CourseManager.prototype.parseExamDateTime = function (strDate) {
 
 CourseManager.prototype.parseLessonTime = function (strTime) {
     var match = /^(\d+)(:\d+)? - (\d+)(:\d+)?$/.exec(strTime);
+    if (!match) {
+        return null;
+    }
+
     var startHour = ('00' + match[1]).slice(-2);
     var startMinute = '00';
     if (match[2] !== undefined) {
@@ -199,4 +205,182 @@ CourseManager.prototype.parseLessonTime = function (strTime) {
     var end = endHour + ':' + endMinute;
 
     return {start: start, end: end};
+};
+
+CourseManager.prototype.filterCourses = function (filters) {
+    var that = this;
+    var filtered = [];
+    var i;
+
+    var moedAMin = filters.moedAMin ? moment.utc(filters.moedAMin).set({hour: 0, minute: 0, second: 0}) : null;
+    var moedAMax = filters.moedAMax ? moment.utc(filters.moedAMax).set({hour: 0, minute: 0, second: 0}) : null;
+    var moedBMin = filters.moedBMin ? moment.utc(filters.moedBMin).set({hour: 0, minute: 0, second: 0}) : null;
+    var moedBMax = filters.moedBMax ? moment.utc(filters.moedBMax).set({hour: 0, minute: 0, second: 0}) : null;
+
+    var currentMoedADates = [];
+    if (filters.moedADaysMin && filters.coursesCurrent) {
+        filters.coursesCurrent.forEach(function (course) {
+            var general = that.coursesHashmap[course].general;
+            if (general['מועד א']) {
+                var dateTimeA = that.parseExamDateTime(general['מועד א']);
+                if (dateTimeA) {
+                    var moedA = moment.utc(dateTimeA.start).set({hour: 0, minute: 0, second: 0});
+                    currentMoedADates.push(moedA);
+                }
+            }
+        });
+    }
+
+    var currentMoedBDates = [];
+    if (filters.moedBDaysMin && filters.coursesCurrent) {
+        filters.coursesCurrent.forEach(function (course) {
+            var general = that.coursesHashmap[course].general;
+            if (general['מועד ב']) {
+                var dateTimeB = that.parseExamDateTime(general['מועד ב']);
+                if (dateTimeB) {
+                    var moedB = moment.utc(dateTimeB.start).set({hour: 0, minute: 0, second: 0});
+                    currentMoedBDates.push(moedB);
+                }
+            }
+        });
+    }
+
+    Object.keys(that.coursesHashmap).forEach(function (course) {
+        var general = that.coursesHashmap[course].general;
+
+        if (filters.coursesLimit && filters.coursesLimit.indexOf(course) === -1) {
+            return;
+        }
+
+        if (filters.coursesExclude && filters.coursesExclude.indexOf(course) !== -1) {
+            return;
+        }
+
+        if (filters.faculties && filters.faculties.indexOf(general['פקולטה']) === -1) {
+            return;
+        }
+
+        if (general['נקודות']) {
+            var points = parseFloat(general['נקודות']);
+            if (filters.pointsMin !== undefined && points < filters.pointsMin) {
+                return;
+            }
+            if (filters.pointsMax !== undefined && points > filters.pointsMax) {
+                return;
+            }
+        }
+
+        if (filters.filterPrerequisites && general['מקצועות קדם']) {
+            if (!filters.coursesTaken) {
+                return;
+            }
+
+            var booleanExpression = general['מקצועות קדם'].replace(/\s/g, '').replace(/או/g, ' OR ').replace(/ו-/g, ' AND ');
+            if (!new BooleanExpression(booleanExpression).test(filters.coursesTaken)) {
+                return;
+            }
+        }
+
+        if (filters.filterLinkedCourses && general['מקצועות צמודים']) {
+            if (!filters.coursesTaken && !filters.coursesCurrent) {
+                return;
+            }
+
+            var linkedCourses = general['מקצועות צמודים'].match(/\d+/g);
+            if (linkedCourses) {
+                for (i = 0; i < linkedCourses.length; i++) {
+                    if ((filters.coursesTaken && filters.coursesTaken.indexOf(linkedCourses[i]) === -1) ||
+                        (filters.coursesCurrent && filters.coursesCurrent.indexOf(linkedCourses[i]) === -1)) {
+                        // OK, was taken or taking now.
+                    } else {
+                        return;
+                    }
+                }
+            }
+        }
+
+        if (filters.filterOverlappingCourses && (filters.coursesTaken || filters.coursesCurrent)) {
+            // If we've already taken this course, it's kinda trivially overlapping.
+            if (filters.coursesTaken && filters.coursesTaken.indexOf(course) !== -1) {
+                return;
+            }
+            if (filters.coursesCurrent && filters.coursesCurrent.indexOf(course) !== -1) {
+                return;
+            }
+
+            var overlappingCourses = [];
+            var overlappingCoursesKeys = [
+                'מקצועות זהים',
+                'מקצועות ללא זיכוי נוסף (מוכלים)',
+                'מקצועות ללא זיכוי נוסף (מכילים)',
+                'מקצועות ללא זיכוי נוסף'
+            ];
+
+            overlappingCoursesKeys.forEach(function (key) {
+                if (general[key]) {
+                    var overlappingCoursesPart = general[key].match(/\d+/g);
+                    if (overlappingCoursesPart) {
+                        overlappingCourses = overlappingCourses.concat(overlappingCoursesPart);
+                    }
+                }
+            });
+
+            for (i = 0; i < overlappingCourses.length; i++) {
+                if (filters.coursesTaken && filters.coursesTaken.indexOf(overlappingCourses[i]) !== -1) {
+                    return;
+                }
+                if (filters.coursesCurrent && filters.coursesCurrent.indexOf(overlappingCourses[i]) !== -1) {
+                    return;
+                }
+            }
+        }
+
+        if ((moedAMin || moedAMax || filters.moedADaysMin) && general['מועד א']) {
+            var dateTimeA = that.parseExamDateTime(general['מועד א']);
+            if (dateTimeA) {
+                var moedA = moment.utc(dateTimeA.start).set({hour: 0, minute: 0, second: 0});
+                if ((moedAMin && moedA.isBefore(moedAMin)) || (moedAMax && moedA.isAfter(moedAMax))) {
+                    return;
+                }
+
+                if (filters.moedADaysMin) {
+                    for (i = 0; i < currentMoedADates.length; i++) {
+                        if (Math.abs(moedA.diff(currentMoedADates[i], 'days')) < filters.moedADaysMin) {
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        if ((moedBMin || moedBMax || filters.moedBDaysMin) && general['מועד ב']) {
+            var dateTimeB = that.parseExamDateTime(general['מועד ב']);
+            if (dateTimeB) {
+                var moedB = moment.utc(dateTimeB.start).set({hour: 0, minute: 0, second: 0});
+                if ((moedBMin && moedB.isBefore(moedBMin)) || (moedBMax && moedB.isAfter(moedBMax))) {
+                    return;
+                }
+
+                if (filters.moedBDaysMin) {
+                    for (i = 0; i < currentMoedBDates.length; i++) {
+                        if (Math.abs(moedB.diff(currentMoedBDates[i], 'days')) < filters.moedBDaysMin) {
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (filters.filterWithExam && (general['מועד א'] || general['מועד א'])) {
+            return;
+        }
+
+        if (filters.filterWithoutExam && !general['מועד א'] && !general['מועד א']) {
+            return;
+        }
+
+        filtered.push(course);
+    });
+
+    return filtered;
 };

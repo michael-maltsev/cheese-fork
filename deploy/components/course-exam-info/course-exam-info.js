@@ -39,7 +39,7 @@ CourseExamInfo.prototype.renderCourses = function (courses) {
             var general = that.courseManager.getGeneralInfo(course);
             if (general[moedName]) {
                 var parsedDate = that.courseManager.parseExamDateTime(general[moedName]);
-                if (parsedDate !== null) {
+                if (parsedDate) {
                     moedDates[course] = moment.utc(parsedDate.start);
                 }
             }

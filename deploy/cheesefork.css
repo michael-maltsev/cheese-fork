@@ -69,3 +69,8 @@
 .bootstrap-dialog .bootstrap-dialog-close-button {
     float: left;
 }
+
+/* bootstrap4-dialog - add spacing between buttons */
+.bootstrap-dialog .bootstrap-dialog-footer-buttons .btn {
+    margin-right: .5rem;
+}
