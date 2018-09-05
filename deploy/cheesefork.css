@@ -35,6 +35,12 @@
     height: 100% !important;
 }
 
+.shared-schedule-title {
+    font-weight: 300;
+    line-height: 1.2;
+    text-align: center;
+}
+
 #general-info {
     font-size: .8rem;
     text-align: center;

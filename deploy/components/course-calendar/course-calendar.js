@@ -5,6 +5,7 @@ var CourseCalendar = (function () {
         this.element = element;
         this.courseManager = options.courseManager;
         this.colorGenerator = options.colorGenerator;
+        this.readonly = options.readonly;
         this.onCourseHoverIn = options.onCourseHoverIn;
         this.onCourseHoverOut = options.onCourseHoverOut;
         this.onCourseConflictedStatusChanged = options.onCourseConflictedStatusChanged;
@@ -293,6 +294,10 @@ var CourseCalendar = (function () {
     }
 
     function onEventClick(event) {
+        if (this.readonly) {
+            return;
+        }
+
         var that = this;
         var calendar = that.element;
 
