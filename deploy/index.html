@@ -76,6 +76,116 @@
         <div id="course-calendar" class="col-md-10"></div>
     </div>
 
+    <div class="d-none">
+        <form id="filter-form">
+            <div class="form-group">
+                <label for="filter-faculty">פקולטה</label>
+                <select id="filter-faculty" class="form-control" multiple>
+                </select>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="filter-points-min">מספר נקודות מינימלי</label>
+                    <select id="filter-points-min" class="form-control">
+                    </select>
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="filter-points-max">מספר נקודות מקסימלי</label>
+                    <select id="filter-points-max" class="form-control">
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="filter-courses-taken-list">קורסים שהושלמו (עבור שלושת האפשרויות הבאות)</label>
+                <input type="text" class="form-control" id="filter-courses-taken-list" placeholder="מספרי קורסים, מופרדים ברווח או פסיק"
+                       data-toggle="tooltip" data-placement="bottom" title="אפשר להדביק פה גם גיליון ציונים - כל טקסט המכיל מספרי קורסים יתאים">
+            </div>
+            <div class="form-group">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="filter-prerequisites">
+                    <label class="form-check-label" for="filter-prerequisites">
+                        אל תציג קורסים שחסר עבורם קדם
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="filter-linked-courses">
+                    <label class="form-check-label" for="filter-linked-courses">
+                        אל תציג קורסים שחסר עבורם צמוד
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="filter-overlapping-courses">
+                    <label class="form-check-label" for="filter-overlapping-courses">
+                        אל תציג קורסים ללא זיכוי נוסף
+                    </label>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-3">
+                    <label for="filter-moed-a-min">מועד א' מתאריך</label>
+                    <select id="filter-moed-a-min" class="form-control">
+                    </select>
+                </div>
+                <div class="form-group col-md-3">
+                    <label for="filter-moed-a-max">עד תאריך</label>
+                    <select id="filter-moed-a-max" class="form-control">
+                    </select>
+                </div>
+                <div class="form-group col-md-3">
+                    <label for="filter-moed-b-min">מועד ב' מתאריך</label>
+                    <select id="filter-moed-b-min" class="form-control">
+                    </select>
+                </div>
+                <div class="form-group col-md-3">
+                    <label for="filter-moed-b-max">עד תאריך</label>
+                    <select id="filter-moed-b-max" class="form-control">
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="filter-moed-a-days-min">מספר ימי למידה מינימלי למועד א'</label>
+                    <input type="number" min="0" value="0" class="form-control" id="filter-moed-a-days-min" placeholder="">
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="filter-moed-b-days-min">מספר ימי למידה מינימלי למועד ב'</label>
+                    <input type="number" min="0" value="0" class="form-control" id="filter-moed-b-days-min" placeholder="">
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="filter-with-exam">
+                    <label class="form-check-label" for="filter-with-exam">
+                        אל תציג קורסים עם מבחן
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="filter-without-exam">
+                    <label class="form-check-label" for="filter-without-exam">
+                        אל תציג קורסים ללא מבחן
+                    </label>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="filter-courses-limit">הגבל לקורסים</label>
+                    <input type="text" class="form-control" id="filter-courses-limit" placeholder="מספרי קורסים">
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="filter-courses-exclude">אל תציג קורסים</label>
+                    <input type="text" class="form-control" id="filter-courses-exclude" placeholder="מספרי קורסים">
+                </div>
+            </div>
+            <input type="submit" class="d-none">
+        </form>
+    </div>
+
     <footer class="pt-4 text-muted text-center text-small">
         <p class="mb-1">
             <span id="footer-semester" class="d-none">מציג מידע עבור סמסטר <span id="footer-semester-name"></span>.</span>
@@ -101,6 +211,8 @@
 <script src="modules/selectize/js/standalone/selectize.min.js"></script>
 <script src="modules/color-hash/color-hash.js"></script>
 <script src="modules/ics.js/ics.deps.min.js"></script>
+<script src="modules/reparse.js"></script>
+<script src="modules/boolean-expression.js"></script>
 <script src="https://www.gstatic.com/firebasejs/5.3.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/5.3.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/5.3.1/firebase-firestore.js"></script>
