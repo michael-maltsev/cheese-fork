@@ -520,7 +520,7 @@
         var footer = filterDialog.getModalFooter();
         footer.css('flex-wrap', 'wrap');
         $('<span id="filter-result">').addClass('bootstrap-dialog-message')
-            .css({'margin-left': 'auto', 'margin-bottom': '.25rem'}).prependTo(footer);
+            .css({'margin-bottom': '.25rem'}).prependTo(footer);
 
         filterForm.submit(function (event) {
             event.preventDefault(); // prevent default browser behavior
