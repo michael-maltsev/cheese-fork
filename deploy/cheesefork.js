@@ -283,18 +283,18 @@
             ],
             callbacks: {
                 // Called when the user has been successfully signed in.
-                signInSuccessWithAuthResult: function (authResult) {
+                /*signInSuccessWithAuthResult: function (authResult) {
                     if (authResult.user) {
                         handleSignedInUser(authResult.user);
                     }
                     // Do not redirect.
                     return false;
-                }
+                }*/
             },
             // Terms of service url.
-            tosUrl: 'https://policies.google.com/terms',
+            //tosUrl: 'https://policies.google.com/terms',
             // Privacy policy url.
-            privacyPolicyUrl: 'https://policies.google.com/privacy',
+            //privacyPolicyUrl: 'https://policies.google.com/privacy',
             // Disable accountchooser.com which is enabled by default.
             credentialHelper: firebaseui.auth.CredentialHelper.NONE
         };
@@ -640,7 +640,9 @@
 
         var semesterSelect = $('#select-semester');
 
-        if (!scheduleSharingUserId) {
+        viewingSharedSchedule = scheduleSharingUserId ? true : false;
+
+        if (!viewingSharedSchedule) {
             availableSemesters.forEach(function (semester) {
                 semesterSelect.append($('<option>', {
                     value: semester,
