@@ -12,6 +12,7 @@
     var coursesChosen = {};
     var previewingFromSelectControl = null;
     var allCoursesCount = 0, filteredCoursesCount = 0;
+    var stopScheduleWatching = null;
 
     // UI components.
     var courseSelect = null;
@@ -258,7 +259,7 @@
 
             try {
                 firebaseAuthUIInit(function () {
-                    loadSavedSchedule(function () {
+                    watchSavedSchedule(function () {
                         $('#page-loader').hide();
                     });
                 });
@@ -270,7 +271,7 @@
 
             if (!firebaseAuthUIInitialized) {
                 document.getElementById('firebase-sign-in').style.display = 'none';
-                loadSavedSchedule(function () {
+                watchSavedSchedule(function () {
                     $('#page-loader').hide();
                 });
             }
@@ -337,14 +338,16 @@
             } else if (user) {
                 // Slow reload.
                 $('#page-loader').show();
+                stopScheduleWatching();
                 resetSchedule();
-                loadSavedSchedule(function () {
+                watchSavedSchedule(function () {
                     $('#page-loader').hide();
                 });
             } else {
                 // Fast reload.
+                stopScheduleWatching();
                 resetSchedule();
-                loadSavedSchedule(function () {});
+                watchSavedSchedule(function () {});
             }
         });
 
@@ -807,10 +810,7 @@
 
         var doc = firestoreUserDoc(scheduleSharingUserId);
         doc.onSnapshot(function (result) {
-            var scroll = $(window).scrollTop(); // save scroll position
-            resetSchedule();
-            setScheduleFromBackendData(result.exists ? result.data() : {});
-            $(window).scrollTop(scroll); // restore scroll position
+            setScheduleFromBackendData(result.exists ? result.data() : {}, !firstDataLoaded);
 
             if (result.exists && result.data().displayName) {
                 $('#sharing-user-name').text(result.data().displayName);
@@ -830,19 +830,53 @@
         });
     }
 
-    function loadSavedSchedule(onLoadedFunc) {
+    function watchSavedSchedule(onLoadedFunc) {
         var doc = firestoreAuthenticatedUserDoc();
         if (doc) {
-            doc.get().then(function (result) {
-                // Save name in server for sharing purposes.
-                doc.update({displayName: firebase.auth().currentUser.displayName});
+            var firstDataLoaded = false;
 
-                setScheduleFromBackendData(result.exists ? result.data() : {});
-                onLoadedFunc();
+            stopScheduleWatching = doc.onSnapshot(function (result) {
+                if (result.metadata.hasPendingWrites) {
+                    // The callback was called as a result of a local change, ignore it.
+                    // https://stackoverflow.com/questions/50186413/is-firestore-onsnapshot-update-event-due-to-local-client-set
+                    return;
+                }
+
+                if (!firstDataLoaded) {
+                    // Save name in server for sharing purposes.
+                    doc.update({displayName: firebase.auth().currentUser.displayName});
+                }
+
+                setScheduleFromBackendData(result.exists ? result.data() : {}, !firstDataLoaded);
+
+                if (!firstDataLoaded) {
+                    onLoadedFunc();
+                    firstDataLoaded = true;
+                }
             }, function (error) {
                 alert('Error loading data from server: ' + error);
             });
         } else {
+            var onStorageEvent = function (e) {
+                var prefix = currentSemester + '_';
+                // Check if the line starts with a required prefix.
+                // https://stackoverflow.com/a/4579228
+                if (e.key.lastIndexOf(prefix, 0) === 0) {
+                    loadFromLocalStorage(true);
+                }
+            };
+
+            window.addEventListener('storage', onStorageEvent);
+
+            stopScheduleWatching = function () {
+                window.removeEventListener('storage', onStorageEvent);
+            };
+
+            loadFromLocalStorage();
+            onLoadedFunc();
+        }
+
+        function loadFromLocalStorage(restoreScrollPosition) {
             var data = {};
             try {
                 var semesterCoursesKey = currentSemester + '_courses';
@@ -854,13 +888,20 @@
             } catch (e) {
                 // localStorage is not available in IE/Edge when running from a local file.
             }
-            setScheduleFromBackendData(data);
-            onLoadedFunc();
+            setScheduleFromBackendData(data, restoreScrollPosition);
         }
     }
 
-    function setScheduleFromBackendData(data) {
+    function setScheduleFromBackendData(data, restoreScrollPosition) {
+        var scrollTop;
+        if (restoreScrollPosition) {
+            scrollTop = $(window).scrollTop(); // save scroll position
+        }
+
         var semesterCoursesKey = currentSemester + '_courses';
+
+        coursesChosen = {};
+        courseButtonList.clear();
 
         var schedule = {};
 
@@ -879,18 +920,19 @@
         courseCalendar.loadSavedSchedule(schedule);
         updateGeneralInfoLine();
         courseExamInfo.renderCourses(getSelectedCourses());
-        if (!viewingSharedSchedule) {
-            filterReset();
+
+        if (restoreScrollPosition) {
+            $(window).scrollTop(scrollTop); // restore scroll position
         }
     }
 
     function resetSchedule() {
+        coursesChosen = {};
         courseButtonList.clear();
         courseCalendar.removeAll();
-        coursesChosen = {};
-
         updateGeneralInfoLine();
         courseExamInfo.renderCourses(getSelectedCourses());
+        filterReset();
     }
 
     function firestoreAuthenticatedUserDoc() {
