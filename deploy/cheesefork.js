@@ -307,13 +307,13 @@
             ],
             callbacks: {
                 // Called when the user has been successfully signed in.
-                /*signInSuccessWithAuthResult: function (authResult) {
-                    if (authResult.user) {
+                signInSuccessWithAuthResult: function (authResult) {
+                    /*if (authResult.user) {
                         handleSignedInUser(authResult.user);
-                    }
+                    }*/
                     // Do not redirect.
                     return false;
-                }*/
+                }
             },
             // Terms of service url.
             //tosUrl: 'https://policies.google.com/terms',
