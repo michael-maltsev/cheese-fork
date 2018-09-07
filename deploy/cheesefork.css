@@ -35,6 +35,11 @@
     height: 100% !important;
 }
 
+/* make the filter footer text align to the right */
+.course-filter-dialog .modal-footer {
+    justify-content: space-between;
+}
+
 .shared-schedule-title {
     font-weight: 300;
     line-height: 1.2;
@@ -86,11 +91,6 @@
 
 .bootstrap-dialog .bootstrap-dialog-close-button {
     float: left;
-}
-
-/* bootstrap4-dialog - make the filter footer text align to the right */
-.bootstrap-dialog .modal-footer {
-    justify-content: space-between;
 }
 
 /* bootstrap4-dialog - add spacing between buttons */
