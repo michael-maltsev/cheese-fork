@@ -498,6 +498,7 @@
 
         var filterForm = $('#filter-form');
         filterDialog = BootstrapDialog.show({
+            cssClass: 'course-filter-dialog',
             title: 'סינון קורסים',
             message: filterForm.get(0),
             buttons: [{
