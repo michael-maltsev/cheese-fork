@@ -1,17 +1,28 @@
-@media screen and (max-width: 400px) {
-    #main-logo {
-        font-size: 1.5rem;
-    }
-}
-
 @media screen and (max-width: 350px) {
-    #main-logo {
+    #top-navbar .navbar-brand {
         font-size: 1rem;
     }
-    #main-logo img {
+    #top-navbar .navbar-brand img {
         height: 20px;
         width: auto;
     }
+}
+
+#top-navbar .navbar-brand {
+    margin-left: 0;
+    margin-right: 1rem;
+}
+
+#top-navbar .navbar-nav .nav-link {
+    color: rgba(0,0,0,.9);
+}
+
+#top-navbar .navbar-nav .nav-link.disabled {
+    color: rgba(0,0,0,.3);
+}
+
+#top-navbar-supported-content.top-navbar-content-uninitialized {
+    visibility: hidden !important;
 }
 
 .selectize-control.select-course {
@@ -40,7 +51,7 @@
     justify-content: space-between;
 }
 
-.shared-schedule-title {
+#shared-schedule-title {
     font-weight: 300;
     line-height: 1.2;
     text-align: center;

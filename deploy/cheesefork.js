@@ -15,6 +15,7 @@
     var stopScheduleWatching = null;
 
     // UI components.
+    var loginDialog = null;
     var courseSelect = null;
     var filterDialog = null;
     var courseButtonList = null;
@@ -28,33 +29,9 @@
 
         viewingSharedSchedule = scheduleSharingUserId ? true : false;
 
+        navbarInit();
+
         if (!viewingSharedSchedule) {
-            var semesterSelect = $('#select-semester');
-
-            availableSemesters.forEach(function (semester) {
-                semesterSelect.append($('<option>', {
-                    value: semester,
-                    text: semesterFriendlyName(semester)
-                }));
-            });
-
-            semesterSelect.val(currentSemester).change(function () {
-                window.location = '?semester=' + this.value;
-            });
-
-            $('#save-as-ics').click(function () {
-                var icsCal = ics();
-
-                var yearFrom = parseInt(currentSemester.slice(0, 4), 10);
-                var yearTo = yearFrom + 2;
-
-                if (courseCalendar.saveAsIcs(icsCal, yearFrom, yearTo) === 0) {
-                    alert('המערכת ריקה');
-                } else {
-                    icsCal.download(semesterFriendlyName(currentSemester));
-                }
-            });
-
             var allCourses = courseManager.getAllCourses();
             allCoursesCount = allCourses.length;
             filteredCoursesCount = allCourses.length;
@@ -149,8 +126,10 @@
 
             filterInit();
         } else {
+            $('#top-navbar-home').removeClass('d-none');
+            $('#top-navbar-share').addClass('d-none');
+            $('#top-navbar-semester').addClass('d-none');
             $('#select-course').hide();
-            $('#top-navbar-toggler').hide();
         }
 
         courseButtonList = new CourseButtonList($('#course-button-list'), {
@@ -242,6 +221,8 @@
             }
         });
 
+        $('#top-navbar-supported-content').removeClass('top-navbar-content-uninitialized');
+
         $('#footer-semester-name').text(semesterFriendlyName(currentSemester));
         $('#footer-semester').removeClass('d-none');
 
@@ -270,12 +251,118 @@
             }
 
             if (!firebaseAuthUIInitialized) {
-                document.getElementById('firebase-sign-in').style.display = 'none';
                 watchSavedSchedule(function () {
                     $('#page-loader').hide();
                 });
             }
         }
+    }
+
+    function navbarInit() {
+        if (!viewingSharedSchedule) {
+            var semesterSelect = $('#top-navbar-semester').find('.dropdown-menu');
+
+            availableSemesters.forEach(function (semester) {
+                var link = $('<a class="dropdown-item">')
+                    .prop('href', '?semester=' + encodeURIComponent(semester))
+                    .text(semesterFriendlyName(semester));
+                if (semester === currentSemester) {
+                    link.addClass('active');
+                }
+                semesterSelect.append(link);
+            });
+
+            $('#top-navbar-login').click(function (event) {
+                event.preventDefault();
+
+                if (loginDialog) {
+                    loginDialog.open();
+                    return;
+                }
+
+                loginDialog = BootstrapDialog.show({
+                    title: 'כניסה למערכת',
+                    message: $('#firebaseui-auth-container'),
+                    buttons: [{
+                        label: 'סגור',
+                        action: function (dialog) {
+                            dialog.close();
+                        }
+                    }],
+                    autodestroy: false
+                });
+            });
+
+            $('#top-navbar-logout').click(function (event) {
+                event.preventDefault();
+
+                firebase.auth().signOut();
+            });
+
+            $('#top-navbar-share').click(function (event) {
+                event.preventDefault();
+                if ($(this).find('a').hasClass('disabled')) {
+                    return;
+                }
+
+                var url = location.protocol + '//' + location.host + location.pathname +
+                    '?semester=' + encodeURIComponent(currentSemester) +
+                    '&uid=' + encodeURIComponent(firebase.auth().currentUser.uid);
+                var urlDiv = $('<div dir="ltr" class="text-right">').html(
+                    $('<a target="_blank">').prop('href', url).text(url));
+                var shareDialogContent = $('<div>הקישור לשיתוף המערכת:<br></div>').append(urlDiv);
+
+                BootstrapDialog.show({
+                    title: 'שיתוף מערכת',
+                    message: shareDialogContent,
+                    buttons: [{
+                        label: 'העתק קישור',
+                        cssClass: 'btn-primary',
+                        action: function (dialog) {
+                            // Doesn't work without setTimeout for some reason.
+                            setTimeout(function () {
+                                if (copyToClipboard(url)) {
+                                    dialog.close();
+                                } else {
+                                    alert('ההעתקה נכשלה');
+                                }
+                            }, 0);
+                        }
+                    }, {
+                        label: 'פתח בחלון חדש',
+                        action: function (dialog) {
+                            var win = window.open(url, '_blank');
+                            win.focus();
+                            dialog.close();
+                        }
+                    }, {
+                        label: 'סגור',
+                        action: function (dialog) {
+                            dialog.close();
+                        }
+                    }]
+                });
+            });
+        }
+
+        $('#top-navbar-export').click(function () {
+            event.preventDefault();
+
+            var icsCal = ics();
+
+            var yearFrom = parseInt(currentSemester.slice(0, 4), 10);
+            var yearTo = yearFrom + 2;
+
+            if (courseCalendar.saveAsIcs(icsCal, yearFrom, yearTo) === 0) {
+                BootstrapDialog.show({
+                    title: 'אופס',
+                    message: 'המערכת ריקה',
+                    size: BootstrapDialog.SIZE_SMALL
+                });
+            } else {
+                icsCal.download(semesterFriendlyName(currentSemester));
+            }
+        });
     }
 
     function firebaseInit() {
@@ -308,9 +395,9 @@
             callbacks: {
                 // Called when the user has been successfully signed in.
                 signInSuccessWithAuthResult: function (authResult) {
-                    /*if (authResult.user) {
-                        handleSignedInUser(authResult.user);
-                    }*/
+                    if (authResult.user) {
+                        loginDialog.close();
+                    }
                     // Do not redirect.
                     return false;
                 }
@@ -351,19 +438,17 @@
             }
         });
 
-        document.getElementById('sign-out').addEventListener('click', function () {
-            firebase.auth().signOut();
-        });
-
         function handleSignedInUser(user) {
-            document.getElementById('user-signed-in').style.display = 'block';
-            document.getElementById('user-signed-out').style.display = 'none';
-            document.getElementById('user-name').textContent = user.displayName;
+            $('#top-navbar-login').addClass('d-none');
+            $('#top-navbar-logout').removeClass('d-none')
+                .find('a').attr('data-original-title', 'מחובר בתור: ' + user.displayName);
+            $('#top-navbar-share').find('a').removeClass('disabled').tooltip('disable');
         }
 
         function handleSignedOutUser() {
-            document.getElementById('user-signed-in').style.display = 'none';
-            document.getElementById('user-signed-out').style.display = 'block';
+            $('#top-navbar-logout').addClass('d-none');
+            $('#top-navbar-login').removeClass('d-none');
+            $('#top-navbar-share').find('a').addClass('disabled').tooltip('enable');
             firebaseUI.start('#firebaseui-auth-container', uiConfig);
         }
     }
@@ -500,7 +585,7 @@
         filterDialog = BootstrapDialog.show({
             cssClass: 'course-filter-dialog',
             title: 'סינון קורסים',
-            message: filterForm.get(0),
+            message: filterForm,
             buttons: [{
                 label: 'סינון',
                 cssClass: 'btn-primary',
@@ -527,7 +612,7 @@
             .css({'margin-bottom': '.25rem'}).prependTo(footer);
 
         filterForm.submit(function (event) {
-            event.preventDefault(); // prevent default browser behavior
+            event.preventDefault();
             filterDialog.getModalFooter().find('button.btn-primary').click();
         });
     }
@@ -945,5 +1030,34 @@
 
     function firestoreUserDoc(userId) {
         return firestoreDb.collection('users').doc(userId);
+    }
+
+    // https://stackoverflow.com/a/33928558
+    // Copies a string to the clipboard. Must be called from within an
+    // event handler such as click. May return false if it failed, but
+    // this is not always possible. Browser support for Chrome 43+,
+    // Firefox 42+, Safari 10+, Edge and IE 10+.
+    // IE: The clipboard feature may be disabled by an administrator. By
+    // default a prompt is shown the first time the clipboard is
+    // used (per session).
+    function copyToClipboard(text) {
+        if (window.clipboardData && window.clipboardData.setData) {
+            // IE specific code path to prevent textarea being shown while dialog is visible.
+            return window.clipboardData.setData("Text", text);
+        } else if (document.queryCommandSupported && document.queryCommandSupported("copy")) {
+            var textarea = document.createElement("textarea");
+            textarea.textContent = text;
+            textarea.style.position = "fixed"; // Prevent scrolling to bottom of page in MS Edge.
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                return document.execCommand("copy"); // Security exception may be thrown by some browsers.
+            } catch (ex) {
+                //console.warn("Copy to clipboard failed.", ex);
+                return false;
+            } finally {
+                document.body.removeChild(textarea);
+            }
+        }
     }
 })();
