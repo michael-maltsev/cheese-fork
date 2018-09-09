@@ -896,7 +896,8 @@
 
         var doc = firestoreUserDoc(scheduleSharingUserId);
         doc.onSnapshot(function (result) {
-            setScheduleFromBackendData(result.exists ? result.data() : {}, !firstDataLoaded);
+            var session = result.exists ? savedSessionFromFirestoreData(result.data()) : {};
+            setScheduleFromSavedSession(session, !firstDataLoaded);
 
             if (result.exists && result.data().displayName) {
                 $('#sharing-user-name').text(result.data().displayName);
@@ -933,7 +934,8 @@
                     doc.update({displayName: firebase.auth().currentUser.displayName});
                 }
 
-                setScheduleFromBackendData(result.exists ? result.data() : {}, !firstDataLoaded);
+                var session = result.exists ? savedSessionFromFirestoreData(result.data()) : {};
+                setScheduleFromSavedSession(session, !firstDataLoaded);
 
                 if (!firstDataLoaded) {
                     onLoadedFunc();
@@ -948,7 +950,8 @@
                 // Check if the line starts with a required prefix.
                 // https://stackoverflow.com/a/4579228
                 if (e.key.lastIndexOf(prefix, 0) === 0) {
-                    loadFromLocalStorage(true);
+                    var session = savedSessionFromLocalStorage();
+                    setScheduleFromSavedSession(session, true);
                 }
             };
 
@@ -958,27 +961,40 @@
                 window.removeEventListener('storage', onStorageEvent);
             };
 
-            loadFromLocalStorage();
+            var session = savedSessionFromLocalStorage();
+            setScheduleFromSavedSession(session, false);
             onLoadedFunc();
-        }
-
-        function loadFromLocalStorage(restoreScrollPosition) {
-            var data = {};
-            try {
-                var semesterCoursesKey = currentSemester + '_courses';
-                data[semesterCoursesKey] = JSON.parse(localStorage.getItem(semesterCoursesKey) || '[]');
-                data[semesterCoursesKey].forEach(function (course) {
-                    var courseKey = currentSemester + '_' + course;
-                    data[courseKey] = JSON.parse(localStorage.getItem(courseKey) || '{}');
-                });
-            } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
-            }
-            setScheduleFromBackendData(data, restoreScrollPosition);
         }
     }
 
-    function setScheduleFromBackendData(data, restoreScrollPosition) {
+    function savedSessionFromLocalStorage() {
+        var session = {};
+        try {
+            var semesterCoursesKey = currentSemester + '_courses';
+            session[semesterCoursesKey] = JSON.parse(localStorage.getItem(semesterCoursesKey) || '[]');
+            session[semesterCoursesKey].forEach(function (course) {
+                var courseKey = currentSemester + '_' + course;
+                session[courseKey] = JSON.parse(localStorage.getItem(courseKey) || '{}');
+            });
+        } catch (e) {
+            // localStorage is not available in IE/Edge when running from a local file.
+        }
+        return session;
+    }
+
+    function savedSessionFromFirestoreData(data) {
+        // Returns only the data relevant to the current semester from data.
+        var session = {};
+        var semesterCoursesKey = currentSemester + '_courses';
+        session[semesterCoursesKey] = data[semesterCoursesKey] || [];
+        session[semesterCoursesKey].forEach(function (course) {
+            var courseKey = currentSemester + '_' + course;
+            session[courseKey] = data[courseKey] || {};
+        });
+        return session;
+    }
+
+    function setScheduleFromSavedSession(session, restoreScrollPosition) {
         var scrollTop;
         if (restoreScrollPosition) {
             scrollTop = $(window).scrollTop(); // save scroll position
@@ -991,14 +1007,14 @@
 
         var schedule = {};
 
-        var courses = data[semesterCoursesKey] || [];
+        var courses = session[semesterCoursesKey] || [];
         courses.forEach(function (course) {
             if (!coursesChosen.propertyIsEnumerable(course) && courseManager.doesExist(course)) {
                 coursesChosen[course] = true;
                 courseButtonList.addCourse(course);
 
                 var courseKey = currentSemester + '_' + course;
-                var lessons = data[courseKey] || {};
+                var lessons = session[courseKey] || {};
                 schedule[course] = lessons;
             }
         });
