@@ -320,14 +320,11 @@
                         label: 'העתק קישור',
                         cssClass: 'btn-primary',
                         action: function (dialog) {
-                            // Doesn't work without setTimeout for some reason.
-                            setTimeout(function () {
-                                if (copyToClipboard(url)) {
-                                    dialog.close();
-                                } else {
-                                    alert('ההעתקה נכשלה');
-                                }
-                            }, 0);
+                            copyToClipboard(url, function () {
+                                dialog.close();
+                            }, function () {
+                                alert('ההעתקה נכשלה');
+                            });
                         }
                     }, {
                         label: 'פתח בחלון חדש',
@@ -1176,31 +1173,36 @@
         return firestoreDb.collection('users').doc(userId);
     }
 
-    // https://stackoverflow.com/a/33928558
-    // Copies a string to the clipboard. Must be called from within an
-    // event handler such as click. May return false if it failed, but
-    // this is not always possible. Browser support for Chrome 43+,
-    // Firefox 42+, Safari 10+, Edge and IE 10+.
-    // IE: The clipboard feature may be disabled by an administrator. By
-    // default a prompt is shown the first time the clipboard is
-    // used (per session).
-    function copyToClipboard(text) {
-        if (window.clipboardData && window.clipboardData.setData) {
-            // IE specific code path to prevent textarea being shown while dialog is visible.
-            return window.clipboardData.setData("Text", text);
-        } else if (document.queryCommandSupported && document.queryCommandSupported("copy")) {
-            var textarea = document.createElement("textarea");
-            textarea.textContent = text;
-            textarea.style.position = "fixed"; // Prevent scrolling to bottom of page in MS Edge.
-            document.body.appendChild(textarea);
-            textarea.select();
+    // https://stackoverflow.com/a/30810322
+    function copyToClipboard(text, onSuccess, onFailure) {
+        if (!navigator.clipboard) {
+            fallbackCopyTextToClipboard(text);
+            return;
+        }
+        navigator.clipboard.writeText(text).then(function() {
+            onSuccess();
+        }, function (err) {
+            onFailure();
+        });
+
+        function fallbackCopyTextToClipboard(text) {
+            var textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            var successful = false;
             try {
-                return document.execCommand("copy"); // Security exception may be thrown by some browsers.
-            } catch (ex) {
-                //console.warn("Copy to clipboard failed.", ex);
-                return false;
-            } finally {
-                document.body.removeChild(textarea);
+                successful = document.execCommand('copy');
+            } catch (err) { }
+
+            document.body.removeChild(textArea);
+
+            if (successful) {
+                onSuccess();
+            } else {
+                onFailure();
             }
         }
     }
