@@ -1,17 +1,28 @@
-@media screen and (max-width: 400px) {
-    #main-logo {
-        font-size: 1.5rem;
-    }
-}
-
 @media screen and (max-width: 350px) {
-    #main-logo {
+    #top-navbar .navbar-brand {
         font-size: 1rem;
     }
-    #main-logo img {
+    #top-navbar .navbar-brand img {
         height: 20px;
         width: auto;
     }
+}
+
+#top-navbar .navbar-brand {
+    margin-left: 0;
+    margin-right: 1rem;
+}
+
+#top-navbar .navbar-nav .nav-link {
+    color: rgba(0,0,0,.9);
+}
+
+#top-navbar .navbar-nav .nav-link.disabled {
+    color: rgba(0,0,0,.3);
+}
+
+#top-navbar-supported-content.top-navbar-content-uninitialized {
+    visibility: hidden !important;
 }
 
 .selectize-control.select-course {
@@ -21,6 +32,29 @@
 .selectize-control.select-course .selectize-input {
     min-height: initial;
     padding: 0.5rem 0.75rem;
+}
+
+/* Next two rules: selectize dropdown height based on screen height */
+/* https://stackoverflow.com/questions/46613111/selectize-dropdown-height-base-on-screen-height */
+.selectize-control.select-course .selectize-dropdown,
+.selectize-control.select-course .selectize-dropdown.form-control {
+    height: 50vh !important;
+}
+
+.selectize-control.select-course .selectize-dropdown-content {
+    max-height: 100% !important;
+    height: 100% !important;
+}
+
+/* make the filter footer text align to the right */
+.course-filter-dialog .modal-footer {
+    justify-content: space-between;
+}
+
+#shared-schedule-title {
+    font-weight: 300;
+    line-height: 1.2;
+    text-align: center;
 }
 
 #general-info {
@@ -36,70 +70,19 @@
     margin-bottom: 10px;
 }
 
+#course-exam-info-wrapper {
+    /* A workaround to an Edge bug: https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/18883305/ */
+    filter: brightness(1);
+}
+
+#course-exam-info {
+    position: sticky;
+    bottom: 20px;
+}
+
 /* Set selectize dropdown cursor to be pointer instead of text selection */
 .selectize-dropdown .option {
     cursor: default;
-}
-
-/* Dynamic calendar table height */
-#calendar .fc-time-grid .fc-slats td {
-    font-size: calc(-0.3em + 3.1vh);
-}
-
-/* Dynamic event text size, RTL direction, default cursor for IE/Edge */
-#calendar .fc-event {
-    font-size: calc(0.1em + 1.3vh);
-    direction: rtl;
-    cursor: default;
-}
-
-/* Center event text vertically */
-#calendar .fc-time-grid-event {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Center event text horizontally */
-#calendar .fc-content {
-    text-align: center !important;
-}
-
-/* Calendar items */
-.calendar-item-previewed {
-    border: 3px solid #1565C0 !important;
-}
-
-.calendar-item-same-course-as-hovered {
-    border: 3px solid #1565C0 !important;
-}
-
-.calendar-item-same-type-as-hovered {
-    border: 3px solid #CC0000 !important;
-}
-
-.calendar-item-previewed .fc-content,
-.calendar-item-same-course-as-hovered .fc-content,
-.calendar-item-same-type-as-hovered .fc-content {
-    font-weight: bold;
-}
-
-.calendar-item-last-choice .fc-content {
-    color: #AA66CC;
-}
-
-/* List group items */
-.list-group-item-same-course-as-hovered {
-    -webkit-box-shadow: inset 0 0 0 3px #CC0000;
-    -moz-box-shadow: inset 0 0 0 3px #CC0000;
-    box-shadow: inset 0 0 0 3px #CC0000;
-    font-weight: bold;
-}
-
-.list-group-item-conflicted {
-    color: red !important;
-    font-weight: bold;
-    text-shadow: 0 0 10px black;
 }
 
 .course-description-tooltip-inner {
@@ -112,45 +95,16 @@
     cursor: default;
 }
 
-/* Exam dates items */
-.exams-moed-content {
-    margin: 6px 0 6px;
-}
-
-.exam-days-item {
-    color: white;
-    padding: 5px;
-    border-radius: 6px;
-    cursor: default;
-}
-
-.exam-days-item-same-course-as-hovered {
-    -webkit-box-shadow: inset 0 0 0 3px #CC0000;
-    -moz-box-shadow: inset 0 0 0 3px #CC0000;
-    box-shadow: inset 0 0 0 3px #CC0000;
-    font-weight: bold;
-}
-
-.exam-days-item-conflicted {
-    color: red;
-    font-weight: bold;
-    text-shadow: 0 0 10px black;
-}
-
-.exam-days-left-arrow {
-    border: solid black;
-    border-width: 0 3px 3px 0;
-    display: inline-block;
-    padding: 3px;
-    transform: rotate(135deg);
-    -webkit-transform: rotate(135deg);
-}
-
 /* bootstrap4-dialog RTL fix */
 .bootstrap-dialog .bootstrap-dialog-header {
-    width: 100%;
+    flex-grow: 1;
 }
 
 .bootstrap-dialog .bootstrap-dialog-close-button {
     float: left;
+}
+
+/* bootstrap4-dialog - add spacing between buttons */
+.bootstrap-dialog .bootstrap-dialog-footer-buttons .btn {
+    margin-right: .5rem;
 }

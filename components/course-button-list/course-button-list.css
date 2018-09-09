@@ -1,0 +1,49 @@
+.course-button-list-item {
+    -webkit-appearance: button;
+}
+
+/* The following two rules are for non-WebKit browsers */
+/* WebKit will ignore it because of the previous rule */
+.course-button-list-item.active {
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.1));
+}
+
+.course-button-list-item.active:active {
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.1));
+}
+
+.course-button-list-item .content-wrapper {
+    position: relative;
+}
+
+.course-button-list-item .content-absolute {
+    position: absolute;
+}
+
+.course-button-list-item .content-bold-hidden {
+    font-weight: bold;
+    visibility: hidden;
+}
+
+.course-button-list-item .badge {
+    /* Prevent hovering the information badge by content-wrapper */
+    position: relative;
+    /* Prevent copying the "i" */
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.course-button-list-item-hovered {
+    -webkit-box-shadow: inset 0 0 0 3px #CC0000;
+    -moz-box-shadow: inset 0 0 0 3px #CC0000;
+    box-shadow: inset 0 0 0 3px #CC0000;
+    font-weight: bold;
+}
+
+.course-button-list-item-conflicted {
+    color: red !important;
+    font-weight: bold;
+    text-shadow: 0 0 10px black;
+}

@@ -1,12 +1,768 @@
-$(document).ready(function () {
-    'use strict';
+'use strict';
 
-    var courses_hashmap = {};
-    var courses_chosen = {};
-    var color_hash = new ColorHash();
-    var firestore_db = null;
+/* global ColorHash, BootstrapDialog, moment, ics, firebase, firebaseui */
+/* global CourseManager, CourseButtonList, CourseExamInfo, CourseCalendar */
+/* global courses_from_rishum, availableSemesters, currentSemester, scheduleSharingUserId */
 
-    function semester_friendly_name(semester) {
+(function () {
+    var courseManager = new CourseManager(courses_from_rishum);
+    var colorHash = new ColorHash();
+    var firestoreDb = null;
+    var viewingSharedSchedule = false;
+    var coursesChosen = {};
+    var previewingFromSelectControl = null;
+    var allCoursesCount = 0, filteredCoursesCount = 0;
+    var stopScheduleWatching = null;
+    var currentSavedSession = null, savedSessionForUndo = null, savedSessionForRedo = null;
+
+    // UI components.
+    var loginDialog = null;
+    var courseSelect = null;
+    var filterDialog = null;
+    var courseButtonList = null;
+    var courseExamInfo = null;
+    var courseCalendar = null;
+
+    cheeseforkInit();
+
+    function cheeseforkInit() {
+        $('[data-toggle="tooltip"]').tooltip();
+
+        viewingSharedSchedule = scheduleSharingUserId ? true : false;
+
+        navbarInit();
+
+        if (!viewingSharedSchedule) {
+            var allCourses = courseManager.getAllCourses();
+            allCoursesCount = allCourses.length;
+            filteredCoursesCount = allCourses.length;
+
+            courseSelect = $('#select-course').selectize({
+                //searchConjunction: 'or',
+                options: makeCourseSelectOptions(allCourses.sort()),
+                maxOptions: 202,
+                render: {
+                    option: function (item) {
+                        if (item.value === 'filter') {
+                            var text = 'סינון קורסים';
+
+                            if (filteredCoursesCount < allCoursesCount) {
+                                text += ' (' + filteredCoursesCount + '/' + allCoursesCount + ')';
+                            }
+
+                            return $('<div>').addClass('option font-weight-bold').text(text);
+                        } else if (item.value === 'partial') {
+                            return $('<div>').addClass('option font-italic').text('מציג 200 קורסים ראשונים');
+                        }
+
+                        var course = item.value;
+                        var general = courseManager.getGeneralInfo(course);
+
+                        var courseDescriptionHtml = $('<div>').text(courseManager.getDescription(course)).html().replace(/\n/g, '<br>');
+
+                        var courseNumber = $('<abbr>').text(general['מספר מקצוע'])
+                            .prop('title', courseDescriptionHtml)
+                            .attr({
+                                'data-toggle': 'tooltip',
+                                'data-html': 'true',
+                                'data-placement': 'right',
+                                'data-template': '<div class="tooltip" role="tooltip"><div class="arrow"></div><div class="tooltip-inner course-description-tooltip-inner"></div></div>',
+                                'data-boundary': 'viewport'
+                            });
+
+                        return $('<div>').addClass('option').append(courseNumber)
+                            .append(document.createTextNode(' - ' + general['שם מקצוע'])).get(0);
+                    }
+                },
+                onItemAdd: function (course) {
+                    if (course === 'filter') {
+                        filterOpen();
+                    } else if (course === 'partial') {
+                        // Do nothing
+                    } else if (!coursesChosen.propertyIsEnumerable(course)) {
+                        coursesChosen[course] = true;
+                        courseButtonList.addCourse(course);
+                        courseCalendar.addCourse(course);
+                        selectedCourseSave(course);
+                        updateGeneralInfoLine();
+                        courseExamInfo.renderCourses(getSelectedCourses());
+                        // Can't apply filter inside onItemAdd since it changes the select contents.
+                        setTimeout(filterApply, 0);
+                    }
+                    this.clear();
+                },
+                onDropdownItemActivate: function (course) {
+                    if (course === 'filter' || course === 'partial') {
+                        return;
+                    }
+
+                    previewingFromSelectControl = course;
+
+                    if (!coursesChosen.propertyIsEnumerable(course)) {
+                        courseCalendar.addCourse(course);
+                        courseExamInfo.renderCourses(getSelectedCourses().concat([course]));
+                    }
+                    courseExamInfo.setHighlighted(course);
+                    courseCalendar.previewCourse(course);
+                },
+                onDropdownItemDeactivate: function (course) {
+                    if (course === 'filter' || course === 'partial') {
+                        return;
+                    }
+
+                    if (!coursesChosen.propertyIsEnumerable(course)) {
+                        courseCalendar.removeCourse(course);
+                        courseExamInfo.renderCourses(getSelectedCourses());
+                    } else {
+                        // Remove highlight
+                        courseExamInfo.removeHighlighted(course);
+                        courseCalendar.unpreviewCourse(course);
+                    }
+
+                    previewingFromSelectControl = null;
+                }
+            }).data('selectize');
+
+            $('.selectize-control .selectize-dropdown').tooltip({selector: '[data-toggle=tooltip]'});
+
+            filterInit();
+        } else {
+            $('#top-navbar-home').removeClass('d-none');
+            $('#top-navbar-share').addClass('d-none');
+            $('#top-navbar-semester').addClass('d-none');
+            $('#select-course').hide();
+        }
+
+        courseButtonList = new CourseButtonList($('#course-button-list'), {
+            courseManager: courseManager,
+            colorGenerator: function (course) {
+                return colorHash.hex(course);
+            },
+            readonly: viewingSharedSchedule,
+            onHoverIn: function (course) {
+                courseExamInfo.setHovered(course);
+                if (previewingFromSelectControl) {
+                    courseCalendar.unpreviewCourse(previewingFromSelectControl);
+                }
+                courseCalendar.previewCourse(course);
+            },
+            onHoverOut: function (course) {
+                courseExamInfo.removeHovered(course);
+                courseCalendar.unpreviewCourse(course);
+                if (previewingFromSelectControl) {
+                    courseCalendar.previewCourse(previewingFromSelectControl);
+                }
+            },
+            onEnableCourse: function (course) {
+                courseCalendar.addCourse(course);
+                courseCalendar.previewCourse(course);
+                selectedCourseSave(course);
+                coursesChosen[course] = true;
+                updateGeneralInfoLine();
+                courseExamInfo.renderCourses(getSelectedCourses());
+                filterApply();
+            },
+            onDisableCourse: function (course) {
+                courseCalendar.removeCourse(course);
+                selectedCourseUnsave(course);
+                coursesChosen[course] = false;
+                updateGeneralInfoLine();
+                courseExamInfo.renderCourses(getSelectedCourses());
+                filterApply();
+            }
+        });
+
+        courseExamInfo = new CourseExamInfo($('#course-exam-info'), {
+            courseManager: courseManager,
+            colorGenerator: function (course) {
+                return colorHash.hex(course);
+            },
+            onHoverIn: function (course) {
+                courseButtonList.setHovered(course);
+                if (previewingFromSelectControl) {
+                    courseCalendar.unpreviewCourse(previewingFromSelectControl);
+                }
+                courseCalendar.previewCourse(course);
+            },
+            onHoverOut: function (course) {
+                courseButtonList.removeHovered(course);
+                courseCalendar.unpreviewCourse(course);
+                if (previewingFromSelectControl) {
+                    courseCalendar.previewCourse(previewingFromSelectControl);
+                }
+            }
+        });
+
+        courseCalendar = new CourseCalendar($('#course-calendar'), {
+            courseManager: courseManager,
+            colorGenerator: function (course) {
+                return colorHash.hex(course);
+            },
+            readonly: viewingSharedSchedule,
+            onCourseHoverIn: function (course) {
+                courseButtonList.setHovered(course);
+                courseExamInfo.setHovered(course);
+            },
+            onCourseHoverOut: function (course) {
+                courseButtonList.removeHovered(course);
+                courseExamInfo.removeHovered(course);
+            },
+            onCourseConflictedStatusChanged: function (course, conflicted) {
+                if (conflicted) {
+                    courseButtonList.setConflicted(course);
+                } else {
+                    courseButtonList.removeConflicted(course);
+                }
+            },
+            onLessonSelected: function (course, lessonNumber, lessonType) {
+                selectedLessonSave(course, lessonNumber, lessonType);
+            },
+            onLessonUnselected: function (course, lessonNumber, lessonType) {
+                selectedLessonUnsave(course, lessonNumber, lessonType);
+            }
+        });
+
+        $('#top-navbar-supported-content').removeClass('top-navbar-content-uninitialized');
+
+        $('#footer-semester-name').text(semesterFriendlyName(currentSemester));
+        $('#footer-semester').removeClass('d-none');
+
+        $('#right-content-bar').removeClass('invisible');
+
+        firebaseInit();
+        firestoreDbInit();
+
+        if (viewingSharedSchedule) {
+            watchSharedSchedule(function () {
+                $('#page-loader').hide();
+            });
+        } else {
+            var firebaseAuthUIInitialized = false;
+
+            try {
+                firebaseAuthUIInit(function () {
+                    watchSavedSchedule(function () {
+                        $('#page-loader').hide();
+                    });
+                });
+                firebaseAuthUIInitialized = true;
+            } catch (e) {
+                // Firebase UI doesn't work on Edge/IE in private mode.
+                // Will fall back to offline mode.
+            }
+
+            if (!firebaseAuthUIInitialized) {
+                watchSavedSchedule(function () {
+                    $('#page-loader').hide();
+                });
+            }
+        }
+    }
+
+    function navbarInit() {
+        if (!viewingSharedSchedule) {
+            var semesterSelect = $('#top-navbar-semester').find('.dropdown-menu');
+
+            availableSemesters.forEach(function (semester) {
+                var link = $('<a class="dropdown-item">')
+                    .prop('href', '?semester=' + encodeURIComponent(semester))
+                    .text(semesterFriendlyName(semester));
+                if (semester === currentSemester) {
+                    link.addClass('active');
+                }
+                semesterSelect.append(link);
+            });
+
+            $('#top-navbar-login').click(function (event) {
+                event.preventDefault();
+
+                if (loginDialog) {
+                    loginDialog.open();
+                    return;
+                }
+
+                loginDialog = BootstrapDialog.show({
+                    title: 'כניסה למערכת',
+                    message: $('#firebaseui-auth-container'),
+                    buttons: [{
+                        label: 'סגור',
+                        action: function (dialog) {
+                            dialog.close();
+                        }
+                    }],
+                    autodestroy: false
+                });
+            });
+
+            $('#top-navbar-logout').click(function (event) {
+                event.preventDefault();
+
+                firebase.auth().signOut();
+            });
+
+            $('#top-navbar-share').click(function (event) {
+                event.preventDefault();
+                if ($(this).find('a').hasClass('disabled')) {
+                    return;
+                }
+
+                var url = location.protocol + '//' + location.host + location.pathname +
+                    '?semester=' + encodeURIComponent(currentSemester) +
+                    '&uid=' + encodeURIComponent(firebase.auth().currentUser.uid);
+                var urlDiv = $('<div dir="ltr" class="text-right">').html(
+                    $('<a target="_blank">').prop('href', url).text(url));
+                var shareDialogContent = $('<div>הקישור לשיתוף המערכת:<br></div>').append(urlDiv);
+
+                BootstrapDialog.show({
+                    title: 'שיתוף מערכת',
+                    message: shareDialogContent,
+                    buttons: [{
+                        label: 'העתק קישור',
+                        cssClass: 'btn-primary',
+                        action: function (dialog) {
+                            // Doesn't work without setTimeout for some reason.
+                            setTimeout(function () {
+                                if (copyToClipboard(url)) {
+                                    dialog.close();
+                                } else {
+                                    alert('ההעתקה נכשלה');
+                                }
+                            }, 0);
+                        }
+                    }, {
+                        label: 'פתח בחלון חדש',
+                        action: function (dialog) {
+                            var win = window.open(url, '_blank');
+                            win.focus();
+                            dialog.close();
+                        }
+                    }, {
+                        label: 'סגור',
+                        action: function (dialog) {
+                            dialog.close();
+                        }
+                    }]
+                });
+            });
+
+            $('#top-navbar-undo').click(function (event) {
+                event.preventDefault();
+
+                makeUndo();
+            });
+
+            $('#top-navbar-redo').click(function (event) {
+                event.preventDefault();
+
+                makeRedo();
+            });
+        }
+
+        $('#top-navbar-export').click(function () {
+            event.preventDefault();
+
+            var icsCal = ics();
+
+            var yearFrom = parseInt(currentSemester.slice(0, 4), 10);
+            var yearTo = yearFrom + 2;
+
+            if (courseCalendar.saveAsIcs(icsCal, yearFrom, yearTo) === 0) {
+                BootstrapDialog.show({
+                    title: 'אופס',
+                    message: 'המערכת ריקה',
+                    size: BootstrapDialog.SIZE_SMALL
+                });
+            } else {
+                icsCal.download(semesterFriendlyName(currentSemester));
+            }
+        });
+    }
+
+    function firebaseInit() {
+        var config = {
+            apiKey: 'AIzaSyAfKPyTM83mkLgdQTdx9YS9UXywiswwIYI',
+            authDomain: 'cheesefork-de9af.firebaseapp.com',
+            databaseURL: 'https://cheesefork-de9af.firebaseio.com',
+            projectId: 'cheesefork-de9af',
+            storageBucket: 'cheesefork-de9af.appspot.com',
+            messagingSenderId: '916559682433'
+        };
+        firebase.initializeApp(config);
+    }
+
+    function firestoreDbInit() {
+        firestoreDb = firebase.firestore();
+        firestoreDb.settings({timestampsInSnapshots: true}); // silence a warning
+    }
+
+    function firebaseAuthUIInit(onInitialized) {
+        // FirebaseUI config.
+        var uiConfig = {
+            // Opens IDP Providers sign-in flow in a popup.
+            signInFlow: 'popup',
+            signInOptions: [
+                // Leave the lines as is for the providers you want to offer your users.
+                firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+                firebase.auth.EmailAuthProvider.PROVIDER_ID
+            ],
+            callbacks: {
+                // Called when the user has been successfully signed in.
+                signInSuccessWithAuthResult: function (authResult) {
+                    if (authResult.user) {
+                        loginDialog.close();
+                    }
+                    // Do not redirect.
+                    return false;
+                }
+            },
+            // Terms of service url.
+            //tosUrl: 'https://policies.google.com/terms',
+            // Privacy policy url.
+            //privacyPolicyUrl: 'https://policies.google.com/privacy',
+            // Disable accountchooser.com which is enabled by default.
+            credentialHelper: firebaseui.auth.CredentialHelper.NONE
+        };
+
+        // Initialize the FirebaseUI Widget using Firebase.
+        var firebaseUI = new firebaseui.auth.AuthUI(firebase.auth());
+
+        var authInitialized = false;
+
+        // Listen to change in auth state so it displays the correct UI for when
+        // the user is signed in or not.
+        firebase.auth().onAuthStateChanged(function (user) {
+            user ? handleSignedInUser(user) : handleSignedOutUser();
+            if (!authInitialized) {
+                onInitialized();
+                authInitialized = true;
+            } else if (user) {
+                // Slow reload.
+                $('#page-loader').show();
+                stopScheduleWatching();
+                resetSchedule();
+                watchSavedSchedule(function () {
+                    $('#page-loader').hide();
+                });
+            } else {
+                // Fast reload.
+                stopScheduleWatching();
+                resetSchedule();
+                watchSavedSchedule(function () {});
+            }
+        });
+
+        function handleSignedInUser(user) {
+            $('#top-navbar-login').addClass('d-none');
+            $('#top-navbar-logout').removeClass('d-none')
+                .find('a').attr('data-original-title', 'מחובר בתור: ' + user.displayName);
+            $('#top-navbar-share').find('a').removeClass('disabled').tooltip('disable');
+        }
+
+        function handleSignedOutUser() {
+            $('#top-navbar-logout').addClass('d-none');
+            $('#top-navbar-login').removeClass('d-none');
+            $('#top-navbar-share').find('a').addClass('disabled').tooltip('enable');
+            firebaseUI.start('#firebaseui-auth-container', uiConfig);
+        }
+    }
+
+    function filterInit() {
+        var faculties = {};
+        var points = {};
+        var moedAMin = null;
+        var moedAMax = null;
+        var moedBMin = null;
+        var moedBMax = null;
+
+        courseManager.getAllCourses().forEach(function (course) {
+            var general = courseManager.getGeneralInfo(course);
+
+            if (general['פקולטה']) {
+                faculties[general['פקולטה']] = true;
+            }
+
+            if (general['נקודות']) {
+                points[general['נקודות']] = true;
+            }
+
+            if (general['מועד א']) {
+                var dateTimeA = courseManager.parseExamDateTime(general['מועד א']);
+                if (dateTimeA) {
+                    var moedA = moment.utc(dateTimeA.start).set({hour: 0, minute: 0, second: 0});
+                    if (moedAMin === null || moedA.isBefore(moedAMin)) {
+                        moedAMin = moedA;
+                    }
+                    if (moedAMax === null || moedA.isAfter(moedAMax)) {
+                        moedAMax = moedA;
+                    }
+                }
+            }
+
+            if (general['מועד ב']) {
+                var dateTimeB = courseManager.parseExamDateTime(general['מועד ב']);
+                if (dateTimeB) {
+                    var moedB = moment.utc(dateTimeB.start).set({hour: 0, minute: 0, second: 0});
+                    if (moedBMin === null || moedB.isBefore(moedBMin)) {
+                        moedBMin = moedB;
+                    }
+                    if (moedBMax === null || moedB.isAfter(moedBMax)) {
+                        moedBMax = moedB;
+                    }
+                }
+            }
+        });
+
+        faculties = Object.keys(faculties).sort();
+
+        var selectFaculties = $('#filter-faculty');
+
+        faculties.forEach(function (faculty) {
+            selectFaculties.append($('<option>', {
+                value: faculty,
+                text: faculty
+            }));
+        });
+
+        selectFaculties.selectize();
+
+        var selectPointsMin = $('#filter-points-min');
+        var selectPointsMax = $('#filter-points-max');
+
+        points = Object.keys(points).sort(function (a, b) {
+            return parseFloat(a) - parseFloat(b);
+        });
+
+        points.forEach(function (point, i) {
+            selectPointsMin.append($('<option>', {
+                value: point,
+                text: point,
+                selected: i === 0
+            }));
+            selectPointsMax.append($('<option>', {
+                value: point,
+                text: point,
+                selected: i === points.length - 1
+            }));
+        });
+
+        var selectMoedAMin = $('#filter-moed-a-min');
+        var selectMoedAMax = $('#filter-moed-a-max');
+
+        var date, dateStrFull, dateStrShort;
+
+        for (date = moedAMin.clone(); !date.isAfter(moedAMax); date.add(1, 'days')) {
+            dateStrFull = date.format();
+            dateStrShort = date.format('DD/MM');
+            selectMoedAMin.append($('<option>', {
+                value: dateStrFull,
+                text: dateStrShort,
+                selected: date.isSame(moedAMin)
+            }));
+            selectMoedAMax.append($('<option>', {
+                value: dateStrFull,
+                text: dateStrShort,
+                selected: date.isSame(moedAMax)
+            }));
+        }
+
+        selectMoedAMax.val(dateStrFull);
+
+        var selectMoedBMin = $('#filter-moed-b-min');
+        var selectMoedBMax = $('#filter-moed-b-max');
+
+        for (date = moedBMin.clone(); !date.isAfter(moedBMax); date.add(1, 'days')) {
+            dateStrFull = date.format();
+            dateStrShort = date.format('DD/MM');
+            selectMoedBMin.append($('<option>', {
+                value: dateStrFull,
+                text: dateStrShort,
+                selected: date.isSame(moedBMin)
+            }));
+            selectMoedBMax.append($('<option>', {
+                value: dateStrFull,
+                text: dateStrShort,
+                selected: date.isSame(moedBMax)
+            }));
+        }
+
+        selectMoedBMax.val(dateStrFull);
+    }
+
+    function filterOpen() {
+        if (filterDialog) {
+            filterDialog.open();
+            return;
+        }
+
+        var filterForm = $('#filter-form');
+        filterDialog = BootstrapDialog.show({
+            cssClass: 'course-filter-dialog',
+            title: 'סינון קורסים',
+            message: filterForm,
+            buttons: [{
+                label: 'סינון',
+                cssClass: 'btn-primary',
+                action: function (dialog) {
+                    filterApply();
+                }
+            }, {
+                label: 'איפוס',
+                action: function (dialog) {
+                    filterReset();
+                }
+            }, {
+                label: 'סגור',
+                action: function (dialog) {
+                    dialog.close();
+                }
+            }],
+            autodestroy: false
+        });
+
+        var footer = filterDialog.getModalFooter();
+        footer.css('flex-wrap', 'wrap');
+        $('<span id="filter-result">').addClass('bootstrap-dialog-message')
+            .css({'margin-bottom': '.25rem'}).prependTo(footer);
+
+        filterForm.submit(function (event) {
+            event.preventDefault();
+            filterDialog.getModalFooter().find('button.btn-primary').click();
+        });
+    }
+
+    function filterApply() {
+        var filters = {};
+
+        var faculties = $('#filter-faculty').data('selectize').items;
+        if (faculties.length > 0) {
+            filters.faculties = faculties;
+        }
+
+        var selectPointsMin = $('#filter-points-min');
+        // If not first which is already the minimum.
+        if (selectPointsMin.prop('selectedIndex') > 0) {
+            filters.pointsMin = parseFloat(selectPointsMin.val());
+        }
+
+        var selectPointsMax = $('#filter-points-max');
+        // If not last which is already the maximum.
+        if (selectPointsMax.prop('selectedIndex') < selectPointsMax.find('option').length - 1) {
+            filters.pointsMax = parseFloat(selectPointsMax.val());
+        }
+
+        var coursesTaken = $('#filter-courses-taken-list').val().match(/\d+/g);
+        if (coursesTaken) {
+            filters.coursesTaken = coursesTaken.filter(function (num) {
+                return parseInt(num, 10) <= 999999;
+            }).map(function (num) {
+                return ('000000' + num).slice(-6);
+            });
+        }
+
+        filters.filterPrerequisites = $('#filter-prerequisites').prop('checked');
+        filters.filterLinkedCourses = $('#filter-linked-courses').prop('checked');
+        filters.filterOverlappingCourses = $('#filter-overlapping-courses').prop('checked');
+
+        var selectMoedAMin = $('#filter-moed-a-min');
+        if (selectMoedAMin.prop('selectedIndex') > 0) {
+            filters.moedAMin = selectMoedAMin.val();
+        }
+
+        var selectMoedAMax = $('#filter-moed-a-max');
+        if (selectMoedAMax.prop('selectedIndex') < selectMoedAMax.find('option').length - 1) {
+            filters.moedAMax = selectMoedAMax.val();
+        }
+
+        var selectMoedBMin = $('#filter-moed-b-min');
+        if (selectMoedBMin.prop('selectedIndex') > 0) {
+            filters.moedBMin = selectMoedBMin.val();
+        }
+
+        var selectMoedBMax = $('#filter-moed-b-max');
+        if (selectMoedBMax.prop('selectedIndex') < selectMoedBMax.find('option').length - 1) {
+            filters.moedBMax = selectMoedBMax.val();
+        }
+
+        filters.moedADaysMin = parseInt($('#filter-moed-a-days-min').val(), 10);
+        filters.moedBDaysMin = parseInt($('#filter-moed-b-days-min').val(), 10);
+
+        filters.filterWithExam = $('#filter-with-exam').prop('checked');
+        filters.filterWithoutExam = $('#filter-without-exam').prop('checked');
+
+        var coursesLimit = $('#filter-courses-limit').val().match(/\d+/g);
+        if (coursesLimit) {
+            filters.coursesLimit = coursesLimit.filter(function (num) {
+                return parseInt(num, 10) <= 999999;
+            }).map(function (num) {
+                return ('000000' + num).slice(-6);
+            });
+        }
+
+        var coursesExclude = $('#filter-courses-exclude').val().match(/\d+/g);
+        if (coursesExclude) {
+            filters.coursesExclude = coursesExclude.filter(function (num) {
+                return parseInt(num, 10) <= 999999;
+            }).map(function (num) {
+                return ('000000' + num).slice(-6);
+            });
+        }
+
+        var selectedCourses = getSelectedCourses();
+        if (selectedCourses.length > 0) {
+            filters.coursesCurrent = selectedCourses;
+        }
+
+        var filtered = courseManager.filterCourses(filters);
+        filteredCoursesCount = filtered.length;
+
+        courseSelect.clearOptions();
+        courseSelect.addOption(makeCourseSelectOptions(filtered.sort()));
+
+        if (filterDialog) {
+            var messageElement = filterDialog.getModalFooter().find('#filter-result');
+            messageElement.text('מציג ' + filteredCoursesCount + ' מתוך ' + allCoursesCount + ' קורסים');
+        }
+    }
+
+    function filterReset() {
+        $('#filter-form').trigger('reset');
+        $('#filter-faculty').data('selectize').clear(); // selectize doesn't work with reset
+
+        if (filteredCoursesCount < allCoursesCount) {
+            courseSelect.clearOptions();
+            courseSelect.addOption(makeCourseSelectOptions(courseManager.getAllCourses().sort()));
+            filteredCoursesCount = allCoursesCount;
+        }
+
+        if (filterDialog) {
+            var messageElement = filterDialog.getModalFooter().find('#filter-result');
+            messageElement.text('');
+        }
+    }
+
+    function makeCourseSelectOptions(courses) {
+        var items = [{
+            value: 'filter',
+            text: ''
+        }].concat(courses.map(function (course) {
+            var general = courseManager.getGeneralInfo(course);
+            return {
+                value: course,
+                text: course + ' - ' + general['שם מקצוע']
+            };
+        }));
+
+        if (items.length > 202) {
+            items.splice(201, 0, {
+                value: 'partial',
+                text: ''
+            });
+        }
+
+        return items;
+    }
+
+    function semesterFriendlyName(semester) {
         var year = parseInt(semester.slice(0, 4), 10);
         var semesterCode = semester.slice(4);
 
@@ -25,213 +781,18 @@ $(document).ready(function () {
         }
     }
 
-    function rishum_time_parse(time) {
-        var match = /^(\d+)(:\d+)? - (\d+)(:\d+)?$/.exec(time);
-        var start_hour = ('00' + match[1]).slice(-2);
-        var start_minute = '00';
-        if (match[2] !== undefined) {
-            start_minute = (match[2] + '00').slice(1, 3);
-        }
-        var start = start_hour + ':' + start_minute;
-
-        var end_hour = ('00' + match[3]).slice(-2);
-        var end_minute = '00';
-        if (match[4] !== undefined) {
-            end_minute = (match[4] + '00').slice(1, 3);
-        }
-        var end = end_hour + ':' + end_minute;
-
-        return { start: start, end: end };
-    }
-
-    function rishum_exam_date_parse(date) {
-        var match = /^בתאריך (\d+)\.(\d+)\.(\d+) /.exec(date);
-        if (match === null) {
-            return null;
-        }
-        return match[3] + '-' + match[2] + '-' + match[1] + 'T00:00:00';
-    }
-
-    function get_lesson_type(course_number, lesson) {
-        // Sport courses have a non-standard format, treat all of the lessons as the same type.
-        if (/^394[89]\d\d$/.test(course_number)) {
-            return 'sport';
-        } else {
-            return string_hex_encode(lesson['סוג']);
-        }
-    }
-
-    function get_event_lesson_type(event) {
-        return get_lesson_type(event.courseNumber, event.lessonData);
-    }
-
-    function get_course_schedule(course) {
-        var general = courses_hashmap[course].general;
-        var schedule = courses_hashmap[course].schedule;
-
-        if (general.propertyIsEnumerable('הערות') && general['הערות'].length > 0) {
-            // Extract sadnaot from course comments.
-            var comment = general['הערות'];
-            var comment_lines = comment.split('\n');
-            for (var i = 0; i < comment_lines.length; i++) {
-                var line = comment_lines[i];
-                if (line.lastIndexOf('סדנאות', 0) === 0 || line.lastIndexOf('סדנת', 0) === 0) {
-                    var sadnaot_ta = '';
-                    match = /^מתרגל[ית]? הסדנ(?:א|ה|אות).*?:\s*(.*?)$/m.exec(comment);
-                    if (match !== null) {
-                        sadnaot_ta = match[1];
-                    }
-
-                    var sadnaot = [];
-                    var sadna_id = 101;
-                    var match;
-                    for (i++; i < comment_lines.length; i++) {
-                        line = comment_lines[i];
-                        match = /^ימי ([א-ו])' (\d+)\.(\d+)-(\d+)\.(\d+)\s*,\s*(.*?) (\d+)(?:\s*,\s*(.*?))?$/.exec(line);
-                        if (match === null) {
-                            break;
-                        }
-
-                        var building = match[6];
-                        switch (building) {
-                            case 'פ\'':
-                                building = 'פישבך';
-                                break;
-
-                            case 'מ\'':
-                                building = 'מאייר';
-                                break;
-                        }
-
-                        sadnaot.push({
-                            'קבוצה': sadna_id,
-                            'מס.': sadna_id,
-                            'סוג': 'sadna',
-                            'מרצה\/מתרגל': match[8] || sadnaot_ta,
-                            'יום': match[1],
-                            'שעה': match[2] + ':' + match[3] + ' - ' + match[4] + ':' + match[5],
-                            'בניין': building,
-                            'חדר': match[7]
-                        });
-                        sadna_id++;
-                    }
-
-                    if (sadnaot.length > 0) {
-                        schedule = schedule.concat(sadnaot);
-                    }
-
-                    break;
-                }
-            }
-        }
-
-        return schedule;
-    }
-
-    function update_calendar_max_day_and_time(extra_courses) {
-        var calendar = $('#calendar');
-        var min_time = moment.utc('2017-01-01T08:30:00');
-        var max_time = moment.utc('2017-01-01T18:30:00');
-        var friday = false;
-
-        Object.keys(courses_chosen).filter(function (course) {
-            return courses_chosen[course];
-        }).concat(extra_courses).forEach(function (course) {
-            var schedule = get_course_schedule(course);
-            for (var i = 0; i < schedule.length; i++) {
-                var lesson = schedule[i];
-                var lesson_day = lesson['יום'].charCodeAt(0) - 'א'.charCodeAt(0) + 1;
-                if (lesson_day === 6) {
-                    friday = true;
-                }
-
-                var lesson_start_end = rishum_time_parse(lesson['שעה']);
-                var event_start = moment.utc('2017-01-01T' + lesson_start_end['start'] + ':00');
-                if (min_time.isAfter(event_start)) {
-                    min_time = event_start;
-                }
-
-                var event_end = moment.utc('2017-01-01T' + lesson_start_end['end'] + ':00');
-                if (max_time.isBefore(event_end)) {
-                    max_time = event_end;
-                }
-            }
+    function getSelectedCourses() {
+        return Object.keys(coursesChosen).filter(function (course) {
+            return coursesChosen[course];
         });
-
-        min_time = min_time.format('kk:mm:ss');
-        max_time = max_time.format('kk:mm:ss');
-        var hidden_days = friday ? [6] : [5, 6];
-
-        // Only apply options that changed, avoids re-rendering if not needed, which is very slow.
-        var new_options = {};
-
-        if (min_time !== calendar.fullCalendar('option', 'minTime')) {
-            new_options['minTime'] = min_time;
-        }
-
-        if (max_time !== calendar.fullCalendar('option', 'maxTime')) {
-            new_options['maxTime'] = max_time;
-        }
-
-        if (JSON.stringify(hidden_days) !== JSON.stringify(calendar.fullCalendar('option', 'hiddenDays'))) {
-            new_options['hiddenDays'] = hidden_days;
-        }
-
-        if (Object.keys(new_options).length > 0) {
-            calendar.fullCalendar('option', new_options);
-        }
     }
 
-    function get_course_description(course) {
-        var general = courses_hashmap[course].general;
-        var text = general['מספר מקצוע'] + ' - ' + general['שם מקצוע'];
-
-        if (general.propertyIsEnumerable('פקולטה') && general['פקולטה'].length > 0) {
-            text += '\nפקולטה: ' + general['פקולטה'];
-        }
-
-        if (general.propertyIsEnumerable('נקודות') && general['נקודות'].length > 0) {
-            var points = general['נקודות'];
-            if (points.indexOf('.') < 0) {
-                points += '.0';
-            }
-            text += '\nנקודות: ' + points;
-        }
-
-        if (general.propertyIsEnumerable('סילבוס') && general['סילבוס'].length > 0) {
-            text += '\n\n' + general['סילבוס'];
-        }
-
-        if (general.propertyIsEnumerable('אחראים') && general['אחראים'].length > 0) {
-            text += '\n\nאחראים: ' + general['אחראים'];
-        }
-
-        if ((general.propertyIsEnumerable('מועד א') && general['מועד א'].length > 0) ||
-            (general.propertyIsEnumerable('מועד ב') && general['מועד ב'].length > 0)) {
-            text += '\n';
-            if (general.propertyIsEnumerable('מועד א') && general['מועד א'].length > 0) {
-                text += '\nמועד א\': ' + general['מועד א'];
-            }
-            if (general.propertyIsEnumerable('מועד ב') && general['מועד ב'].length > 0) {
-                text += '\nמועד ב\': ' + general['מועד ב'];
-            }
-        }
-
-        if (general.propertyIsEnumerable('הערות') && general['הערות'].length > 0) {
-            text += '\n\nהערות: ' + general['הערות'];
-        }
-
-        return text;
-    }
-
-    function update_general_info_line() {
+    function updateGeneralInfoLine() {
         var courses = 0;
         var points = 0;
 
-        Object.keys(courses_chosen).filter(function (course) {
-            return courses_chosen[course];
-        }).forEach(function (course) {
-            var general = courses_hashmap[course].general;
+        getSelectedCourses().forEach(function (course) {
+            var general = courseManager.getGeneralInfo(course);
             courses++;
             points += parseFloat(general['נקודות']);
         });
@@ -259,945 +820,388 @@ $(document).ready(function () {
         $('#general-info').text(text);
     }
 
-    function string_hex_encode(str) {
-        var result = '';
-        for (var i=0; i<str.length; i++) {
-            var hex = str.charCodeAt(i).toString(16);
-            result += ('000'+hex).slice(-4);
-        }
-        return result;
-    }
+    function selectedCourseSave(course) {
+        var semesterCoursesKey = currentSemester + '_courses';
+        var courseKey = currentSemester + '_' + course;
 
-    function update_moed_exam_info(moed, div_content, span_exam_list, extra_courses) {
-        var moed_names = ['מועד א', 'מועד ב'];
-        var moed_name = moed_names[moed - 1];
-        var moed_dates = {};
+        currentSavedSession[semesterCoursesKey].push(course);
+        currentSavedSession[courseKey] = {};
 
-        Object.keys(courses_chosen).filter(function (course) {
-            return courses_chosen[course];
-        }).concat(extra_courses).forEach(function (course) {
-            var general = courses_hashmap[course].general;
-            if (general.propertyIsEnumerable(moed_name)) {
-                var date = rishum_exam_date_parse(general[moed_name]);
-                if (date !== null) {
-                    moed_dates[course] = moment.utc(date);
-                }
-            }
-        });
-
-        var moed_courses = Object.keys(moed_dates);
-        if (moed_courses.length === 0) {
-            div_content.hide();
-            return false;
-        }
-
-        div_content.show();
-
-        moed_courses.sort(function (left_course, right_course) {
-            var left = moed_dates[left_course];
-            var right = moed_dates[right_course];
-            var diff = left.diff(right);
-            return diff !== 0 ? diff : left_course - right_course;
-        });
-
-        span_exam_list.empty();
-
-        moed_courses.forEach(function (course, i) {
-            var days_text = $('<span class="exam-days-item exam-days-item-course-' + course + '"></span>');
-            var color = color_hash.hex(course);
-            days_text.css('background-color', color);
-            days_text.hover(
-                function () {
-                    $(this).addClass('exam-days-item-same-course-as-hovered');
-                    change_course_previewed_status(course, true);
-                    $('.list-group-item-course-' + course).addClass('list-group-item-same-course-as-hovered');
-                }, function () {
-                    $(this).removeClass('exam-days-item-same-course-as-hovered');
-                    change_course_previewed_status(course, false);
-                    $('.list-group-item-course-' + course).removeClass('list-group-item-same-course-as-hovered');
-                }
-            );
-
-            var date = moed_dates[course].format('DD/MM');
-
-            if (i === 0) {
-                days_text.text(date);
-                span_exam_list.append(days_text);
-            } else {
-                days_text
-                    .prop('title', date)
-                    .attr('data-toggle', 'tooltip')
-                    .tooltip({
-                        placement: (moed === 1 ? 'top' : 'bottom'),
-                        template: '<div class="tooltip" role="tooltip"><div class="tooltip-inner"></div></div>'
-                    });
-                var left = moed_dates[moed_courses[i - 1]];
-                var right = moed_dates[course];
-                var diff = right.diff(left, 'days');
-                days_text.text(diff);
-                if (diff === 0) {
-                    days_text.addClass('exam-days-item-conflicted');
-                }
-                //span_exam_list.append('🢀\u00AD');
-                span_exam_list.append('<i class="exam-days-left-arrow"></i> ');
-                span_exam_list.append(days_text);
-            }
-        });
-
-        return true;
-    }
-
-    function update_exam_info(extra_courses) {
-        var moed_a_added = update_moed_exam_info(1, $('#exams-moed-a'), $('#exams-moed-a-list'), extra_courses);
-        var moed_b_added = update_moed_exam_info(2, $('#exams-moed-b'), $('#exams-moed-b-list'), extra_courses);
-
-        if (moed_a_added || moed_b_added) {
-            $('#exam-info').removeClass('d-none');
-        } else {
-            $('#exam-info').addClass('d-none');
-        }
-    }
-
-    function update_course_conflicted_status(course) {
-        var calendar = $('#calendar');
-
-        var available_options_per_type = {};
-
-        calendar.fullCalendar('clientEvents', function (event) {
-            if (event.courseNumber !== course) {
-                return false;
-            }
-
-            var type = get_lesson_type(course, event.lessonData);
-            if (!available_options_per_type.propertyIsEnumerable(type)) {
-                available_options_per_type[type] = 0;
-            }
-
-            if (event.start.week() === 1) {
-                available_options_per_type[type]++;
-            }
-
-            return false;
-        });
-
-        var conflicted = false;
-
-        Object.keys(available_options_per_type).some(function (type) {
-            if (available_options_per_type[type] === 0) {
-                conflicted = true;
-                return true;
-            }
-            return false;
-        });
-
-        if (conflicted) {
-            $('.list-group-item-course-' + course).addClass('list-group-item-conflicted');
-        } else {
-            $('.list-group-item-course-' + course).removeClass('list-group-item-conflicted');
-        }
-    }
-
-    function my_update_events(calendar, events) {
-        events = events.slice(); // make a copy
-        events.forEach(function (value, index) {
-            events[index] = $.extend({}, events[index]); // make a copy
-
-            // Delete properties which are not shared among events with the same id.
-            delete events[index].title;
-            delete events[index].lessonData;
-        });
-        calendar.fullCalendar('updateEvents', events);
-    }
-
-    function my_update_event(calendar, event) {
-        my_update_events(calendar, [event]);
-    }
-
-    function are_events_overlapping(event1, event2) {
-        if (event1.start.day() !== event2.start.day()) {
-            return false;
-        }
-
-        var start_time_1 = event1.start.clone().year(0).month(0).date(1);
-        var end_time_1 = event1.end.clone().year(0).month(0).date(1);
-        var start_time_2 = event2.start.clone().year(0).month(0).date(1);
-        var end_time_2 = event2.end.clone().year(0).month(0).date(1);
-
-        return start_time_1.isBefore(end_time_2) && end_time_1.isAfter(start_time_2);
-    }
-
-    function add_course_to_calendar(course) {
-        var general = courses_hashmap[course].general;
-        var schedule = get_course_schedule(course);
-        if (schedule.length === 0) {
-            return;
-        }
-
-        var calendar = $('#calendar');
-
-        var lessons_added = {};
-        var events = [];
-        var conflicted_ids = {};
-
-        for (var i = 0; i < schedule.length; i++) {
-            var lesson = schedule[i];
-            if (lessons_added.propertyIsEnumerable(lesson['מס.']) && lessons_added[lesson['מס.']] !== lesson['קבוצה']) {
-                continue;
-            }
-
-            events.push(make_lesson_event(lesson));
-            lessons_added[lesson['מס.']] = lesson['קבוצה'];
-        }
-
-        for (i = 0; i < events.length; i++) {
-            if (conflicted_ids.propertyIsEnumerable(events[i].id)) {
-                var weeks = conflicted_ids[events[i].id];
-                events[i].start.add(7*weeks, 'days');
-                events[i].end.add(7*weeks, 'days');
-            }
-        }
-
-        calendar.fullCalendar('renderEvents', events);
-
-        if (Object.keys(conflicted_ids).length > 0) {
-            update_course_conflicted_status(course);
-        }
-
-        function make_lesson_event(lesson) {
-            var lesson_type = get_lesson_type(course, lesson);
-            var lesson_day = lesson['יום'].charCodeAt(0) - 'א'.charCodeAt(0) + 1;
-            var lesson_start_end = rishum_time_parse(lesson['שעה']);
-            var event_start_end = {
-                start: calendar.fullCalendar('getCalendar').moment('2017-01-0' + lesson_day + 'T' + lesson_start_end['start'] + ':00'),
-                end: calendar.fullCalendar('getCalendar').moment('2017-01-0' + lesson_day + 'T' + lesson_start_end['end'] + ':00')
-            };
-
-            var event_id = course + '.' + lesson['מס.'] + '.' + lesson_type;
-
-            var title = lesson['סוג'] + ' ' + lesson['מס.'];
-            if (lesson['סוג'] === 'sadna') {
-                title = 'סדנה';
-            }
-            if (lesson['בניין'] !== '') {
-                title += '\n' + lesson['בניין'];
-                if (lesson['חדר'] !== '') {
-                    title += ' ' + lesson['חדר'];
-                }
-            }
-            if (lesson['מרצה/מתרגל'] !== '') {
-                title += '\n' + lesson['מרצה/מתרגל'];
-            }
-            title += '\n' + general['שם מקצוע'];
-
-            // Mark conflicting events which cannot be selected.
-            calendar.fullCalendar('clientEvents', function (cb_event) {
-                if (cb_event.selected && are_events_overlapping(cb_event, event_start_end)) {
-                    if (!conflicted_ids.propertyIsEnumerable(event_id)) {
-                        conflicted_ids[event_id] = 0;
-                    }
-                    conflicted_ids[event_id]++;
-                }
-                return false;
-            });
-
-            return {
-                id: event_id,
-                title: title,
-                start: event_start_end.start,
-                end: event_start_end.end,
-                backgroundColor: '#F8F9FA',
-                textColor: 'black',
-                borderColor: 'black',
-                className: 'calendar-item-course-' + course
-                    + ' calendar-item-course-' + course + '-type-' + lesson_type
-                    + ' calendar-item-course-' + course + '-lesson-' + lesson['מס.'],
-                courseNumber: course,
-                lessonData: lesson,
-                selected: false,
-                temporary: false
-            };
-        }
-    }
-
-    function remove_course_from_calendar(course) {
-        var calendar = $('#calendar');
-
-        // Show conflicting events which can now be selected.
-        var conflicted_ids = {};
-
-        var conflicted_events = calendar.fullCalendar('clientEvents', function (event) {
-            if (event.courseNumber !== course && is_conflicted(event, course)) {
-                if (!conflicted_ids.propertyIsEnumerable(event.id)) {
-                    conflicted_ids[event.id] = 1;
-                    return true;
-                }
-                conflicted_ids[event.id]++;
-                return false;
-            }
-
-            return false;
-        });
-
-        var conflicted_courses = {};
-
-        for (var i = 0; i < conflicted_events.length; i++) {
-            var weeks = conflicted_ids[conflicted_events[i].id];
-            conflicted_events[i].start.add(-7*weeks, 'days');
-            conflicted_events[i].end.add(-7*weeks, 'days');
-            conflicted_courses[conflicted_events[i].courseNumber] = true;
-        }
-
-        my_update_events(calendar, conflicted_events);
-        calendar.fullCalendar('removeEvents', function (event) {
-            return event.courseNumber === course;
-        });
-
-        Object.keys(conflicted_courses).forEach(function (conflicted_course) {
-            update_course_conflicted_status(conflicted_course);
-        });
-
-        // True if the event cannot be selected because of the given course.
-        function is_conflicted(event, course) {
-            var conflicting_event = calendar.fullCalendar('clientEvents', function (cb_event) {
-                return cb_event.courseNumber === course && cb_event.selected && are_events_overlapping(cb_event, event);
-            });
-
-            return conflicting_event.length > 0;
-        }
-    }
-
-    function change_course_previewed_status(course, previewed) {
-        var calendar = $('#calendar');
-        if (previewed) {
-            var conflicted_events = calendar.fullCalendar('clientEvents', function (event) {
-                return event.courseNumber === course && event.start.week() > 1;
-            });
-
-            var temporary_events = [];
-
-            for (var i = 0; i < conflicted_events.length; i++) {
-                var conf = conflicted_events[i];
-                var temp = {
-                    id: 'temp_' + conf.id,
-                    title: conf.title,
-                    start: conf.start.clone().week(1),
-                    end: conf.end.clone().week(1),
-                    backgroundColor: conf.backgroundColor,
-                    textColor: conf.textColor,
-                    borderColor: conf.borderColor,
-                    className: conf.className,
-                    courseNumber: conf.courseNumber,
-                    lessonData: conf.lessonData,
-                    selected: conf.selected,
-                    temporary: true
-                };
-
-                temporary_events.push(temp);
-            }
-
-            calendar.fullCalendar('renderEvents', temporary_events);
-
-            $('.calendar-item-course-' + course).addClass('calendar-item-previewed');
-        } else {
-            $('.calendar-item-course-' + course).removeClass('calendar-item-previewed');
-            calendar.fullCalendar('removeEvents', function (event) {
-                return event.temporary;
-            });
-        }
-    }
-
-    function on_event_click(event) {
-        var calendar = $('#calendar');
-
-        var selecting_event = !event.selected;
-        var conflicted_courses = {};
-
-        if (selecting_event) {
-            selected_lesson_save(event.courseNumber, event.lessonData['מס.'], get_event_lesson_type(event));
-            event.selected = true;
-            event.backgroundColor = color_hash.hex(event.courseNumber);
-            event.textColor = 'white';
-            event.borderColor = 'white';
-        } else {
-            selected_lesson_unsave(event.courseNumber, event.lessonData['מס.'], get_event_lesson_type(event));
-            event.selected = false;
-            event.backgroundColor = '#F8F9FA';
-            event.textColor = 'black';
-            event.borderColor = 'black';
-        }
-        my_update_event(calendar, event);
-
-        var same_course_type_events = calendar.fullCalendar('clientEvents', function (cb_event) {
-            if (cb_event.courseNumber === event.courseNumber &&
-                get_event_lesson_type(cb_event) === get_event_lesson_type(event)) {
-
-                if (cb_event.lessonData['מס.'] === event.lessonData['מס.']) {
-                    // There might be multiple events for the same course, type, and number, process them all.
-                    handle_conflicted_events(cb_event);
-                    return false;
-                } else {
-                    return true;
-                }
-            }
-            return false;
-        });
-
-        for (var i = 0; i < same_course_type_events.length; i++) {
-            same_course_type_events[i].start.add(selecting_event ? 7 : -7, 'days');
-            same_course_type_events[i].end.add(selecting_event ? 7 : -7, 'days');
-        }
-
-        my_update_events(calendar, same_course_type_events);
-
-        Object.keys(conflicted_courses).forEach(function (conflicted_course) {
-            update_course_conflicted_status(conflicted_course);
-        });
-
-        function handle_conflicted_events(event) {
-            var conflicted_ids = {};
-
-            var conflicted_events = calendar.fullCalendar('clientEvents', function (cb_event) {
-                if (cb_event.courseNumber === event.courseNumber &&
-                    get_event_lesson_type(cb_event) === get_event_lesson_type(event)) {
-                    return false;
-                }
-
-                if (are_events_overlapping(cb_event, event)) {
-                    if (!conflicted_ids.propertyIsEnumerable(cb_event.id)) {
-                        conflicted_ids[cb_event.id] = 1;
-                        return true;
-                    }
-                    conflicted_ids[cb_event.id]++;
-                    return false;
-                }
-
-                return false;
-            });
-
-            for (var i = 0; i < conflicted_events.length; i++) {
-                var weeks = conflicted_ids[conflicted_events[i].id];
-                conflicted_events[i].start.add((selecting_event ? 7 : -7)*weeks, 'days');
-                conflicted_events[i].end.add((selecting_event ? 7 : -7)*weeks, 'days');
-                conflicted_courses[conflicted_events[i].courseNumber] = true;
-            }
-
-            my_update_events(calendar, conflicted_events);
-        }
-    }
-
-    function on_event_mouseover(event) {
-        $('.list-group-item-course-' + event.courseNumber).addClass('list-group-item-same-course-as-hovered');
-        $('.exam-days-item-course-' + event.courseNumber).addClass('exam-days-item-same-course-as-hovered');
-        $('.calendar-item-course-' + event.courseNumber).addClass('calendar-item-same-course-as-hovered');
-        $('.calendar-item-course-' + event.courseNumber + '-type-' + get_event_lesson_type(event)).addClass('calendar-item-same-type-as-hovered');
-    }
-
-    function on_event_mouseout(event) {
-        $('.list-group-item-course-' + event.courseNumber).removeClass('list-group-item-same-course-as-hovered');
-        $('.exam-days-item-course-' + event.courseNumber).removeClass('exam-days-item-same-course-as-hovered');
-        $('.calendar-item-course-' + event.courseNumber).removeClass('calendar-item-same-course-as-hovered');
-        $('.calendar-item-course-' + event.courseNumber + '-type-' + get_event_lesson_type(event)).removeClass('calendar-item-same-type-as-hovered');
-    }
-
-    function after_event_render(event, element) {
-        if (!event.selected) {
-            var same_type = $('.calendar-item-course-' + event.courseNumber + '-type-' + get_event_lesson_type(event))
-                .not('.calendar-item-course-' + event.courseNumber + '-lesson-' + event.lessonData['מס.']);
-            if (same_type.length === 0) {
-                element.addClass('calendar-item-last-choice');
-            }
-        }
-    }
-
-    function get_course_title(course) {
-        var general = courses_hashmap[course].general;
-        return general['מספר מקצוע'] + ' - ' + general['שם מקצוע'];
-    }
-
-    function on_course_button_click(button, course) {
-        if (button.hasClass('active')) {
-            remove_course_from_calendar(course);
-            button.removeClass('active').removeClass('list-group-item-conflicted');
-            button.css({ 'background-color': '', 'border-color': '' });
-            selected_course_unsave(course);
-            courses_chosen[course] = false;
-            update_general_info_line();
-            update_calendar_max_day_and_time([]);
-            update_exam_info([]);
-        } else {
-            add_course_to_calendar(course);
-            change_course_previewed_status(course, true);
-            button.addClass('active');
-            var color = color_hash.hex(course);
-            button.css({ 'background-color': color, 'border-color': color });
-            selected_course_save(course);
-            courses_chosen[course] = true;
-            update_general_info_line();
-            update_calendar_max_day_and_time([]);
-            update_exam_info([]);
-        }
-    }
-
-    function add_course_to_list_group(course) {
-        var button = $('<a href="#" type="button"'
-            + ' class="list-group-item active list-group-item-course-' + course + '">'
-            + '</a>');
-        var badge = $('<span class="badge badge-pill badge-secondary float-right">i</span>');
-        var color = color_hash.hex(course);
-        var course_title = get_course_title(course);
-        button.css({ 'background-color': color, 'border-color': color })
-            .click(function (e) {
-                e.preventDefault(); // don't follow the link "#"
-                on_course_button_click($(this), course);
-            }).hover(
-                function () {
-                    $(this).addClass('list-group-item-same-course-as-hovered');
-                    $('.exam-days-item-course-' + course).addClass('exam-days-item-same-course-as-hovered');
-                    change_course_previewed_status(course, true);
-                }, function () {
-                    $(this).removeClass('list-group-item-same-course-as-hovered');
-                    $('.exam-days-item-course-' + course).removeClass('exam-days-item-same-course-as-hovered');
-                    change_course_previewed_status(course, false);
-                }
-            ).text(course_title)
-            .append(badge);
-
-        // Add tooltip to badge.
-        var course_description = get_course_description(course);
-        var course_description_html = $('<div>').text(course_description).html().replace(/\n/g, '<br>');
-        badge.hover(
-                function () {
-                    $(this).removeClass('badge-secondary');
-                    $(this).addClass('badge-primary');
-                }, function () {
-                    $(this).removeClass('badge-primary');
-                    $(this).addClass('badge-secondary');
-                }
-            ).click(function (e) {
-                e.stopPropagation(); // don't execute parent button onclick
-                e.preventDefault(); // don't follow the link "#"
-                $(this).tooltip('hide');
-                BootstrapDialog.show({
-                    title: course_title,
-                    message: course_description
-                });
-            }).prop('title', course_description_html)
-            .attr('data-toggle', 'tooltip')
-            .tooltip({
-                html: true,
-                placement: 'right',
-                template: '<div class="tooltip" role="tooltip"><div class="arrow"></div><div class="tooltip-inner course-description-tooltip-inner"></div></div>',
-                trigger: 'hover'
-            });
-        $('#course-button-list').append(button);
-    }
-
-    function save_as_ics() {
-        var calendar = $('#calendar');
-        var ics_cal = ics();
-
-        var year_from = parseInt(current_semester.slice(0, 4), 10);
-        var year_to = year_from + 2;
-
-        var rrule = { freq: 'WEEKLY', until: year_to + '-01-01T00:00:00Z' };
-
-        var count = 0;
-
-        calendar.fullCalendar('clientEvents', function (event) {
-            if (event.start.week() === 1 && event.selected) {
-                var general = courses_hashmap[event.courseNumber].general;
-                var lesson = event.lessonData;
-
-                var subject = lesson['סוג'] + ' ' + lesson['מס.'];
-                if (lesson['סוג'] === 'sadna') {
-                    subject = 'סדנה';
-                }
-                subject += ' - ' + general['שם מקצוע'];
-
-                var description = '';
-                if (lesson['מרצה/מתרגל'] !== '') {
-                    description = lesson['מרצה/מתרגל'];
-                }
-
-                var location = '';
-                if (lesson['בניין'] !== '') {
-                    location = lesson['בניין'];
-                    if (lesson['חדר'] !== '') {
-                        location += ' ' + lesson['חדר'];
-                    }
-                }
-
-                var begin = event.start.format();
-                var end = event.end.format();
-
-                ics_cal.addEvent(subject, description, location, begin, end, rrule);
-                count++;
-            }
-
-            return false;
-        });
-
-        if (count > 0) {
-            ics_cal.download(semester_friendly_name(current_semester));
-        } else {
-            alert('המערכת ריקה');
-        }
-    }
-
-    function selected_course_save(course) {
-        var semesterCoursesKey = current_semester + '_courses';
-        var courseKey = current_semester + '_' + course;
-
-        var doc = firestore_auth_user_doc();
+        var doc = firestoreAuthenticatedUserDoc();
         if (doc) {
             var input = {};
             input[semesterCoursesKey] = firebase.firestore.FieldValue.arrayUnion(course);
             input[courseKey] = {};
-            doc.set(input, { merge: true });
+            doc.set(input, {merge: true});
         } else {
-            var courses = JSON.parse(localStorage && localStorage.getItem(semesterCoursesKey) || '[]');
-            courses.push(course);
-            localStorage && localStorage.setItem(semesterCoursesKey, JSON.stringify(courses));
-            localStorage && localStorage.removeItem(courseKey);
+            try {
+                localStorage.setItem(semesterCoursesKey, JSON.stringify(currentSavedSession[semesterCoursesKey]));
+                localStorage.removeItem(courseKey);
+            } catch (e) {
+                // localStorage is not available in IE/Edge when running from a local file.
+            }
         }
+
+        onSavedSessionChange();
     }
 
-    function selected_course_unsave(course) {
-        var semesterCoursesKey = current_semester + '_courses';
-        var courseKey = current_semester + '_' + course;
+    function selectedCourseUnsave(course) {
+        var semesterCoursesKey = currentSemester + '_courses';
+        var courseKey = currentSemester + '_' + course;
 
-        var doc = firestore_auth_user_doc();
+        currentSavedSession[semesterCoursesKey] = currentSavedSession[semesterCoursesKey].filter(function (item) {
+            return item !== course;
+        });
+        delete currentSavedSession[courseKey];
+
+        var doc = firestoreAuthenticatedUserDoc();
         if (doc) {
             var input = {};
             input[semesterCoursesKey] = firebase.firestore.FieldValue.arrayRemove(course);
             input[courseKey] = firebase.firestore.FieldValue.delete();
             doc.update(input);
         } else {
-            var courses = JSON.parse(localStorage && localStorage.getItem(semesterCoursesKey) || '[]');
-            courses = courses.filter(function (item) {
-                return item !== course;
-            });
-            localStorage && localStorage.setItem(semesterCoursesKey, JSON.stringify(courses));
-            localStorage && localStorage.removeItem(courseKey);
+            try {
+                localStorage.setItem(semesterCoursesKey, JSON.stringify(currentSavedSession[semesterCoursesKey]));
+                localStorage.removeItem(courseKey);
+            } catch (e) {
+                // localStorage is not available in IE/Edge when running from a local file.
+            }
         }
+
+        onSavedSessionChange();
     }
 
-    function selected_lesson_save(course, lesson_number, lesson_type) {
-        var courseKey = current_semester + '_' + course;
+    function selectedLessonSave(course, lessonNumber, lessonType) {
+        var courseKey = currentSemester + '_' + course;
 
-        var doc = firestore_auth_user_doc();
+        currentSavedSession[courseKey][lessonType] = lessonNumber;
+
+        var doc = firestoreAuthenticatedUserDoc();
         if (doc) {
             var input = {};
-            input[courseKey + '.' + lesson_type] = lesson_number;
+            input[courseKey + '.' + lessonType] = lessonNumber;
             doc.update(input);
         } else {
-            var lessons = JSON.parse(localStorage && localStorage.getItem(courseKey) || '{}');
-            lessons[lesson_type] = lesson_number;
-            localStorage && localStorage.setItem(courseKey, JSON.stringify(lessons));
+            try {
+                localStorage.setItem(courseKey, JSON.stringify(currentSavedSession[courseKey]));
+            } catch (e) {
+                // localStorage is not available in IE/Edge when running from a local file.
+            }
         }
+
+        onSavedSessionChange();
     }
 
-    function selected_lesson_unsave(course, lesson_number, lesson_type) {
-        var courseKey = current_semester + '_' + course;
+    function selectedLessonUnsave(course, lessonNumber, lessonType) {
+        var courseKey = currentSemester + '_' + course;
 
-        var doc = firestore_auth_user_doc();
+        delete currentSavedSession[courseKey][lessonType];
+
+        var doc = firestoreAuthenticatedUserDoc();
         if (doc) {
             var input = {};
-            input[courseKey + '.' + lesson_type] = firebase.firestore.FieldValue.delete();
+            input[courseKey + '.' + lessonType] = firebase.firestore.FieldValue.delete();
             doc.update(input);
         } else {
-            var lessons = JSON.parse(localStorage && localStorage.getItem(courseKey) || '{}');
-            delete lessons[lesson_type];
-            localStorage && localStorage.setItem(courseKey, JSON.stringify(lessons));
+            try {
+                localStorage.setItem(courseKey, JSON.stringify(currentSavedSession[courseKey]));
+            } catch (e) {
+                // localStorage is not available in IE/Edge when running from a local file.
+            }
         }
+
+        onSavedSessionChange();
     }
 
-    function load_saved_courses_and_lessons(on_loaded_func) {
-        var semesterCoursesKey = current_semester + '_courses';
+    function watchSharedSchedule(onLoadedFunc) {
+        var firstDataLoaded = false;
 
-        var doc = firestore_auth_user_doc();
+        var doc = firestoreUserDoc(scheduleSharingUserId);
+        doc.onSnapshot(function (result) {
+            var session = result.exists ? savedSessionFromFirestoreData(result.data()) : {};
+            setScheduleFromSavedSession(session, !firstDataLoaded);
+
+            if (result.exists && result.data().displayName) {
+                $('#sharing-user-name').text(result.data().displayName);
+                $('#sharing-user-known').removeClass('d-none');
+                $('#sharing-user-unknown').addClass('d-none');
+            } else {
+                $('#sharing-user-unknown').removeClass('d-none');
+                $('#sharing-user-known').addClass('d-none');
+            }
+
+            if (!firstDataLoaded) {
+                onLoadedFunc();
+                firstDataLoaded = true;
+            }
+        }, function (error) {
+            alert('Error loading data from server: ' + error);
+        });
+    }
+
+    function watchSavedSchedule(onLoadedFunc) {
+        var doc = firestoreAuthenticatedUserDoc();
         if (doc) {
-            doc.get().then(function (doc) {
-                apply_saved(doc.exists ? doc.data() : {});
-                on_loaded_func();
+            var firstDataLoaded = false;
+
+            stopScheduleWatching = doc.onSnapshot(function (result) {
+                if (result.metadata.hasPendingWrites) {
+                    // The callback was called as a result of a local change, ignore it.
+                    // https://stackoverflow.com/questions/50186413/is-firestore-onsnapshot-update-event-due-to-local-client-set
+                    return;
+                }
+
+                if (!firstDataLoaded) {
+                    // Save name in server for sharing purposes.
+                    doc.update({displayName: firebase.auth().currentUser.displayName});
+                }
+
+                var session = result.exists ? savedSessionFromFirestoreData(result.data()) : {};
+                setScheduleFromSavedSession(session, !firstDataLoaded);
+
+                currentSavedSession = session;
+                onSavedSessionReset();
+
+                if (!firstDataLoaded) {
+                    onLoadedFunc();
+                    firstDataLoaded = true;
+                }
             }, function (error) {
                 alert('Error loading data from server: ' + error);
             });
         } else {
-            var data = {};
-            data[semesterCoursesKey] = JSON.parse(localStorage && localStorage.getItem(semesterCoursesKey) || '[]');
-            data[semesterCoursesKey].forEach(function (course) {
-                var courseKey = current_semester + '_' + course;
-                data[courseKey] = JSON.parse(localStorage && localStorage.getItem(courseKey) || '{}');
-            });
-            apply_saved(data);
-            on_loaded_func();
-        }
+            var onStorageEvent = function (e) {
+                var prefix = currentSemester + '_';
+                // Check if the line starts with a required prefix.
+                // https://stackoverflow.com/a/4579228
+                if (e.key.lastIndexOf(prefix, 0) === 0) {
+                    var session = savedSessionFromLocalStorage();
+                    setScheduleFromSavedSession(session, true);
 
-        function apply_saved(data) {
-            var courses = data[semesterCoursesKey] || [];
-
-            courses.forEach(function (course) {
-                if (!courses_chosen.propertyIsEnumerable(course) && courses_hashmap.propertyIsEnumerable(course)) {
-                    courses_chosen[course] = true;
-                    add_course_to_list_group(course);
-                    add_course_to_calendar(course);
-
-                    var courseKey = current_semester + '_' + course;
-
-                    var lessons = data[courseKey] || {};
-                    Object.keys(lessons).forEach(function (lesson_type) {
-                        var lesson_number = lessons[lesson_type];
-                        $('.calendar-item-course-' + course + '-type-' + lesson_type
-                            + '.calendar-item-course-' + course + '-lesson-' + lesson_number).first().click();
-                    });
+                    currentSavedSession = session;
+                    onSavedSessionReset();
                 }
-            });
+            };
 
-            update_general_info_line();
-            update_calendar_max_day_and_time([]);
-            update_exam_info([]);
+            window.addEventListener('storage', onStorageEvent);
+
+            stopScheduleWatching = function () {
+                window.removeEventListener('storage', onStorageEvent);
+            };
+
+            var session = savedSessionFromLocalStorage();
+            setScheduleFromSavedSession(session, false);
+
+            currentSavedSession = session;
+            onSavedSessionReset();
+
+            onLoadedFunc();
         }
     }
 
-    function reload_saved_courses_and_lessons(on_loaded_func) {
-        $('#course-button-list').empty();
-        $('#calendar').fullCalendar('removeEvents', function (event) {
-            return true;
-        });
-        courses_chosen = {};
-
-        update_general_info_line();
-        update_calendar_max_day_and_time([]);
-        update_exam_info([]);
-
-        load_saved_courses_and_lessons(on_loaded_func);
+    function savedSessionFromLocalStorage() {
+        var semesterCoursesKey = currentSemester + '_courses';
+        var session = {};
+        try {
+            session[semesterCoursesKey] = JSON.parse(localStorage.getItem(semesterCoursesKey) || '[]');
+            session[semesterCoursesKey].forEach(function (course) {
+                var courseKey = currentSemester + '_' + course;
+                session[courseKey] = JSON.parse(localStorage.getItem(courseKey) || '{}');
+            });
+        } catch (e) {
+            // localStorage is not available in IE/Edge when running from a local file.
+            session[semesterCoursesKey] = [];
+        }
+        return session;
     }
 
-    function firestore_auth_user_doc() {
+    function savedSessionFromFirestoreData(data) {
+        // Returns only the data relevant to the current semester from data.
+        var semesterCoursesKey = currentSemester + '_courses';
+        var session = {};
+        session[semesterCoursesKey] = data[semesterCoursesKey] || [];
+        session[semesterCoursesKey].forEach(function (course) {
+            var courseKey = currentSemester + '_' + course;
+            session[courseKey] = data[courseKey] || {};
+        });
+        return session;
+    }
+
+    function restoreSavedSession(currentSession, sessionToRestore) {
+        var newKeys = [], removeKeys = [];
+
+        var semesterCoursesKey = currentSemester + '_courses';
+        var currentCourses = currentSession[semesterCoursesKey];
+        var newCourses = sessionToRestore[semesterCoursesKey];
+        if (JSON.stringify(currentCourses) !== JSON.stringify(newCourses)) {
+            newKeys.push(semesterCoursesKey);
+        }
+
+        currentCourses.forEach(function (course) {
+            if (newCourses.indexOf(course) === -1) {
+                var courseKey = currentSemester + '_' + course;
+                removeKeys.push(courseKey);
+            }
+        });
+
+        newCourses.forEach(function (course) {
+            var courseKey = currentSemester + '_' + course;
+            if (currentCourses.indexOf(course) === -1) {
+                newKeys.push(courseKey);
+            } else {
+                var currentLessons = currentSession[courseKey];
+                var newLessons = sessionToRestore[courseKey];
+                // Can be different even if object are equal due to key order,
+                // but that's OK, we'll just override the same data.
+                if (JSON.stringify(currentLessons) !== JSON.stringify(newLessons)) {
+                    newKeys.push(courseKey);
+                }
+            }
+        });
+
+        var doc = firestoreAuthenticatedUserDoc();
+        if (doc) {
+            var input = {};
+
+            removeKeys.forEach(function (key) {
+                input[key] = firebase.firestore.FieldValue.delete();
+            });
+
+            newKeys.forEach(function (key) {
+                input[key] = sessionToRestore[key];
+            });
+
+            doc.update(input);
+        } else {
+            try {
+                removeKeys.forEach(function (key) {
+                    localStorage.removeItem(key);
+                });
+
+                newKeys.forEach(function (key) {
+                    localStorage.setItem(key, JSON.stringify(sessionToRestore[key]));
+                });
+            } catch (e) {
+                // localStorage is not available in IE/Edge when running from a local file.
+            }
+        }
+
+        setScheduleFromSavedSession(sessionToRestore);
+    }
+
+    function setScheduleFromSavedSession(session, restoreScrollPosition) {
+        var scrollTop;
+        if (restoreScrollPosition) {
+            scrollTop = $(window).scrollTop(); // save scroll position
+        }
+
+        var semesterCoursesKey = currentSemester + '_courses';
+
+        coursesChosen = {};
+        courseButtonList.clear();
+
+        var schedule = {};
+
+        var courses = session[semesterCoursesKey] || [];
+        courses.forEach(function (course) {
+            if (!coursesChosen.propertyIsEnumerable(course) && courseManager.doesExist(course)) {
+                coursesChosen[course] = true;
+                courseButtonList.addCourse(course);
+
+                var courseKey = currentSemester + '_' + course;
+                var lessons = session[courseKey] || {};
+                schedule[course] = lessons;
+            }
+        });
+
+        courseCalendar.loadSavedSchedule(schedule);
+        updateGeneralInfoLine();
+        courseExamInfo.renderCourses(getSelectedCourses());
+
+        if (restoreScrollPosition) {
+            $(window).scrollTop(scrollTop); // restore scroll position
+        }
+    }
+
+    function resetSchedule() {
+        coursesChosen = {};
+        courseButtonList.clear();
+        courseCalendar.removeAll();
+        updateGeneralInfoLine();
+        courseExamInfo.renderCourses(getSelectedCourses());
+        filterReset();
+    }
+
+    function onSavedSessionReset() {
+        savedSessionForUndo = $.extend(true, {}, currentSavedSession); // make a deep copy
+
+        $('#top-navbar-undo').addClass('d-none');
+        $('#top-navbar-redo').addClass('d-none');
+    }
+
+    function onSavedSessionChange() {
+        $('#top-navbar-undo').removeClass('d-none');
+        $('#top-navbar-redo').addClass('d-none');
+    }
+
+    function makeUndo() {
+        restoreSavedSession(currentSavedSession, savedSessionForUndo);
+
+        savedSessionForRedo = currentSavedSession;
+        currentSavedSession = $.extend(true, {}, savedSessionForUndo); // make a deep copy
+
+        $('#top-navbar-undo').addClass('d-none');
+        $('#top-navbar-redo').removeClass('d-none');
+    }
+
+    function makeRedo() {
+        restoreSavedSession(currentSavedSession, savedSessionForRedo);
+
+        currentSavedSession = savedSessionForRedo;
+        savedSessionForRedo = null;
+
+        $('#top-navbar-redo').addClass('d-none');
+        $('#top-navbar-undo').removeClass('d-none');
+    }
+
+    function firestoreAuthenticatedUserDoc() {
         if (typeof firebase !== 'undefined' && firebase.auth().currentUser !== null) {
-            return firestore_db.collection('users').doc(firebase.auth().currentUser.uid);
+            return firestoreDb.collection('users').doc(firebase.auth().currentUser.uid);
         }
         return null;
     }
 
-    function firebase_init(after_init_func) {
-        // Initialize Firebase.
-        var config = {
-            apiKey: 'AIzaSyAfKPyTM83mkLgdQTdx9YS9UXywiswwIYI',
-            authDomain: 'cheesefork-de9af.firebaseapp.com',
-            databaseURL: 'https://cheesefork-de9af.firebaseio.com',
-            projectId: 'cheesefork-de9af',
-            storageBucket: 'cheesefork-de9af.appspot.com',
-            messagingSenderId: '916559682433'
-        };
-        firebase.initializeApp(config);
-
-        // Initialize Firestore.
-        firestore_db = firebase.firestore();
-        firestore_db.settings({ timestampsInSnapshots: true }); // silence a warning
-
-        // FirebaseUI config.
-        var uiConfig = {
-            // Opens IDP Providers sign-in flow in a popup.
-            signInFlow: 'popup',
-            signInOptions: [
-                // Leave the lines as is for the providers you want to offer your users.
-                firebase.auth.GoogleAuthProvider.PROVIDER_ID,
-                firebase.auth.EmailAuthProvider.PROVIDER_ID
-            ],
-            callbacks: {
-                // Called when the user has been successfully signed in.
-                signInSuccessWithAuthResult: function (authResult) {
-                    if (authResult.user) {
-                        handleSignedInUser(authResult.user);
-                    }
-                    // Do not redirect.
-                    return false;
-                }
-            },
-            // Terms of service url.
-            tosUrl: 'https://policies.google.com/terms',
-            // Privacy policy url.
-            privacyPolicyUrl: 'https://policies.google.com/privacy',
-            // Disable accountchooser.com which is enabled by default.
-            credentialHelper: firebaseui.auth.CredentialHelper.NONE
-        };
-
-        // Initialize the FirebaseUI Widget using Firebase.
-        var firebaseUI = new firebaseui.auth.AuthUI(firebase.auth());
-
-        var auth_initialized = false;
-
-        // Listen to change in auth state so it displays the correct UI for when
-        // the user is signed in or not.
-        firebase.auth().onAuthStateChanged(function (user) {
-            user ? handleSignedInUser(user) : handleSignedOutUser();
-            if (!auth_initialized) {
-                after_init_func();
-                auth_initialized = true;
-            } else if (user) {
-                // Slow reload.
-                $('#page-loader').show();
-                reload_saved_courses_and_lessons(function () {
-                    $('#page-loader').hide();
-                });
-            } else {
-                // Fast reload.
-                reload_saved_courses_and_lessons(function () {});
-            }
-        });
-
-        document.getElementById('sign-out').addEventListener('click', function () {
-            firebase.auth().signOut();
-        });
-
-        function handleSignedInUser(user) {
-            document.getElementById('user-signed-in').style.display = 'block';
-            document.getElementById('user-signed-out').style.display = 'none';
-            document.getElementById('user-name').textContent = user.displayName;
-        }
-
-        function handleSignedOutUser() {
-            document.getElementById('user-signed-in').style.display = 'none';
-            document.getElementById('user-signed-out').style.display = 'block';
-            firebaseUI.start('#firebaseui-auth-container', uiConfig);
-        }
+    function firestoreUserDoc(userId) {
+        return firestoreDb.collection('users').doc(userId);
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    available_semesters.forEach(function (semester) {
-        $('#select-semester').append($('<option>', {
-            value: semester,
-            text: semester_friendly_name(semester)
-        }));
-    });
-
-    $('#select-semester').val(current_semester).change(function () {
-        window.location = '?semester=' + this.value;
-    });
-
-    $('#save-as-ics').click(function () {
-        save_as_ics();
-    });
-
-    courses_from_rishum.forEach(function (item) {
-        var course_number = item.general['מספר מקצוע'];
-        courses_hashmap[course_number] = item;
-        $('#select-course').append($('<option>', {
-            value: course_number,
-            text: course_number + ' - ' + item.general['שם מקצוע']
-        }));
-    });
-
-    $('#select-course').selectize({
-        //searchConjunction: 'or',
-        maxOptions: 200,
-        render: {
-            option: function (item, escape) {
-                var course = item.value;
-                var general = courses_hashmap[course].general;
-
-                var course_description_html = $('<div>').text(get_course_description(course)).html().replace(/\n/g, '<br>');
-
-                var course_number = $('<abbr>').text(general['מספר מקצוע'])
-                    .prop('title', course_description_html)
-                    .attr({
-                        'data-toggle': 'tooltip',
-                        'data-html': 'true',
-                        'data-placement': 'right',
-                        'data-template': '<div class="tooltip" role="tooltip"><div class="arrow"></div><div class="tooltip-inner course-description-tooltip-inner"></div></div>',
-                        'data-boundary': 'viewport'
-                    });
-
-                return $('<div>').addClass('option').append(course_number)
-                    .append(document.createTextNode(' - ' + general['שם מקצוע'])).get(0);
-            }
-        },
-        onItemAdd: function (course) {
-            if (!courses_chosen.propertyIsEnumerable(course)) {
-                courses_chosen[course] = true;
-                add_course_to_list_group(course);
-                add_course_to_calendar(course);
-                selected_course_save(course);
-                update_general_info_line();
-                update_calendar_max_day_and_time([]);
-                update_exam_info([]);
-            }
-            this.clear();
-        },
-        onDropdownItemActivate: function (course) {
-            if (!courses_chosen.propertyIsEnumerable(course)) {
-                add_course_to_calendar(course);
-                update_calendar_max_day_and_time([course]);
-                update_exam_info([course]);
-                $('.exam-days-item-course-' + course).addClass('exam-days-item-same-course-as-hovered');
-            }
-            change_course_previewed_status(course, true);
-        },
-        onDropdownItemDeactivate: function (course) {
-            if (!courses_chosen.propertyIsEnumerable(course)) {
-                remove_course_from_calendar(course);
-                update_calendar_max_day_and_time([]);
-                update_exam_info([]);
-            } else {
-                // Remove highlight
-                change_course_previewed_status(course, false);
+    // https://stackoverflow.com/a/33928558
+    // Copies a string to the clipboard. Must be called from within an
+    // event handler such as click. May return false if it failed, but
+    // this is not always possible. Browser support for Chrome 43+,
+    // Firefox 42+, Safari 10+, Edge and IE 10+.
+    // IE: The clipboard feature may be disabled by an administrator. By
+    // default a prompt is shown the first time the clipboard is
+    // used (per session).
+    function copyToClipboard(text) {
+        if (window.clipboardData && window.clipboardData.setData) {
+            // IE specific code path to prevent textarea being shown while dialog is visible.
+            return window.clipboardData.setData("Text", text);
+        } else if (document.queryCommandSupported && document.queryCommandSupported("copy")) {
+            var textarea = document.createElement("textarea");
+            textarea.textContent = text;
+            textarea.style.position = "fixed"; // Prevent scrolling to bottom of page in MS Edge.
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                return document.execCommand("copy"); // Security exception may be thrown by some browsers.
+            } catch (ex) {
+                //console.warn("Copy to clipboard failed.", ex);
+                return false;
+            } finally {
+                document.body.removeChild(textarea);
             }
         }
-    });
-
-    $('.selectize-control .selectize-dropdown').tooltip({ selector: '[data-toggle=tooltip]' });
-
-    $('#calendar').fullCalendar({
-        defaultDate: '2017-01-01',
-        //editable: true,
-        //eventLimit: true, // allow "more" link when too many events
-        defaultView: 'agendaWeek',
-        header: false,
-        allDaySlot: false,
-        minTime: '08:30:00',
-        maxTime: '18:30:00',
-        height: 'auto',
-        contentHeight: 'auto',
-        columnFormat: 'dddd',
-        locale: 'he',
-        slotEventOverlap: false,
-        displayEventTime: false,
-        eventClick: on_event_click,
-        eventMouseover: on_event_mouseover,
-        eventMouseout: on_event_mouseout,
-        eventAfterRender: after_event_render
-    }).fullCalendar('option', {
-        // Set afterwards as a bug workaround.
-        // https://github.com/fullcalendar/fullcalendar/issues/4102
-        hiddenDays: [5, 6]
-    });
-
-    $('#footer-semester-name').text(semester_friendly_name(current_semester));
-    $('#footer-semester').removeClass('d-none');
-
-    $('#right-content-bar').removeClass('invisible');
-
-    if (typeof firebase !== 'undefined') {
-        // Firebase UI doesn't work on Edge/IE in private mode.
-        // Fall back to offline mode.
-        try {
-            firebase_init(function () {
-                load_saved_courses_and_lessons(function () {
-                    $('#page-loader').hide();
-                });
-            });
-        } catch(e) {
-            firebase = undefined;
-        }
     }
-
-    if (typeof firebase === 'undefined') {
-        document.getElementById('firebase-sign-in').style.display = 'none';
-        load_saved_courses_and_lessons(function () {
-            $('#page-loader').hide();
-        });
-    }
-});
+})();

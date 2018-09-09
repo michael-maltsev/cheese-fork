@@ -7,72 +7,223 @@
     <title>CheeseFork - Your Cheesy Scheduler</title>
     <link rel="shortcut icon" type="image/png" href="favicon.ico">
     <link rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/3.3.0/firebase-ui-auth-rtl.css">
-    <link rel="stylesheet" href="bootstrap_rtl/css/bootstrap.min.css">
-    <link rel="stylesheet" href="bootstrap4-dialog/css/bootstrap-dialog.min.css">
-    <link rel="stylesheet" href="fullcalendar/fullcalendar.min.css">
-    <link rel="stylesheet" media="print" href="fullcalendar/fullcalendar.print.min.css">
-    <link rel="stylesheet" href="selectize/css/selectize.bootstrap4.css">
+    <link rel="stylesheet" href="modules/bootstrap-rtl/css/bootstrap.min.css">
+    <link rel="stylesheet" href="modules/bootstrap4-dialog/css/bootstrap-dialog.min.css">
+    <link rel="stylesheet" href="modules/fullcalendar/fullcalendar.min.css">
+    <link rel="stylesheet" media="print" href="modules/fullcalendar/fullcalendar.print.min.css">
+    <link rel="stylesheet" href="modules/selectize/css/selectize.bootstrap4.css">
+    <link rel="stylesheet" href="modules/fontawesome/css/all.min.css">
     <link rel="stylesheet" href="loader.css">
+    <link rel="stylesheet" href="components/course-button-list/course-button-list.css">
+    <link rel="stylesheet" href="components/course-exam-info/course-exam-info.css">
+    <link rel="stylesheet" href="components/course-calendar/course-calendar.css">
     <link rel="stylesheet" href="cheesefork.css">
 </head>
 <body class="bg-light">
 <div class="container-fluid">
     <div class="loading" id="page-loader">Loading&#8230;</div>
 
-    <div class="pos-f-t">
-        <div class="collapse px-4 pt-4" id="navbarToggleExternalContent">
-            <div id="firebase-sign-in" class="form-group row">
-                <div id="user-signed-out">
-                    <div id="firebaseui-auth-container"></div>
-                </div>
-                <div id="user-signed-in">
-                    מחובר בתור <span id="user-name" class="font-weight-bold"></span>
-                    <button type="button" class="btn" id="sign-out">התנתק</button>
-                </div>
-            </div>
-            <div class="form-group row">
-                <label for="select-semester" class="col-form-label pr-2">מעבר לסמסטר:</label>
-                <select name="select-semester" id="select-semester" class="form-control" style="width:auto;"></select>
-            </div>
-            <div class="form-group row">
-                <div>
-                יצוא לקובץ iCalendar:
-                <button type="button" class="btn" id="save-as-ics">יצוא</button>
-                </div>
-            </div>
-        </div>
-        <nav class="navbar navbar-light">
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggleExternalContent" aria-controls="navbarToggleExternalContent" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="mx-auto">
-                <h2 id="main-logo" dir="ltr">
-                    CheeseFork
-                    <img src="logo.png" alt="logo" height="30">
-                </h2>
-            </div>
-        </nav>
+    <div class="d-none">
+        <div id="firebaseui-auth-container"></div>
     </div>
 
+    <nav id="top-navbar" class="navbar navbar-expand-md navbar-light bg-light">
+        <div id="top-navbar-supported-content" class="collapse navbar-collapse top-navbar-content-uninitialized">
+            <ul class="navbar-nav mr-auto">
+                <li id="top-navbar-home" class="nav-item d-none">
+                    <a class="nav-link" href="https://cheesefork.cf/">
+                        <i class="fas fa-home"></i>
+                        המערכת שלי
+                    </a>
+                </li>
+                <li id="top-navbar-login" class="nav-item d-none">
+                    <a class="nav-link" href="#">
+                        <i class="fas fa-sign-in-alt"></i>
+                        כניסה
+                    </a>
+                </li>
+                <li id="top-navbar-logout" class="nav-item d-none">
+                    <a class="nav-link" href="#" data-toggle="tooltip" data-placement="bottom" data-trigger="hover" title="">
+                        <i class="fas fa-sign-out-alt"></i>
+                        יציאה
+                    </a>
+                </li>
+                <li id="top-navbar-share" class="nav-item">
+                    <a class="nav-link disabled" href="#" data-toggle="tooltip" data-placement="bottom" data-trigger="hover" title="יש לבצע כניסה על מנת לשתף את המערכת">
+                        <i class="fas fa-share-alt"></i>
+                        שיתוף מערכת
+                    </a>
+                </li>
+                <li id="top-navbar-export" class="nav-item">
+                    <a class="nav-link" href="#" data-toggle="tooltip" data-placement="bottom" data-trigger="hover" title="מאפשר לייבא את המערכת לכלי שתומך בקבצי iCalendar כגון Google Calendar">
+                        <i class="fas fa-file-download"></i>
+                        ייצוא לקובץ iCalendar
+                    </a>
+                </li>
+                <li id="top-navbar-undo" class="nav-item d-none">
+                    <a class="nav-link" href="#">
+                        <i class="fas fa-redo"></i>
+                        בטל שינויים
+                    </a>
+                </li>
+                <li id="top-navbar-redo" class="nav-item d-none">
+                    <a class="nav-link" href="#">
+                        <i class="fas fa-undo"></i>
+                        החזר שינויים
+                    </a>
+                </li>
+                <li id="top-navbar-semester" class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="top-navbar-dropdown-semester" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-calendar-alt"></i>
+                        סמסטר
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="top-navbar-dropdown-semester"></div>
+                </li>
+            </ul>
+        </div>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#top-navbar-supported-content" aria-controls="top-navbar-supported-content" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <a class="navbar-brand" href="https://cheesefork.cf/">
+            <img src="logo.png" alt="logo" height="30">
+            <span class="font-weight-bold">CheeseFork</span>
+        </a>
+    </nav>
+
     <div class="row">
-        <div id="right-content-bar" class="col-md-2 invisible">
+        <div id="right-content-bar" class="col-md-2 my-2 my-md-0 invisible">
             <div class="d-flex flex-column h-100">
                 <select id="select-course" class="select-course" placeholder="לחצו לבחירת מקצוע...">
                     <option value="">לחצו לבחירת מקצוע...</option>
                 </select>
-            
+
+                <div id="shared-schedule-title">
+                    <h3 id="sharing-user-unknown" class="d-none">מציג מערכת של משתמש אחר</h3>
+                    <h3 id="sharing-user-known" class="d-none">
+                        מציג את המערכת של <span id="sharing-user-name" class="font-weight-bold"></span>
+                    </h3>
+                </div>
+
                 <div id="general-info"></div>
-            
-                <div id="course-button-list" class="list-group"></div>
-            
-                <div id="exam-info" class="mt-auto d-none">
-                    <div>מספר ימי למידה למבחנים:</div>
-                    <div id="exams-moed-a" class="exams-moed-content">מועדי א': <span id="exams-moed-a-list"></span></div>
-                    <div id="exams-moed-b" class="exams-moed-content">מועדי ב': <span id="exams-moed-b-list"></span></div>
+
+                <ul id="course-button-list" class="list-group"></ul>
+
+                <div id="course-exam-info-wrapper" class="d-flex flex-column" style="flex:1;">
+                    <div id="course-exam-info" class="mt-auto"></div>
                 </div>
             </div>
         </div>
-        <div id="calendar" class="col-md-10"></div>
+        <div id="course-calendar" class="col-md-10"></div>
+    </div>
+
+    <div class="d-none">
+        <form id="filter-form">
+            <div class="form-group">
+                <label for="filter-faculty">פקולטה</label>
+                <select id="filter-faculty" class="form-control" multiple>
+                </select>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="filter-points-min">מספר נקודות מינימלי</label>
+                    <select id="filter-points-min" class="form-control">
+                    </select>
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="filter-points-max">מספר נקודות מקסימלי</label>
+                    <select id="filter-points-max" class="form-control">
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="filter-courses-taken-list">קורסים שהושלמו (עבור שלושת האפשרויות הבאות)</label>
+                <input type="text" class="form-control" id="filter-courses-taken-list" placeholder="מספרי קורסים, מופרדים ברווח או פסיק"
+                       data-toggle="tooltip" data-placement="bottom" title="אפשר להדביק פה גם גיליון ציונים - כל טקסט המכיל מספרי קורסים יתאים">
+            </div>
+            <div class="form-group">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="filter-prerequisites">
+                    <label class="form-check-label" for="filter-prerequisites">
+                        אל תציג קורסים שחסר עבורם קדם
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="filter-linked-courses">
+                    <label class="form-check-label" for="filter-linked-courses">
+                        אל תציג קורסים שחסר עבורם צמוד
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="filter-overlapping-courses">
+                    <label class="form-check-label" for="filter-overlapping-courses">
+                        אל תציג קורסים ללא זיכוי נוסף
+                    </label>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-3">
+                    <label for="filter-moed-a-min">מועד א' מתאריך</label>
+                    <select id="filter-moed-a-min" class="form-control">
+                    </select>
+                </div>
+                <div class="form-group col-md-3">
+                    <label for="filter-moed-a-max">עד תאריך</label>
+                    <select id="filter-moed-a-max" class="form-control">
+                    </select>
+                </div>
+                <div class="form-group col-md-3">
+                    <label for="filter-moed-b-min">מועד ב' מתאריך</label>
+                    <select id="filter-moed-b-min" class="form-control">
+                    </select>
+                </div>
+                <div class="form-group col-md-3">
+                    <label for="filter-moed-b-max">עד תאריך</label>
+                    <select id="filter-moed-b-max" class="form-control">
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="filter-moed-a-days-min">מספר ימי למידה מינימלי למועד א'</label>
+                    <input type="number" min="0" value="0" class="form-control" id="filter-moed-a-days-min" placeholder="">
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="filter-moed-b-days-min">מספר ימי למידה מינימלי למועד ב'</label>
+                    <input type="number" min="0" value="0" class="form-control" id="filter-moed-b-days-min" placeholder="">
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="filter-with-exam">
+                    <label class="form-check-label" for="filter-with-exam">
+                        אל תציג קורסים עם מבחן
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="filter-without-exam">
+                    <label class="form-check-label" for="filter-without-exam">
+                        אל תציג קורסים ללא מבחן
+                    </label>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="filter-courses-limit">הגבל לקורסים</label>
+                    <input type="text" class="form-control" id="filter-courses-limit" placeholder="מספרי קורסים">
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="filter-courses-exclude">אל תציג קורסים</label>
+                    <input type="text" class="form-control" id="filter-courses-exclude" placeholder="מספרי קורסים">
+                </div>
+            </div>
+            <input type="submit" class="d-none">
+        </form>
     </div>
 
     <footer class="pt-4 text-muted text-center text-small">
@@ -90,27 +241,30 @@
     gtag('js', new Date());
     gtag('config', 'UA-115440973-1');
 </script>
-<script src="fullcalendar/lib/jquery.min.js"></script>
-<script src="popper/popper.js"></script>
-<script src="bootstrap_rtl/js/bootstrap.min.js"></script>
-<script src="bootstrap4-dialog/js/bootstrap-dialog.min.js"></script>
-<script src="fullcalendar/lib/moment.min.js"></script>
-<script src="fullcalendar/fullcalendar.min.js"></script>
-<script src='fullcalendar/locale/he.js'></script>
-<script src="selectize/js/standalone/selectize.min.js"></script>
-<script src="color-hash/color-hash.js"></script>
-<script src="ics.js/ics.deps.min.js"></script>
+<script src="modules/fullcalendar/lib/jquery.min.js"></script>
+<script src="modules/popper/popper.js"></script>
+<script src="modules/bootstrap-rtl/js/bootstrap.min.js"></script>
+<script src="modules/bootstrap4-dialog/js/bootstrap-dialog.min.js"></script>
+<script src="modules/fullcalendar/lib/moment.min.js"></script>
+<script src="modules/fullcalendar/fullcalendar.min.js"></script>
+<script src='modules/fullcalendar/locale/he.js'></script>
+<script src="modules/selectize/js/standalone/selectize.min.js"></script>
+<script src="modules/color-hash/color-hash.js"></script>
+<script src="modules/ics.js/ics.deps.min.js"></script>
+<script src="modules/reparse.js"></script>
+<script src="modules/boolean-expression.js"></script>
 <script src="https://www.gstatic.com/firebasejs/5.3.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/5.3.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/5.3.1/firebase-firestore.js"></script>
 <script src="https://www.gstatic.com/firebasejs/ui/3.3.0/firebase-ui-auth__iw.js"></script>
 <script>
-    var available_semesters = [
+    var availableSemesters = [
         '201701', '201702', '201703',
         '201801'
     ];
-    var current_semester;
-    (function() {
+    var currentSemester;
+    var scheduleSharingUserId;
+    (function () {
         // https://stackoverflow.com/a/901144
         function getParameterByName(name, url) {
             if (!url) url = window.location.href;
@@ -122,15 +276,21 @@
             return decodeURIComponent(results[2].replace(/\+/g, " "));
         }
 
-        current_semester = getParameterByName('semester');
-        if (available_semesters.indexOf(current_semester) === -1) {
-            current_semester = '201801';
+        currentSemester = getParameterByName('semester');
+        if (availableSemesters.indexOf(currentSemester) === -1) {
+            currentSemester = '201801';
         }
         var script = document.createElement('script');
-        script.src = 'courses_' + current_semester + '.min.js';
+        script.src = 'courses/courses_' + currentSemester + '.min.js';
         document.write(script.outerHTML);
+
+        scheduleSharingUserId = getParameterByName('uid');
     })();
 </script>
+<script src="components/course-button-list/course-button-list.js"></script>
+<script src="components/course-exam-info/course-exam-info.js"></script>
+<script src="components/course-calendar/course-calendar.js"></script>
+<script src="course-manager.js"></script>
 <script src="cheesefork.js"></script>
 </body>
 </html>

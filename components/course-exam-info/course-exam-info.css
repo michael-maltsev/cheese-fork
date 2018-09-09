@@ -1,0 +1,44 @@
+.exam-info-item {
+    position: relative;
+    display: inline-block;
+    white-space: nowrap;
+    color: white;
+    padding: 3px 5px;
+    border-radius: 6px;
+    cursor: default;
+}
+
+.exam-info-item .content-absolute {
+    position: absolute;
+    /* Center the element: https://stackoverflow.com/a/23384995 */
+    left: 50%;
+    transform: translate(-50%, 0);
+}
+
+.exam-info-item .content-bold-hidden {
+    font-weight: bold;
+    visibility: hidden;
+}
+
+.exam-info-item-hovered,
+.exam-info-item-highlighted {
+    -webkit-box-shadow: inset 0 0 0 3px #CC0000;
+    -moz-box-shadow: inset 0 0 0 3px #CC0000;
+    box-shadow: inset 0 0 0 3px #CC0000;
+    font-weight: bold;
+}
+
+.exam-info-item-conflicted {
+    color: red;
+    font-weight: bold;
+    text-shadow: 0 0 10px black;
+}
+
+.exam-info-left-arrow {
+    border: solid black;
+    border-width: 0 3px 3px 0;
+    display: inline-block;
+    padding: 3px;
+    transform: rotate(135deg);
+    -webkit-transform: rotate(135deg);
+}
