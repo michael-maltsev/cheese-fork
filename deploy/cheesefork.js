@@ -355,7 +355,7 @@
             });
         }
 
-        $('#top-navbar-export').click(function () {
+        $('#top-navbar-export').click(function (event) {
             event.preventDefault();
 
             var icsCal = ics();
