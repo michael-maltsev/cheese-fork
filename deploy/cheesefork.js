@@ -951,7 +951,7 @@
 
                 if (!firstDataLoaded) {
                     // Save name in server for sharing purposes.
-                    doc.update({displayName: firebase.auth().currentUser.displayName});
+                    doc.set({displayName: firebase.auth().currentUser.displayName}, {merge: true});
                 }
 
                 var session = result.exists ? savedSessionFromFirestoreData(result.data()) : {};
