@@ -309,9 +309,8 @@
                 var url = location.protocol + '//' + location.host + location.pathname +
                     '?semester=' + encodeURIComponent(currentSemester) +
                     '&uid=' + encodeURIComponent(firebase.auth().currentUser.uid);
-                var urlDiv = $('<div dir="ltr" class="text-right">').html(
-                    $('<a target="_blank">').prop('href', url).text(url));
-                var shareDialogContent = $('<div>הקישור לשיתוף המערכת:<br></div>').append(urlDiv);
+                var urlElement = $('<a target="_blank">לחצו כאן לפתיחה</a>').prop('href', url);
+                var shareDialogContent = $('<div>הקישור לשיתוף המערכת: </div>').append(urlElement);
 
                 BootstrapDialog.show({
                     title: 'שיתוף מערכת',
@@ -325,13 +324,6 @@
                             }, function () {
                                 alert('ההעתקה נכשלה');
                             });
-                        }
-                    }, {
-                        label: 'פתח בחלון חדש',
-                        action: function (dialog) {
-                            var win = window.open(url, '_blank');
-                            win.focus();
-                            dialog.close();
                         }
                     }, {
                         label: 'סגור',
