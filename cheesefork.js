@@ -263,7 +263,7 @@
         if (!viewingSharedSchedule) {
             var semesterSelect = $('#top-navbar-semester').find('.dropdown-menu');
 
-            availableSemesters.forEach(function (semester) {
+            Object.keys(availableSemesters).sort().forEach(function (semester) {
                 var link = $('<a class="dropdown-item">')
                     .prop('href', '?semester=' + encodeURIComponent(semester))
                     .text(semesterFriendlyName(semester));
@@ -352,17 +352,31 @@
 
             var icsCal = ics();
 
-            var yearFrom = parseInt(currentSemester.slice(0, 4), 10);
-            var yearTo = yearFrom + 2;
+            // Schedule.
+            var dateFrom = availableSemesters[currentSemester].start;
+            var dateTo = availableSemesters[currentSemester].end;
+            courseCalendar.saveAsIcs(icsCal, dateFrom, dateTo);
 
-            if (courseCalendar.saveAsIcs(icsCal, yearFrom, yearTo) === 0) {
+            // Exams.
+            getSelectedCourses().forEach(function (course) {
+                var general = courseManager.getGeneralInfo(course);
+                ['מועד א', 'מועד ב'].forEach(function (moed) {
+                    if (general[moed]) {
+                        var parsedDate = courseManager.parseExamDateTime(general[moed]);
+                        if (parsedDate) {
+                            var title = moed + '\' - ' + general['שם מקצוע'];
+                            icsCal.addEvent(title, '', '', parsedDate.start, parsedDate.end);
+                        }
+                    }
+                });
+            });
+
+            if (!icsCal.download(semesterFriendlyName(currentSemester))) {
                 BootstrapDialog.show({
                     title: 'אופס',
                     message: 'המערכת ריקה',
                     size: BootstrapDialog.SIZE_SMALL
                 });
-            } else {
-                icsCal.download(semesterFriendlyName(currentSemester));
             }
         });
     }
@@ -946,15 +960,17 @@
                     doc.set({displayName: firebase.auth().currentUser.displayName}, {merge: true});
                 }
 
-                var session = result.exists ? savedSessionFromFirestoreData(result.data()) : {};
+                var session = savedSessionFromFirestoreData(result.exists ? result.data() : {});
                 setScheduleFromSavedSession(session, !firstDataLoaded);
 
                 currentSavedSession = session;
-                onSavedSessionReset();
 
                 if (!firstDataLoaded) {
+                    onSavedSessionReset();
                     onLoadedFunc();
                     firstDataLoaded = true;
+                } else {
+                    onSavedSessionChange();
                 }
             }, function (error) {
                 alert('Error loading data from server: ' + error);
@@ -969,7 +985,7 @@
                     setScheduleFromSavedSession(session, true);
 
                     currentSavedSession = session;
-                    onSavedSessionReset();
+                    onSavedSessionChange();
                 }
             };
 

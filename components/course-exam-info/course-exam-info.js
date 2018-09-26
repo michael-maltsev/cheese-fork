@@ -92,8 +92,8 @@ CourseExamInfo.prototype.renderCourses = function (courses) {
                     tooltipText = dateWithTime;
                 }
             } else {
-                var left = moedDates[moedCourses[i - 1]];
-                var right = moedDates[course];
+                var left = moedDates[moedCourses[i - 1]].clone().set({hour: 0, minute: 0, second: 0});
+                var right = moedDates[course].clone().set({hour: 0, minute: 0, second: 0});
                 var diff = right.diff(left, 'days');
                 elementText = diff;
                 if (diff === 0) {
