@@ -1,5 +1,7 @@
 'use strict';
 
+/* global moment */
+
 var CourseCalendar = (function () {
     function CourseCalendar(element, options) {
         this.element = element;
@@ -605,11 +607,19 @@ var CourseCalendar = (function () {
         });
     };
 
-    CourseCalendar.prototype.saveAsIcs = function (icsCal, yearFrom, yearTo) {
+    CourseCalendar.prototype.saveAsIcs = function (icsCal, dateFrom, dateTo) {
         var that = this;
         var calendar = that.element;
 
-        var rrule = {freq: 'WEEKLY', until: yearTo + '-01-01T00:00:00Z'};
+        var dateFromArray = dateFrom.split('-');
+        var dateFromObject = {
+            year: parseInt(dateFromArray[0], 10),
+            month: parseInt(dateFromArray[1], 10) - 1,
+            date: parseInt(dateFromArray[2], 10)
+        };
+
+        var until = moment.utc(dateTo + 'T00:00:00').add(1, 'days').format();
+        var rrule = {freq: 'WEEKLY', until: until};
 
         var count = 0;
 
@@ -634,8 +644,19 @@ var CourseCalendar = (function () {
                     }
                 }
 
-                var begin = event.start.clone().set({year: yearFrom, month: 0, date: 1}).day(event.start.day());
-                var end = event.end.clone().set({year: yearFrom, month: 0, date: 1}).day(event.start.day());
+                var begin = event.start.clone().set(dateFromObject);
+                var end = event.end.clone().set(dateFromObject);
+                var eventDay = event.start.day();
+
+                // If setting the day will move us to the past, add 7 days
+                // to move forward to the next week.
+                if (eventDay < begin.day()) {
+                    begin.add(7, 'days');
+                    end.add(7, 'days');
+                }
+
+                begin.day(eventDay);
+                end.day(eventDay);
 
                 // Fix-up for 24:00 which is treated as 00:00 of the next day.
                 if (end.hour() === 0 && end.minute() === 0) {
