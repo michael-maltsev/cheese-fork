@@ -946,15 +946,17 @@
                     doc.set({displayName: firebase.auth().currentUser.displayName}, {merge: true});
                 }
 
-                var session = result.exists ? savedSessionFromFirestoreData(result.data()) : {};
+                var session = savedSessionFromFirestoreData(result.exists ? result.data() : {});
                 setScheduleFromSavedSession(session, !firstDataLoaded);
 
                 currentSavedSession = session;
-                onSavedSessionReset();
 
                 if (!firstDataLoaded) {
+                    onSavedSessionReset();
                     onLoadedFunc();
                     firstDataLoaded = true;
+                } else {
+                    onSavedSessionChange();
                 }
             }, function (error) {
                 alert('Error loading data from server: ' + error);
@@ -969,7 +971,7 @@
                     setScheduleFromSavedSession(session, true);
 
                     currentSavedSession = session;
-                    onSavedSessionReset();
+                    onSavedSessionChange();
                 }
             };
 
