@@ -7,7 +7,7 @@ function fetch_semester {
 	local courses_file=courses_$semester
 
 	cd technion-ug-info-fetcher
-	php courses_to_json.php courses_list_from_rishum=$semester || {
+	php courses_to_json.php "courses_list_from_rishum=$semester&try_until_all_downloaded=true" || {
 		cd ..
 		echo courses_to_json failed
 		return 1
