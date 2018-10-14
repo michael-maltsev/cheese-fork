@@ -51,6 +51,10 @@
     justify-content: space-between;
 }
 
+.course-filter-dialog .modal-footer .bootstrap-dialog-footer {
+    margin-right: auto;
+}
+
 #shared-schedule-title {
     font-weight: 300;
     line-height: 1.2;
