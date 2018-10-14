@@ -1,6 +1,6 @@
 'use strict';
 
-/* global ColorHash, BootstrapDialog, moment, ics, firebase, firebaseui, ga */
+/* global ColorHash, BootstrapDialog, moment, ics, firebase, firebaseui, gtag */
 /* global CourseManager, CourseButtonList, CourseExamInfo, CourseCalendar */
 /* global courses_from_rishum, availableSemesters, currentSemester, scheduleSharingUserId */
 
@@ -276,9 +276,7 @@
             $('#top-navbar-login').click(function (event) {
                 event.preventDefault();
 
-                if (typeof ga === 'function') {
-                    ga('send', 'event', 'navbar', 'login');
-                }
+                gtag('event', 'navbar-login');
 
                 if (loginDialog) {
                     loginDialog.open();
@@ -301,9 +299,7 @@
             $('#top-navbar-logout').click(function (event) {
                 event.preventDefault();
 
-                if (typeof ga === 'function') {
-                    ga('send', 'event', 'navbar', 'logout');
-                }
+                gtag('event', 'navbar-logout');
 
                 firebase.auth().signOut();
             });
@@ -314,9 +310,7 @@
                     return;
                 }
 
-                if (typeof ga === 'function') {
-                    ga('send', 'event', 'navbar', 'share');
-                }
+                gtag('event', 'navbar-share');
 
                 var url = location.protocol + '//' + location.host + location.pathname +
                     '?semester=' + encodeURIComponent(currentSemester) +
@@ -349,9 +343,7 @@
             $('#top-navbar-undo').click(function (event) {
                 event.preventDefault();
 
-                if (typeof ga === 'function') {
-                    ga('send', 'event', 'navbar', 'undo');
-                }
+                gtag('event', 'navbar-undo');
 
                 makeUndo();
             });
@@ -359,9 +351,7 @@
             $('#top-navbar-redo').click(function (event) {
                 event.preventDefault();
 
-                if (typeof ga === 'function') {
-                    ga('send', 'event', 'navbar', 'redo');
-                }
+                gtag('event', 'navbar-redo');
 
                 makeRedo();
             });
@@ -370,9 +360,7 @@
         $('#top-navbar-export').click(function (event) {
             event.preventDefault();
 
-            if (typeof ga === 'function') {
-                ga('send', 'event', 'navbar', 'export');
-            }
+            gtag('event', 'navbar-export');
 
             var icsCal = ics();
 
@@ -616,9 +604,7 @@
     }
 
     function filterOpen() {
-        if (typeof ga === 'function') {
-            ga('send', 'event', 'course-select-filter', 'open');
-        }
+        gtag('event', 'course-select-filter-open');
 
         if (filterDialog) {
             filterDialog.open();
@@ -634,18 +620,14 @@
                 label: 'סינון',
                 cssClass: 'btn-primary',
                 action: function (dialog) {
-                    if (typeof ga === 'function') {
-                        ga('send', 'event', 'course-select-filter', 'submit');
-                    }
+                    gtag('event', 'course-select-filter-submit');
 
                     filterApply();
                 }
             }, {
                 label: 'איפוס',
                 action: function (dialog) {
-                    if (typeof ga === 'function') {
-                        ga('send', 'event', 'course-select-filter', 'reset');
-                    }
+                    gtag('event', 'course-select-filter-reset');
 
                     filterReset();
                 }
