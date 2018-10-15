@@ -25,27 +25,6 @@
     visibility: hidden !important;
 }
 
-.selectize-control.select-course {
-    font-size: .8rem;
-}
-
-.selectize-control.select-course .selectize-input {
-    min-height: initial;
-    padding: 0.5rem 0.75rem;
-}
-
-/* Next two rules: selectize dropdown height based on screen height */
-/* https://stackoverflow.com/questions/46613111/selectize-dropdown-height-base-on-screen-height */
-.selectize-control.select-course .selectize-dropdown,
-.selectize-control.select-course .selectize-dropdown.form-control {
-    height: 50vh !important;
-}
-
-.selectize-control.select-course .selectize-dropdown-content {
-    max-height: 100% !important;
-    height: 100% !important;
-}
-
 /* make the filter footer text align to the right */
 .course-filter-dialog .modal-footer {
     justify-content: space-between;
