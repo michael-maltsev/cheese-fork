@@ -1,6 +1,6 @@
 'use strict';
 
-/* global BootstrapDialog */
+/* global BootstrapDialog, gtag */
 
 function CourseButtonList(element, options) {
     this.element = element;
@@ -56,6 +56,9 @@ CourseButtonList.prototype.addCourse = function (course) {
         }
     ).click(function (e) {
         e.stopPropagation(); // don't execute parent button onclick
+
+        gtag('event', 'course-button-list-info-click');
+
         $(this).tooltip('hide');
         BootstrapDialog.show({
             title: courseTitle,
