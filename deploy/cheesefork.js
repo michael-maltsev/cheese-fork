@@ -364,6 +364,11 @@
             signInFlow: 'popup',
             signInOptions: [
                 firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+                firebase.auth.EmailAuthProvider.PROVIDER_ID
+                // I wanted to implement viewing Facebook friends' schedule via the Facebook API,
+                // but they require business verification for the user_friends permission. -_-
+                // https://stackoverflow.com/questions/51089608/business-verification-required-as-part-of-my-app-review
+                /*,
                 {
                     provider: firebase.auth.FacebookAuthProvider.PROVIDER_ID,
                     scopes: [
@@ -371,8 +376,7 @@
                         'email',
                         'user_friends'
                     ]
-                },
-                firebase.auth.EmailAuthProvider.PROVIDER_ID
+                }*/
             ],
             callbacks: {
                 // Called when the user has been successfully signed in.
