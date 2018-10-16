@@ -363,7 +363,7 @@
             // Opens IDP Providers sign-in flow in a popup.
             signInFlow: 'popup',
             signInOptions: [
-                // Leave the lines as is for the providers you want to offer your users.
+                firebase.auth.GoogleAuthProvider.PROVIDER_ID,
                 {
                     provider: firebase.auth.FacebookAuthProvider.PROVIDER_ID,
                     scopes: [
@@ -372,7 +372,6 @@
                         'user_friends'
                     ]
                 },
-                firebase.auth.GoogleAuthProvider.PROVIDER_ID,
                 firebase.auth.EmailAuthProvider.PROVIDER_ID
             ],
             callbacks: {
