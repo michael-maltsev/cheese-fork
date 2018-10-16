@@ -77,7 +77,7 @@
             $('#top-navbar-home').removeClass('d-none');
             $('#top-navbar-share').addClass('d-none');
             $('#top-navbar-semester').addClass('d-none');
-            $('#select-course').hide();
+            $('#course-select').hide();
         }
 
         courseButtonList = new CourseButtonList($('#course-button-list'), {
