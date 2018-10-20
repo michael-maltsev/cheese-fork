@@ -166,6 +166,15 @@
             },
             onLessonUnselected: function (course, lessonNumber, lessonType) {
                 selectedLessonUnsave(course, lessonNumber, lessonType);
+            },
+            onCustomEventAdded: function (eventId, eventData) {
+                customEventSave(eventId, eventData);
+            },
+            onCustomEventUpdated: function (eventId, eventData) {
+                customEventSave(eventId, eventData);
+            },
+            onCustomEventRemoved: function (eventId) {
+                customEventUnsave(eventId);
             }
         });
 
@@ -263,7 +272,7 @@
                     '?semester=' + encodeURIComponent(currentSemester) +
                     '&uid=' + encodeURIComponent(firebase.auth().currentUser.uid);
                 var urlElement = $('<a target="_blank">לחצו כאן לפתיחה</a>').prop('href', url);
-                var shareDialogContent = $('<div>הקישור לשיתוף המערכת: </div>').append(urlElement);
+                var shareDialogContent = $('<div>הקישור לשיתוף המערכת: </div>').append(urlElement).append('.');
 
                 BootstrapDialog.show({
                     title: 'שיתוף מערכת',
@@ -509,7 +518,7 @@
             var input = {};
             input[semesterCoursesKey] = firebase.firestore.FieldValue.arrayUnion(course);
             input[courseKey] = {};
-            doc.set(input, {merge: true});
+            doc.update(input);
         } else {
             try {
                 localStorage.setItem(semesterCoursesKey, JSON.stringify(currentSavedSession[semesterCoursesKey]));
@@ -583,6 +592,48 @@
         } else {
             try {
                 localStorage.setItem(courseKey, JSON.stringify(currentSavedSession[courseKey]));
+            } catch (e) {
+                // localStorage is not available in IE/Edge when running from a local file.
+            }
+        }
+
+        onSavedSessionChange();
+    }
+
+    function customEventSave(eventId, eventData) {
+        var semesterCustomEventsKey = currentSemester + '_custom_events';
+
+        currentSavedSession[semesterCustomEventsKey][eventId] = eventData;
+
+        var doc = firestoreAuthenticatedUserDoc();
+        if (doc) {
+            var input = {};
+            input[semesterCustomEventsKey + '.' + eventId] = eventData;
+            doc.update(input);
+        } else {
+            try {
+                localStorage.setItem(semesterCustomEventsKey, JSON.stringify(currentSavedSession[semesterCustomEventsKey]));
+            } catch (e) {
+                // localStorage is not available in IE/Edge when running from a local file.
+            }
+        }
+
+        onSavedSessionChange();
+    }
+
+    function customEventUnsave(eventId) {
+        var semesterCustomEventsKey = currentSemester + '_custom_events';
+
+        delete currentSavedSession[semesterCustomEventsKey][eventId];
+
+        var doc = firestoreAuthenticatedUserDoc();
+        if (doc) {
+            var input = {};
+            input[semesterCustomEventsKey + '.' + eventId] = firebase.firestore.FieldValue.delete();
+            doc.update(input);
+        } else {
+            try {
+                localStorage.setItem(semesterCustomEventsKey, JSON.stringify(currentSavedSession[semesterCustomEventsKey]));
             } catch (e) {
                 // localStorage is not available in IE/Edge when running from a local file.
             }
@@ -692,6 +743,15 @@
             // localStorage is not available in IE/Edge when running from a local file.
             session[semesterCoursesKey] = [];
         }
+
+        var semesterCustomEventsKey = currentSemester + '_custom_events';
+        try {
+            session[semesterCustomEventsKey] = JSON.parse(localStorage.getItem(semesterCustomEventsKey) || '{}');
+        } catch (e) {
+            // localStorage is not available in IE/Edge when running from a local file.
+            session[semesterCustomEventsKey] = {};
+        }
+
         return session;
     }
 
@@ -704,6 +764,10 @@
             var courseKey = currentSemester + '_' + course;
             session[courseKey] = data[courseKey] || {};
         });
+
+        var semesterCustomEventsKey = currentSemester + '_custom_events';
+        session[semesterCustomEventsKey] = data[semesterCustomEventsKey] || {};
+
         return session;
     }
 
@@ -738,6 +802,15 @@
                 }
             }
         });
+
+        var semesterCustomEventsKey = currentSemester + '_custom_events';
+        var currentCustomEvents = currentSession[semesterCustomEventsKey];
+        var newCustomEvents = sessionToRestore[semesterCustomEventsKey];
+        // Can be different even if object are equal due to key order,
+        // but that's OK, we'll just override the same data.
+        if (JSON.stringify(currentCustomEvents) !== JSON.stringify(newCustomEvents)) {
+            newKeys.push(semesterCustomEventsKey);
+        }
 
         var doc = firestoreAuthenticatedUserDoc();
         if (doc) {
@@ -776,7 +849,6 @@
         }
 
         var semesterCoursesKey = currentSemester + '_courses';
-
         coursesChosen = {};
         courseButtonList.clear();
 
@@ -794,7 +866,10 @@
             }
         });
 
-        courseCalendar.loadSavedSchedule(schedule);
+        var semesterCustomEventsKey = currentSemester + '_custom_events';
+        var customEvents = session[semesterCustomEventsKey] || {};
+
+        courseCalendar.loadSavedSchedule(schedule, customEvents);
         updateGeneralInfoLine();
         courseExamInfo.renderCourses(getSelectedCourses());
 
