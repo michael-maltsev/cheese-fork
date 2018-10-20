@@ -263,7 +263,7 @@
                     '?semester=' + encodeURIComponent(currentSemester) +
                     '&uid=' + encodeURIComponent(firebase.auth().currentUser.uid);
                 var urlElement = $('<a target="_blank">לחצו כאן לפתיחה</a>').prop('href', url);
-                var shareDialogContent = $('<div>הקישור לשיתוף המערכת: </div>').append(urlElement);
+                var shareDialogContent = $('<div>הקישור לשיתוף המערכת: </div>').append(urlElement).append('.');
 
                 BootstrapDialog.show({
                     title: 'שיתוף מערכת',
