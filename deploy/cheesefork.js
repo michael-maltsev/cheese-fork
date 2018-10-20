@@ -509,7 +509,7 @@
             var input = {};
             input[semesterCoursesKey] = firebase.firestore.FieldValue.arrayUnion(course);
             input[courseKey] = {};
-            doc.set(input, {merge: true});
+            doc.update(input);
         } else {
             try {
                 localStorage.setItem(semesterCoursesKey, JSON.stringify(currentSavedSession[semesterCoursesKey]));
