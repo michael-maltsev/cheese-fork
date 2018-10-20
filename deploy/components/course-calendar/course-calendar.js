@@ -1,6 +1,6 @@
 'use strict';
 
-/* global moment */
+/* global moment, BootstrapDialog */
 
 var CourseCalendar = (function () {
     function CourseCalendar(element, options) {
@@ -13,6 +13,11 @@ var CourseCalendar = (function () {
         this.onCourseConflictedStatusChanged = options.onCourseConflictedStatusChanged;
         this.onLessonSelected = options.onLessonSelected;
         this.onLessonUnselected = options.onLessonUnselected;
+        this.onCustomEventAdded = options.onCustomEventAdded;
+        this.onCustomEventUpdated = options.onCustomEventUpdated;
+        this.onCustomEventRemoved = options.onCustomEventRemoved;
+
+        var that = this;
 
         element.addClass('course-calendar').fullCalendar({
             defaultDate: '2017-01-01',
@@ -29,10 +34,16 @@ var CourseCalendar = (function () {
             locale: 'he',
             slotEventOverlap: false,
             displayEventTime: false,
-            eventClick: onEventClick.bind(this),
-            eventMouseover: onEventMouseover.bind(this),
-            eventMouseout: onEventMouseout.bind(this),
-            eventAfterRender: afterEventRender.bind(this)
+            selectable: !that.readonly,
+            selectHelper: true,
+            selectOverlap: true,
+            select: onSelect.bind(that),
+            eventDrop: onCustomEventUpdated.bind(that),
+            eventResize: onCustomEventUpdated.bind(that),
+            eventClick: onEventClick.bind(that),
+            eventMouseover: onEventMouseover.bind(that),
+            eventMouseout: onEventMouseout.bind(that),
+            eventAfterRender: afterEventRender.bind(that)
         }).fullCalendar('option', {
             // Set afterwards as a bug workaround.
             // https://github.com/fullcalendar/fullcalendar/issues/4102
@@ -62,7 +73,7 @@ var CourseCalendar = (function () {
         return getLessonType(event.courseNumber, event.lessonData);
     }
 
-    function updateEvents(calendar, events) {
+    function updateLessonEvents(calendar, events) {
         events = events.slice(); // make a copy
         events.forEach(function (value, index) {
             events[index] = $.extend({}, events[index]); // make a copy
@@ -74,8 +85,8 @@ var CourseCalendar = (function () {
         calendar.fullCalendar('updateEvents', events);
     }
 
-    function updateEvent(calendar, event) {
-        updateEvents(calendar, [event]);
+    function updateLessonEvent(calendar, event) {
+        updateLessonEvents(calendar, [event]);
     }
 
     function getCourseConflictedStatus(calendar, course) {
@@ -295,6 +306,73 @@ var CourseCalendar = (function () {
         }
     }
 
+    function makeCustomEvent(courseCalendar, eventId, eventTitle, start, end) {
+        return {
+            id: eventId,
+            title: eventTitle,
+            start: start,
+            end: end,
+            backgroundColor: courseCalendar.colorGenerator(eventTitle),
+            textColor: 'white',
+            borderColor: 'white',
+            editable: !courseCalendar.readonly,
+            courseNumber: null,
+            lessonData: null,
+            selected: true,
+            temporary: false
+        };
+    }
+
+    function onSelect(start, end) {
+        var that = this;
+
+        BootstrapDialog.show({
+            title: 'הוספת אירוע מותאם אישית',
+            message: $('<textarea class="form-control" placeholder="תיאור האירוע"></textarea>'),
+            onshown: function (dialog) {
+                dialog.getModalBody().find('textarea').focus();
+            },
+            onhide: function (dialog) {
+                that.element.fullCalendar('unselect');
+            },
+            buttons: [{
+                label: 'הוסף',
+                cssClass: 'btn-primary',
+                action: function (dialog) {
+                    dialog.close();
+
+                    var eventTitle = dialog.getModalBody().find('textarea').val().trim();
+                    if (eventTitle === '') {
+                        return;
+                    }
+
+                    var eventIdCounter = Math.round(Date.now() / 1000);
+                    var eventId = 'custom_event_' + eventIdCounter;
+                    while (that.element.fullCalendar('clientEvents', eventId).length > 0) {
+                        eventIdCounter++;
+                        eventId = 'custom_event_' + eventIdCounter;
+                    }
+
+                    that.element.fullCalendar('renderEvent', makeCustomEvent(that, eventId, eventTitle, start, end));
+
+                    that.onCustomEventAdded(eventIdCounter, {
+                        title: eventTitle,
+                        start: start.format(),
+                        end: end.format()
+                    });
+                }
+            }]
+        });
+    }
+
+    function onCustomEventUpdated(event) {
+        this.onCustomEventUpdated(event.id.replace(/^custom_event_/, ''), {
+            title: event.title,
+            start: event.start.format(),
+            end: event.end.format()
+        });
+    }
+
     function onEventClick(event) {
         if (this.readonly) {
             return;
@@ -302,6 +380,49 @@ var CourseCalendar = (function () {
 
         var that = this;
         var calendar = that.element;
+
+        if (event.courseNumber === null) {
+            BootstrapDialog.show({
+                title: 'עריכת אירוע מותאם אישית',
+                message: $('<textarea class="form-control" placeholder="תיאור האירוע"></textarea>').val(event.title),
+                onshown: function (dialog) {
+                    dialog.getModalBody().find('textarea').focus();
+                },
+                buttons: [{
+                    label: 'ערוך',
+                    cssClass: 'btn-primary',
+                    action: function (dialog) {
+                        dialog.close();
+
+                        var eventTitle = dialog.getModalBody().find('textarea').val().trim();
+                        if (eventTitle === '') {
+                            return;
+                        }
+
+                        event.title = eventTitle;
+                        event.backgroundColor = that.colorGenerator(eventTitle);
+                        that.element.fullCalendar('updateEvent', event);
+
+                        that.onCustomEventUpdated(event.id.replace(/^custom_event_/, ''), {
+                            title: eventTitle,
+                            start: event.start.format(),
+                            end: event.end.format()
+                        });
+                    }
+                }, {
+                    label: 'הסר',
+                    action: function (dialog) {
+                        dialog.close();
+
+                        that.element.fullCalendar('removeEvents', event.id);
+
+                        that.onCustomEventRemoved(event.id.replace(/^custom_event_/, ''));
+                    }
+                }]
+            });
+
+            return;
+        }
 
         var selectingEvent = !event.selected;
         var conflictedCourses = {};
@@ -313,7 +434,7 @@ var CourseCalendar = (function () {
             that.onLessonUnselected(event.courseNumber, event.lessonData['מס.'], getEventLessonType(event));
             event.selected = false;
         }
-        updateEvent(calendar, event);
+        updateLessonEvent(calendar, event);
 
         var sameCourseTypeEvents = calendar.fullCalendar('clientEvents', function (cbEvent) {
             if (cbEvent.courseNumber === event.courseNumber &&
@@ -336,7 +457,7 @@ var CourseCalendar = (function () {
             sameCourseTypeEvents[i].end.add(selectingEvent ? 7 : -7, 'days');
         }
 
-        updateEvents(calendar, sameCourseTypeEvents);
+        updateLessonEvents(calendar, sameCourseTypeEvents);
 
         Object.keys(conflictedCourses).forEach(function (conflictedCourse) {
             var conflicted = getCourseConflictedStatus(calendar, conflictedCourse);
@@ -347,6 +468,10 @@ var CourseCalendar = (function () {
             var conflictedIds = {};
 
             var conflictedEvents = calendar.fullCalendar('clientEvents', function (cbEvent) {
+                if (cbEvent.courseNumber === null) {
+                    return false;
+                }
+
                 if (cbEvent.courseNumber === event.courseNumber &&
                     getEventLessonType(cbEvent) === getEventLessonType(event)) {
                     return false;
@@ -371,17 +496,25 @@ var CourseCalendar = (function () {
                 conflictedCourses[conflictedEvents[i].courseNumber] = true;
             }
 
-            updateEvents(calendar, conflictedEvents);
+            updateLessonEvents(calendar, conflictedEvents);
         }
     }
 
     function onEventMouseover(event) {
+        if (event.courseNumber === null) {
+            return;
+        }
+
         $('.calendar-item-course-' + event.courseNumber, this.element).addClass('calendar-item-same-course-as-hovered');
         $('.calendar-item-course-' + event.courseNumber + '-type-' + getEventLessonType(event), this.element).addClass('calendar-item-same-type-as-hovered');
         this.onCourseHoverIn(event.courseNumber);
     }
 
     function onEventMouseout(event) {
+        if (event.courseNumber === null) {
+            return;
+        }
+
         $('.calendar-item-course-' + event.courseNumber, this.element).removeClass('calendar-item-same-course-as-hovered');
         $('.calendar-item-course-' + event.courseNumber + '-type-' + getEventLessonType(event), this.element).removeClass('calendar-item-same-type-as-hovered');
         this.onCourseHoverOut(event.courseNumber);
@@ -393,10 +526,12 @@ var CourseCalendar = (function () {
         } else {
             element.addClass('calendar-item-unselected');
 
-            var sameType = $('.calendar-item-course-' + event.courseNumber + '-type-' + getEventLessonType(event), this.element)
-                .not('.calendar-item-course-' + event.courseNumber + '-lesson-' + event.lessonData['מס.']);
-            if (sameType.length === 0) {
-                element.addClass('calendar-item-last-choice');
+            if (event.courseNumber !== null) {
+                var sameType = $('.calendar-item-course-' + event.courseNumber + '-type-' + getEventLessonType(event), this.element)
+                    .not('.calendar-item-course-' + event.courseNumber + '-lesson-' + event.lessonData['מס.']);
+                if (sameType.length === 0) {
+                    element.addClass('calendar-item-last-choice');
+                }
             }
         }
     }
@@ -455,7 +590,7 @@ var CourseCalendar = (function () {
         function countEventConflicts(event) {
             var count = 0;
             calendar.fullCalendar('clientEvents', function (cbEvent) {
-                if (cbEvent.selected && areEventsOverlapping(cbEvent, event)) {
+                if (cbEvent.courseNumber !== null && cbEvent.selected && areEventsOverlapping(cbEvent, event)) {
                     count++;
                 }
                 return false;
@@ -472,7 +607,7 @@ var CourseCalendar = (function () {
         var conflictedIds = {};
 
         var conflictedEvents = calendar.fullCalendar('clientEvents', function (event) {
-            if (event.courseNumber !== course && isConflicted(event, course)) {
+            if (event.courseNumber !== null && event.courseNumber !== course && isConflicted(event, course)) {
                 if (!conflictedIds.propertyIsEnumerable(event.id)) {
                     conflictedIds[event.id] = 1;
                     return true;
@@ -493,7 +628,7 @@ var CourseCalendar = (function () {
             conflictedCourses[conflictedEvents[i].courseNumber] = true;
         }
 
-        updateEvents(calendar, conflictedEvents);
+        updateLessonEvents(calendar, conflictedEvents);
         calendar.fullCalendar('removeEvents', function (event) {
             return event.courseNumber === course;
         });
@@ -576,7 +711,7 @@ var CourseCalendar = (function () {
         }
     };
 
-    CourseCalendar.prototype.loadSavedSchedule = function (schedule) {
+    CourseCalendar.prototype.loadSavedSchedule = function (schedule, customEvents) {
         var that = this;
         var calendar = that.element;
 
@@ -595,6 +730,13 @@ var CourseCalendar = (function () {
                 var lessonNumber = lessons[lessonType];
                 initSelectLesson(events, course, lessonType, lessonNumber);
             });
+        });
+
+        Object.keys(customEvents).forEach(function (eventId) {
+            var eventData = customEvents[eventId];
+            var start = calendar.fullCalendar('getCalendar').moment(eventData.start);
+            var end = calendar.fullCalendar('getCalendar').moment(eventData.end);
+            events.push(makeCustomEvent(that, 'custom_event_' + eventId, eventData.title, start, end));
         });
 
         calendar.fullCalendar('renderEvents', events);
@@ -625,23 +767,30 @@ var CourseCalendar = (function () {
 
         calendar.fullCalendar('clientEvents', function (event) {
             if (event.start.week() === 1 && event.selected) {
-                var general = that.courseManager.getGeneralInfo(event.courseNumber);
-                var lesson = event.lessonData;
-
-                var subject = that.courseManager.getLessonTypeAndNumber(lesson);
-                subject += ' - ' + general['שם מקצוע'];
-
+                var subject = '';
                 var description = '';
-                if (lesson['מרצה/מתרגל']) {
-                    description = lesson['מרצה/מתרגל'];
-                }
-
                 var location = '';
-                if (lesson['בניין']) {
-                    location = lesson['בניין'];
-                    if (lesson['חדר']) {
-                        location += ' ' + lesson['חדר'];
+                if (event.courseNumber !== null) {
+                    var general = that.courseManager.getGeneralInfo(event.courseNumber);
+                    var lesson = event.lessonData;
+
+                    subject = that.courseManager.getLessonTypeAndNumber(lesson);
+                    subject += ' - ' + general['שם מקצוע'];
+
+                    description = '';
+                    if (lesson['מרצה/מתרגל']) {
+                        description = lesson['מרצה/מתרגל'];
                     }
+
+                    location = '';
+                    if (lesson['בניין']) {
+                        location = lesson['בניין'];
+                        if (lesson['חדר']) {
+                            location += ' ' + lesson['חדר'];
+                        }
+                    }
+                } else {
+                    subject = event.title.replace(/\n/g, ', ');
                 }
 
                 var begin = event.start.clone().set(dateFromObject);
