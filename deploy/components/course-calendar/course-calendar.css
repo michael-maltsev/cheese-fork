@@ -10,6 +10,11 @@
     cursor: default;
 }
 
+/* Keep the not-allowed cursor, which is otherwise overwritten by the above rule */
+.fc-not-allowed .fc-event {
+    cursor: not-allowed;
+}
+
 /* Center event text vertically */
 .course-calendar .fc-time-grid-event {
     display: flex;
