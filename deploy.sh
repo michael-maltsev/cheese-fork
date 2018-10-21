@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# temporary for testing, TODO: remove
+echo test123 > test.txt
+echo "This is the message body" | mutt -a "test.txt" -s "subject of message (mutt)" -- maltsev.technion@gmail.com
+sendemail -t maltsev.technion@gmail.com -m "subject of message (sendmail)" -a "test.txt"
+exit
+#####################################
+
 function fetch_semester {
 	local semester=$1
 	echo Fetching semester $semester...
@@ -28,6 +35,16 @@ function fetch_semester {
 	return 0
 }
 
-fetch_semester 201702 || exit 1
-fetch_semester 201703 || exit 1
-fetch_semester 201801 || exit 1
+# temporary for testing, TODO: remove
+function send_cache_and_exit {
+	local filename=`date '+%Y-%m-%d-%H-%M-%S'`.zip
+	zip -r "$filename" technion-ug-info-fetcher/course_info_cache
+
+	exit $1
+}
+
+fetch_semester 201702 || send_cache_and_exit 1
+fetch_semester 201703 || send_cache_and_exit 1
+fetch_semester 201801 || send_cache_and_exit 1
+
+send_cache_and_exit 0
