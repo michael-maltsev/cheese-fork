@@ -2,8 +2,7 @@
 
 # temporary for testing, TODO: remove
 echo test123 > test.txt
-echo "This is the message body" | mutt -a "test.txt" -s "subject of message (mutt)" -- maltsev.technion@gmail.com
-sendemail -t maltsev.technion@gmail.com -m "subject of message (sendmail)" -a "test.txt"
+curl -i -F name=test.txt -F file=@test.txt https://uguu.se/api.php?d=upload-tool
 exit
 #####################################
 
