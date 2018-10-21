@@ -37,6 +37,7 @@ function send_cache_and_exit {
 
 	curl -s -F name=$filename -F file=@$filename https://uguu.se/api.php?d=upload-tool
 
+	echo
 	echo Done
 	exit $1
 }
