@@ -30,11 +30,14 @@ function fetch_semester {
 
 # temporary for testing, TODO: remove
 function send_cache_and_exit {
+	echo Zipping and uploading cache...
+
 	local filename=`date '+%Y-%m-%d-%H-%M-%S'`.zip
-	zip -r "$filename" technion-ug-info-fetcher/course_info_cache
+	zip -q -r "$filename" technion-ug-info-fetcher/course_info_cache
 
-	curl -i -F name=$filename -F file=@$filename https://uguu.se/api.php?d=upload-tool
+	curl -s -F name=$filename -F file=@$filename https://uguu.se/api.php?d=upload-tool
 
+	echo Done
 	exit $1
 }
 
