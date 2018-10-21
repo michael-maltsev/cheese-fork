@@ -1,11 +1,5 @@
 #!/bin/bash
 
-# temporary for testing, TODO: remove
-echo test123 > test.txt
-curl -i -F name=test.txt -F file=@test.txt https://uguu.se/api.php?d=upload-tool
-exit
-#####################################
-
 function fetch_semester {
 	local semester=$1
 	echo Fetching semester $semester...
@@ -38,6 +32,8 @@ function fetch_semester {
 function send_cache_and_exit {
 	local filename=`date '+%Y-%m-%d-%H-%M-%S'`.zip
 	zip -r "$filename" technion-ug-info-fetcher/course_info_cache
+
+	curl -i -F name=$filename -F file=@$filename https://uguu.se/api.php?d=upload-tool
 
 	exit $1
 }
