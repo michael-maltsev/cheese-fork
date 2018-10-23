@@ -13,6 +13,10 @@ function CourseExamInfo(element, options) {
 CourseExamInfo.prototype.renderCourses = function (courses) {
     var that = this;
 
+    // Make sure existing tooltips are disposed. Otherwise if there
+    // are any visible tooltips, they'll stay hanging forever.
+    that.element.find('[data-toggle="tooltip"]').tooltip('dispose');
+
     var moedASpan = makeExamInfoSpan(1, courses);
     var moedBSpan = makeExamInfoSpan(2, courses);
 
