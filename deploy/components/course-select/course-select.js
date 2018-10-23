@@ -79,6 +79,9 @@ var CourseSelect = (function () {
                 }
 
                 that.onDropdownItemDeactivate(course);
+            },
+            onDropdownClose: function (dropdown) {
+                dropdown.find('[data-toggle=tooltip]').tooltip('hide');
             }
         }).data('selectize');
 
