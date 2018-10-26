@@ -1,6 +1,6 @@
 'use strict';
 
-/* global moment, BootstrapDialog */
+/* global moment, BootstrapDialog, Hammer */
 
 var CourseCalendar = (function () {
     function CourseCalendar(element, options) {
@@ -48,6 +48,20 @@ var CourseCalendar = (function () {
             // Set afterwards as a bug workaround.
             // https://github.com/fullcalendar/fullcalendar/issues/4102
             hiddenDays: [5, 6]
+        });
+
+        // Based on the CSS rule:
+        // .fc-time-grid .fc-slats td {
+        //     height: 1.5em;
+        // }
+        that.gridSlotHeight = 1.5;
+
+        // Allow to change schedule height in mobile by zooming.
+        // https://stackoverflow.com/a/1793550
+        var hammertime = new Hammer(that.element.get(0));
+        hammertime.get('pinch').set({ enable: true });
+        hammertime.on('pinchin pinchout pinchend pinchcencel', function (event) {
+            that.scaleSize(event.scale, event.type !== 'pinchend');
         });
     }
 
@@ -831,6 +845,27 @@ var CourseCalendar = (function () {
         });
 
         updateCalendarMaxDayAndTime(calendar);
+    };
+
+    CourseCalendar.prototype.scaleSize = function (scale, onlyPreview) {
+        var that = this;
+        var calendar = that.element;
+
+        var height = that.gridSlotHeight * scale;
+        if (height < 1.5) {
+            height = 1.5;
+        } else if (height > 7.5) {
+            height = 7.5;
+        }
+
+        calendar.find('.fc-time-grid .fc-slats td').css('height', height + 'em');
+
+        calendar.fullCalendar('render');
+        calendar.fullCalendar('rerenderEvents');
+
+        if (!onlyPreview) {
+            that.gridSlotHeight = height;
+        }
     };
 
     return CourseCalendar;
