@@ -1,6 +1,6 @@
 'use strict';
 
-/* global moment, BootstrapDialog, Hammer */
+/* global moment, BootstrapDialog */
 
 var CourseCalendar = (function () {
     function CourseCalendar(element, options) {
@@ -50,19 +50,62 @@ var CourseCalendar = (function () {
             hiddenDays: [5, 6]
         });
 
+        initTouchScalingSupport(that);
+    }
+
+    function initTouchScalingSupport(courseCalendar) {
+        var calendar = courseCalendar.element;
+
         // Based on the CSS rule:
         // .fc-time-grid .fc-slats td {
         //     height: 1.5em;
         // }
-        that.gridSlotHeight = 1.5;
+        var gridSlotHeight = 1.5;
 
-        // Allow to change schedule height in mobile by zooming.
-        // https://stackoverflow.com/a/1793550
-        var hammertime = new Hammer(that.element.get(0));
-        hammertime.get('pinch').set({ enable: true });
-        hammertime.on('pinchin pinchout pinchend pinchcencel', function (event) {
-            that.scaleSize(event.scale, event.type !== 'pinchend');
+        var scaling = false;
+        var firstDist, lastDist;
+
+        // Based on:
+        // https://stackoverflow.com/a/11183333
+
+        calendar.on('touchstart', function (event) {
+            if (!scaling && event.touches.length === 2) {
+                scaling = true;
+                firstDist = Math.hypot(
+                    event.touches[0].pageX - event.touches[1].pageX,
+                    event.touches[0].pageY - event.touches[1].pageY);
+                lastDist = firstDist;
+            }
+        }).on('touchmove', function (event) {
+            if (scaling) {
+                lastDist = Math.hypot(
+                    event.touches[0].pageX - event.touches[1].pageX,
+                    event.touches[0].pageY - event.touches[1].pageY);
+                scaleGridSlotHeight(lastDist / firstDist);
+                event.preventDefault();
+            }
+        }).on('touchend', function (event) {
+            if (scaling && event.touches.length < 2) {
+                gridSlotHeight = scaleGridSlotHeight(lastDist / firstDist);
+                scaling = false;
+            }
         });
+
+        function scaleGridSlotHeight(scale) {
+            var height = gridSlotHeight * scale;
+            if (height < 1.5) {
+                height = 1.5;
+            } else if (height > 4.5) {
+                height = 4.5;
+            }
+
+            calendar.find('.fc-time-grid .fc-slats td').css('height', height + 'em');
+
+            calendar.fullCalendar('render');
+            calendar.fullCalendar('rerenderEvents');
+
+            return height;
+        }
     }
 
     function stringHexEncode(str) {
@@ -845,27 +888,6 @@ var CourseCalendar = (function () {
         });
 
         updateCalendarMaxDayAndTime(calendar);
-    };
-
-    CourseCalendar.prototype.scaleSize = function (scale, onlyPreview) {
-        var that = this;
-        var calendar = that.element;
-
-        var height = that.gridSlotHeight * scale;
-        if (height < 1.5) {
-            height = 1.5;
-        } else if (height > 7.5) {
-            height = 7.5;
-        }
-
-        calendar.find('.fc-time-grid .fc-slats td').css('height', height + 'em');
-
-        calendar.fullCalendar('render');
-        calendar.fullCalendar('rerenderEvents');
-
-        if (!onlyPreview) {
-            that.gridSlotHeight = height;
-        }
     };
 
     return CourseCalendar;
