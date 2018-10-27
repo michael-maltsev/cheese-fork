@@ -63,6 +63,7 @@ var CourseCalendar = (function () {
         var gridSlotHeight = 1.5;
 
         var scaling = false;
+        var eventListenerElement = null;
         var pendingAnimationRequest = null;
         var renderRequired = false;
         var previousDist;
@@ -73,9 +74,10 @@ var CourseCalendar = (function () {
         calendar.on('touchstart', function (event) {
             if (!scaling && event.touches.length >= 2) {
                 // https://plus.google.com/+RickByers/posts/GHwpqnAFATf
-                event.target.addEventListener('touchmove', onTouchMove);
-                event.target.addEventListener('touchend', onTouchEnd);
-                event.target.addEventListener('touchcancel', onTouchEnd);
+                eventListenerElement = event.target;
+                eventListenerElement.addEventListener('touchmove', onTouchMove);
+                eventListenerElement.addEventListener('touchend', onTouchEnd);
+                eventListenerElement.addEventListener('touchcancel', onTouchEnd);
 
                 scaling = true;
                 previousDist = Math.hypot(
@@ -85,33 +87,50 @@ var CourseCalendar = (function () {
                 pendingAnimationRequest = window.requestAnimationFrame(renderNewSlotHeight);
 
                 event.preventDefault();
+            } else if (scaling) {
+                if (event.touches.length >= 2) {
+                    event.preventDefault();
+                } else {
+                    scaling = false;
+                    endScaling();
+                }
             }
         });
 
         function onTouchMove(event) {
-            var dist = Math.hypot(
-                event.touches[0].pageX - event.touches[1].pageX,
-                event.touches[0].pageY - event.touches[1].pageY);
-            scaleGridSlotHeight(dist / previousDist);
-            previousDist = dist;
+            if (scaling && event.touches.length >= 2) {
+                var dist = Math.hypot(
+                    event.touches[0].pageX - event.touches[1].pageX,
+                    event.touches[0].pageY - event.touches[1].pageY);
+                scaleGridSlotHeight(dist / previousDist);
+                previousDist = dist;
 
-            event.preventDefault();
+                event.preventDefault();
+            }
         }
 
         function onTouchEnd(event) {
-            if (event.type === 'touchcancel' || event.touches.length < 2) {
-                scaling = false;
-
-                if (pendingAnimationRequest !== null) {
-                    window.cancelAnimationFrame(pendingAnimationRequest);
-                    renderNewSlotHeight();
+            if (scaling) {
+                if (event.type === 'touchcancel' || event.touches.length < 2) {
+                    scaling = false;
+                    endScaling();
                 }
 
-                event.target.removeEventListener('touchmove', onTouchMove);
-                event.target.removeEventListener('touchend', onTouchEnd);
-                event.target.removeEventListener('touchcancel', onTouchEnd);
-
                 event.preventDefault();
+            }
+        }
+
+        function endScaling() {
+            if (pendingAnimationRequest !== null) {
+                window.cancelAnimationFrame(pendingAnimationRequest);
+                renderNewSlotHeight();
+            }
+
+            if (eventListenerElement !== null) {
+                eventListenerElement.removeEventListener('touchmove', onTouchMove);
+                eventListenerElement.removeEventListener('touchend', onTouchEnd);
+                eventListenerElement.removeEventListener('touchcancel', onTouchEnd);
+                eventListenerElement = null;
             }
         }
 
