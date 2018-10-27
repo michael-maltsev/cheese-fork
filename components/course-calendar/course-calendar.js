@@ -63,7 +63,6 @@ var CourseCalendar = (function () {
         var gridSlotHeight = 1.5;
 
         var scaling = false;
-        var eventListenerElement = null;
         var pendingAnimationRequest = null;
         var renderRequired = false;
         var previousDist;
@@ -72,13 +71,12 @@ var CourseCalendar = (function () {
         // https://stackoverflow.com/a/11183333
 
         calendar.on('touchstart', function (event) {
-            if (!scaling && event.touches.length >= 2) {
-                // https://plus.google.com/+RickByers/posts/GHwpqnAFATf
-                eventListenerElement = event.target;
-                eventListenerElement.addEventListener('touchmove', onTouchMove);
-                eventListenerElement.addEventListener('touchend', onTouchEnd);
-                eventListenerElement.addEventListener('touchcancel', onTouchEnd);
+            // https://plus.google.com/+RickByers/posts/GHwpqnAFATf
+            event.target.addEventListener('touchmove', onTouchMove);
+            event.target.addEventListener('touchend', onTouchEnd);
+            event.target.addEventListener('touchcancel', onTouchEnd);
 
+            if (!scaling && event.touches.length >= 2) {
                 scaling = true;
                 previousDist = Math.hypot(
                     event.touches[0].pageX - event.touches[1].pageX,
@@ -118,19 +116,16 @@ var CourseCalendar = (function () {
 
                 event.preventDefault();
             }
+
+            event.target.addEventListener('touchmove', onTouchMove);
+            event.target.addEventListener('touchend', onTouchEnd);
+            event.target.addEventListener('touchcancel', onTouchEnd);
         }
 
         function endScaling() {
             if (pendingAnimationRequest !== null) {
                 window.cancelAnimationFrame(pendingAnimationRequest);
                 renderNewSlotHeight();
-            }
-
-            if (eventListenerElement !== null) {
-                eventListenerElement.removeEventListener('touchmove', onTouchMove);
-                eventListenerElement.removeEventListener('touchend', onTouchEnd);
-                eventListenerElement.removeEventListener('touchcancel', onTouchEnd);
-                eventListenerElement = null;
             }
         }
 
