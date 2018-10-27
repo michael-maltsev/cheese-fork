@@ -63,48 +63,87 @@ var CourseCalendar = (function () {
         var gridSlotHeight = 1.5;
 
         var scaling = false;
-        var firstDist, lastDist;
+        var pendingAnimationRequest = null;
+        var renderRequired = false;
+        var previousDist;
 
         // Based on:
         // https://stackoverflow.com/a/11183333
 
         calendar.on('touchstart', function (event) {
-            if (!scaling && event.touches.length === 2) {
+            if (!scaling && event.touches.length >= 2) {
+                // https://plus.google.com/+RickByers/posts/GHwpqnAFATf
+                event.target.addEventListener('touchmove', onTouchMove);
+                event.target.addEventListener('touchend', onTouchEnd);
+                event.target.addEventListener('touchcancel', onTouchEnd);
+
                 scaling = true;
-                firstDist = Math.hypot(
+                previousDist = Math.hypot(
                     event.touches[0].pageX - event.touches[1].pageX,
                     event.touches[0].pageY - event.touches[1].pageY);
-                lastDist = firstDist;
-            }
-        }).on('touchmove', function (event) {
-            if (scaling) {
-                lastDist = Math.hypot(
-                    event.touches[0].pageX - event.touches[1].pageX,
-                    event.touches[0].pageY - event.touches[1].pageY);
-                scaleGridSlotHeight(lastDist / firstDist);
+
+                pendingAnimationRequest = window.requestAnimationFrame(renderNewSlotHeight);
+
                 event.preventDefault();
-            }
-        }).on('touchend', function (event) {
-            if (scaling && event.touches.length < 2) {
-                gridSlotHeight = scaleGridSlotHeight(lastDist / firstDist);
-                scaling = false;
             }
         });
 
+        function onTouchMove(event) {
+            var dist = Math.hypot(
+                event.touches[0].pageX - event.touches[1].pageX,
+                event.touches[0].pageY - event.touches[1].pageY);
+            scaleGridSlotHeight(dist / previousDist);
+            previousDist = dist;
+
+            event.preventDefault();
+        }
+
+        function onTouchEnd(event) {
+            if (event.type === 'touchcancel' || event.touches.length < 2) {
+                scaling = false;
+
+                if (pendingAnimationRequest !== null) {
+                    window.cancelAnimationFrame(pendingAnimationRequest);
+                    renderNewSlotHeight();
+                }
+
+                event.target.removeEventListener('touchmove', onTouchMove);
+                event.target.removeEventListener('touchend', onTouchEnd);
+                event.target.removeEventListener('touchcancel', onTouchEnd);
+
+                event.preventDefault();
+            }
+        }
+
         function scaleGridSlotHeight(scale) {
-            var height = gridSlotHeight * scale;
-            if (height < 1.5) {
-                height = 1.5;
-            } else if (height > 4.5) {
-                height = 4.5;
+            var prevHeight = gridSlotHeight;
+            gridSlotHeight *= scale;
+            if (gridSlotHeight < 1.5) {
+                gridSlotHeight = 1.5;
+            } else if (gridSlotHeight > 4.5) {
+                gridSlotHeight = 4.5;
             }
 
-            calendar.find('.fc-time-grid .fc-slats td').css('height', height + 'em');
+            if (gridSlotHeight !== prevHeight) {
+                renderRequired = true;
+            }
+        }
 
-            calendar.fullCalendar('render');
-            calendar.fullCalendar('rerenderEvents');
+        function renderNewSlotHeight() {
+            if (renderRequired) {
+                calendar.find('.fc-time-grid .fc-slats td').css('height', gridSlotHeight + 'em');
 
-            return height;
+                calendar.fullCalendar('render');
+                calendar.fullCalendar('rerenderEvents');
+
+                renderRequired = false;
+            }
+
+            if (scaling) {
+                pendingAnimationRequest = window.requestAnimationFrame(renderNewSlotHeight);
+            } else {
+                pendingAnimationRequest = null;
+            }
         }
     }
 
