@@ -117,9 +117,20 @@ var CourseCalendar = (function () {
                 event.preventDefault();
             }
 
-            event.target.addEventListener('touchmove', onTouchMove);
-            event.target.addEventListener('touchend', onTouchEnd);
-            event.target.addEventListener('touchcancel', onTouchEnd);
+            var targetStillTouched = false;
+            for (var i = 0; i < event.touches.length; i++) {
+                var touch = event.touches[i];
+                if (touch.target === event.target) {
+                    targetStillTouched = true;
+                    break;
+                }
+            }
+
+            if (!targetStillTouched) {
+                event.target.removeEventListener('touchmove', onTouchMove);
+                event.target.removeEventListener('touchend', onTouchEnd);
+                event.target.removeEventListener('touchcancel', onTouchEnd);
+            }
         }
 
         function endScaling() {
