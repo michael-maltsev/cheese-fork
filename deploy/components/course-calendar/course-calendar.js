@@ -63,6 +63,7 @@ var CourseCalendar = (function () {
         var gridSlotHeight = 1.5;
 
         var scaling = false;
+        var verticalCenter;
         var pendingAnimationRequest = null;
         var renderRequired = false;
         var previousDist;
@@ -70,30 +71,25 @@ var CourseCalendar = (function () {
         // Based on:
         // https://stackoverflow.com/a/11183333
 
-        calendar.on('touchstart', function (event) {
+        calendar.get(0).addEventListener('touchstart', function (event) {
             // https://plus.google.com/+RickByers/posts/GHwpqnAFATf
-            event.target.addEventListener('touchmove', onTouchMove);
-            event.target.addEventListener('touchend', onTouchEnd);
-            event.target.addEventListener('touchcancel', onTouchEnd);
+            event.target.addEventListener('touchmove', onTouchMove, {passive: true});
+            event.target.addEventListener('touchend', onTouchEnd, {passive: true});
+            event.target.addEventListener('touchcancel', onTouchEnd, {passive: true});
 
             if (!scaling && event.touches.length >= 2) {
                 scaling = true;
+                verticalCenter = getVerticalCenter(event.touches);
                 previousDist = Math.hypot(
                     event.touches[0].pageX - event.touches[1].pageX,
                     event.touches[0].pageY - event.touches[1].pageY);
 
                 pendingAnimationRequest = window.requestAnimationFrame(renderNewSlotHeight);
-
-                event.preventDefault();
-            } else if (scaling) {
-                if (event.touches.length >= 2) {
-                    event.preventDefault();
-                } else {
-                    scaling = false;
-                    endScaling();
-                }
+            } else if (scaling && event.touches.length < 2) {
+                scaling = false;
+                endScaling();
             }
-        });
+        }, {passive: true});
 
         function onTouchMove(event) {
             if (scaling && event.touches.length >= 2) {
@@ -102,8 +98,6 @@ var CourseCalendar = (function () {
                     event.touches[0].pageY - event.touches[1].pageY);
                 scaleGridSlotHeight(dist / previousDist);
                 previousDist = dist;
-
-                event.preventDefault();
             }
         }
 
@@ -113,8 +107,6 @@ var CourseCalendar = (function () {
                     scaling = false;
                     endScaling();
                 }
-
-                event.preventDefault();
             }
 
             var targetStillTouched = false;
@@ -156,10 +148,18 @@ var CourseCalendar = (function () {
 
         function renderNewSlotHeight() {
             if (renderRequired) {
+                var timeGrid = calendar.find('.fc-time-grid');
+                var heightBefore = timeGrid.height();
+
                 calendar.find('.fc-time-grid .fc-slats td').css('height', gridSlotHeight + 'em');
 
                 calendar.fullCalendar('render');
                 calendar.fullCalendar('rerenderEvents');
+
+                var heightAfter = timeGrid.height();
+
+                // Make verticalCenter the vertical anchor of the zoom.
+                $(window).scrollTop($(window).scrollTop() + (heightAfter - heightBefore) * verticalCenter);
 
                 renderRequired = false;
             }
@@ -169,6 +169,24 @@ var CourseCalendar = (function () {
             } else {
                 pendingAnimationRequest = null;
             }
+        }
+
+        function getVerticalCenter(touches) {
+            var timeGrid = calendar.find('.fc-time-grid');
+            var offset = timeGrid.offset();
+            var top = offset.top;
+            var height = timeGrid.height();
+
+            var centerY = (touches[0].pageY + touches[1].pageY) / 2;
+
+            var centerYRelative = (centerY - top) / height;
+            if (centerYRelative < 0) {
+                centerYRelative = 0;
+            } else if (centerYRelative > 1) {
+                centerYRelative = 1;
+            }
+
+            return centerYRelative;
         }
     }
 
