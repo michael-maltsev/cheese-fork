@@ -1,3 +1,8 @@
+/* Disable touch zooming, dynamic time table height is implemented instead */
+.course-calendar {
+    touch-action: pan-x pan-y;
+}
+
 /* Dynamic calendar table height */
 .course-calendar .fc-time-grid .fc-slats td {
     font-size: calc(-0.3em + 3.1vh);
