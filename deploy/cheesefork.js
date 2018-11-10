@@ -185,26 +185,29 @@
 
         $('#right-content-bar').removeClass('invisible');
 
-        firebaseInit();
-        firestoreDbInit();
-
         if (viewingSharedSchedule) {
+            firebaseInit();
+            firestoreDbInit();
             watchSharedSchedule(function () {
                 $('#page-loader').hide();
             });
         } else {
             var firebaseAuthUIInitialized = false;
 
-            try {
-                firebaseAuthUIInit(function () {
-                    watchSavedSchedule(function () {
-                        $('#page-loader').hide();
+            if (typeof firebase !== 'undefined') {
+                try {
+                    firebaseInit();
+                    firestoreDbInit();
+                    firebaseAuthUIInit(function () {
+                        watchSavedSchedule(function () {
+                            $('#page-loader').hide();
+                        });
                     });
-                });
-                firebaseAuthUIInitialized = true;
-            } catch (e) {
-                // Firebase UI doesn't work on Edge/IE in private mode.
-                // Will fall back to offline mode.
+                    firebaseAuthUIInitialized = true;
+                } catch (e) {
+                    // Firebase UI doesn't work on Edge/IE in private mode.
+                    // Will fall back to offline mode.
+                }
             }
 
             if (!firebaseAuthUIInitialized) {
