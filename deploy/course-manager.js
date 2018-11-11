@@ -156,6 +156,8 @@ CourseManager.prototype.getDescription = function (course, options) {
                 linksHtml += '<br><a href="https://webcourse.cs.technion.ac.il/' + course + '/" target="_blank"><img src="assets/icon_webcourse.png" alt="icon"> אתר ה-WebCourse</a>';
             }
 
+            linksHtml += '<br><a href="https://www.facebook.com/search/groups/?q=' + course + '" target="_blank"><img src="assets/icon_facebook.png" alt="icon"> חיפוש קבוצה בפייסבוק</a>';
+
             var scansBaseUrl = 'https://script.google.com/macros/s/AKfycbwydtnNiY0Pi5_znthdlZVKy3YP9khMMdtG8nSg_ejzpOl7_S9Y/exec';
             linksHtml += '<br><a href="' + scansBaseUrl + '?course=' + course + '" target="_blank"><img src="assets/icon_scans.png" alt="icon"> סריקות</a>';
 
