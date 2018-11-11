@@ -106,7 +106,7 @@
         </a>
     </nav>
 
-    <div class="row">
+    <div id="content-container" class="row">
         <div id="right-content-bar" class="col-md-2 my-2 my-md-0 invisible">
             <div class="d-flex flex-column h-100">
                 <select id="course-select" placeholder="לחצו לבחירת מקצוע...">
@@ -285,6 +285,7 @@
     };
     var currentSemester;
     var scheduleSharingUserId;
+    var courseNumberForCrawlers;
     (function () {
         // https://stackoverflow.com/a/901144
         function getParameterByName(name, url) {
@@ -306,6 +307,7 @@
         document.write(script.outerHTML);
 
         scheduleSharingUserId = getParameterByName('uid');
+        courseNumberForCrawlers = getParameterByName('course');
     })();
 </script>
 <script src="components/course-select/course-select.js"></script>
