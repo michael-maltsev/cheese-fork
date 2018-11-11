@@ -107,7 +107,7 @@ CourseManager.prototype.getTitle = function (course) {
     return general['מספר מקצוע'] + ' - ' + general['שם מקצוע'];
 };
 
-CourseManager.prototype.getDescription = function (course) {
+CourseManager.prototype.getDescription = function (course, options) {
     var general = this.coursesHashmap[course].general;
     var text = general['מספר מקצוע'] + ' - ' + general['שם מקצוע'];
 
@@ -141,7 +141,11 @@ CourseManager.prototype.getDescription = function (course) {
         text += '\n\nהערות: ' + general['הערות'];
     }
 
-    return text;
+    if (options.html) {
+        return $('<div>').text(text).html().replace(/\n/g, '<br>');
+    } else {
+        return text;
+    }
 };
 
 CourseManager.prototype.getLessonTypeAndNumber = function (lesson) {

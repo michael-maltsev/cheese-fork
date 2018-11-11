@@ -40,7 +40,7 @@ var CourseSelect = (function () {
                     var course = item.value;
                     var general = that.courseManager.getGeneralInfo(course);
 
-                    var courseDescriptionHtml = $('<div>').text(that.courseManager.getDescription(course)).html().replace(/\n/g, '<br>');
+                    var courseDescriptionHtml = that.courseManager.getDescription(course, {html: true});
 
                     var courseNumber = $('<abbr>').text(general['מספר מקצוע'])
                         .prop('title', courseDescriptionHtml)
