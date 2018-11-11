@@ -2,7 +2,7 @@
 
 /* global ColorHash, BootstrapDialog, moment, ics, firebase, firebaseui, gtag */
 /* global CourseManager, CourseSelect, CourseButtonList, CourseExamInfo, CourseCalendar */
-/* global courses_from_rishum, availableSemesters, currentSemester, scheduleSharingUserId */
+/* global courses_from_rishum, availableSemesters, currentSemester, scheduleSharingUserId, courseNumberForCrawlers */
 
 (function () {
     var courseManager = new CourseManager(courses_from_rishum);
@@ -21,7 +21,65 @@
     var courseExamInfo = null;
     var courseCalendar = null;
 
-    cheeseforkInit();
+    if (courseNumberForCrawlers !== null) {
+        displayCourseInfoForCrawlers(courseNumberForCrawlers);
+    } else {
+        cheeseforkInit();
+    }
+
+    function displayCourseInfoForCrawlers(course) {
+        var content = $('<div class="col-md-12">');
+        var semseterName = semesterFriendlyName(currentSemester);
+
+        if (courseManager.doesExist(course)) {
+            var url = '?semester=' + encodeURIComponent(currentSemester) + '&course=all';
+            content.append($('<a>').text('לרשימת הקורסים').prop('href', url));
+            content.append($('<br><br>'));
+
+            var title = courseManager.getTitle(course);
+            var description = courseManager.getDescription(course, {html: true});
+            content.append($('<div>').html(description));
+
+            document.title = title + ' - ' + semseterName + ' - CheeseFork';
+        } else {
+            Object.keys(availableSemesters).sort().forEach(function (semester) {
+                var text = semesterFriendlyName(semester);
+                if (semester === currentSemester) {
+                    content.append($('<span>').text(text));
+                } else {
+                    var url = '?semester=' + encodeURIComponent(semester) + '&course=all';
+                    content.append($('<a>').text(text).prop('href', url));
+                }
+                content.append($('<br>'));
+            });
+
+            content.append($('<br>'));
+
+            courseManager.getAllCourses().sort().forEach(function (cbCourse) {
+                var title = courseManager.getTitle(cbCourse);
+                var url = '?semester=' + encodeURIComponent(currentSemester) + '&course=' + encodeURIComponent(cbCourse);
+                content.append($('<a>').text(title).prop('href', url));
+                content.append($('<br>'));
+            });
+
+            document.title = semseterName + ' - CheeseFork';
+        }
+
+        $('#content-container').html(content);
+
+        $('#top-navbar-home').removeClass('d-none');
+        $('#top-navbar-share').addClass('d-none');
+        $('#top-navbar-export').addClass('d-none');
+        $('#top-navbar-semester').addClass('d-none');
+        $('#course-select').hide();
+
+        $('#top-navbar-supported-content').removeClass('top-navbar-content-uninitialized');
+
+        $('#footer-semester-name').text(semesterFriendlyName(currentSemester));
+        $('#footer-semester').removeClass('d-none');
+
+        $('#page-loader').hide();
+    }
 
     function cheeseforkInit() {
         $('[data-toggle="tooltip"]').tooltip();
@@ -185,26 +243,29 @@
 
         $('#right-content-bar').removeClass('invisible');
 
-        firebaseInit();
-        firestoreDbInit();
-
         if (viewingSharedSchedule) {
+            firebaseInit();
+            firestoreDbInit();
             watchSharedSchedule(function () {
                 $('#page-loader').hide();
             });
         } else {
             var firebaseAuthUIInitialized = false;
 
-            try {
-                firebaseAuthUIInit(function () {
-                    watchSavedSchedule(function () {
-                        $('#page-loader').hide();
+            if (typeof firebase !== 'undefined') {
+                try {
+                    firebaseInit();
+                    firestoreDbInit();
+                    firebaseAuthUIInit(function () {
+                        watchSavedSchedule(function () {
+                            $('#page-loader').hide();
+                        });
                     });
-                });
-                firebaseAuthUIInitialized = true;
-            } catch (e) {
-                // Firebase UI doesn't work on Edge/IE in private mode.
-                // Will fall back to offline mode.
+                    firebaseAuthUIInitialized = true;
+                } catch (e) {
+                    // Firebase UI doesn't work on Edge/IE in private mode.
+                    // Will fall back to offline mode.
+                }
             }
 
             if (!firebaseAuthUIInitialized) {
