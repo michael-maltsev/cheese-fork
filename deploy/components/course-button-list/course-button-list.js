@@ -44,8 +44,8 @@ CourseButtonList.prototype.addCourse = function (course) {
         .append(spanAbsolute, spanBoldHidden, badge);
 
     // Add tooltip to badge.
-    var courseDescription = that.courseManager.getDescription(course, {html: false});
     var courseDescriptionHtml = that.courseManager.getDescription(course, {html: true});
+    var courseDescriptionHtmlWithLinks = that.courseManager.getDescription(course, {html: true, links: true});
     badge.hover(
         function () {
             $(this).removeClass('badge-secondary');
@@ -62,7 +62,7 @@ CourseButtonList.prototype.addCourse = function (course) {
         $(this).tooltip('hide');
         BootstrapDialog.show({
             title: courseTitle,
-            message: courseDescription
+            message: $('<div>').html(courseDescriptionHtmlWithLinks)
         });
     }).prop('title', courseDescriptionHtml)
         .attr('data-toggle', 'tooltip')

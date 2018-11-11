@@ -109,42 +109,64 @@ CourseManager.prototype.getTitle = function (course) {
 
 CourseManager.prototype.getDescription = function (course, options) {
     var general = this.coursesHashmap[course].general;
-    var text = general['מספר מקצוע'] + ' - ' + general['שם מקצוע'];
+    var header = general['מספר מקצוע'] + ' - ' + general['שם מקצוע'];
 
     if (general['פקולטה']) {
-        text += '\nפקולטה: ' + general['פקולטה'];
+        header += '\nפקולטה: ' + general['פקולטה'];
     }
 
     if (general['נקודות']) {
-        text += '\nנקודות: ' + general['נקודות'];
+        header += '\nנקודות: ' + general['נקודות'];
     }
 
+    var content = '';
+
     if (general['סילבוס']) {
-        text += '\n\n' + general['סילבוס'];
+        content += '\n\n' + general['סילבוס'];
     }
 
     if (general['אחראים']) {
-        text += '\n\nאחראים: ' + general['אחראים'];
+        content += '\n\nאחראים: ' + general['אחראים'];
     }
 
     if (general['מועד א'] || general['מועד ב']) {
-        text += '\n';
+        content += '\n';
         if (general['מועד א']) {
-            text += '\nמועד א\': ' + general['מועד א'];
+            content += '\nמועד א\': ' + general['מועד א'];
         }
         if (general['מועד ב']) {
-            text += '\nמועד ב\': ' + general['מועד ב'];
+            content += '\nמועד ב\': ' + general['מועד ב'];
         }
     }
 
     if (general['הערות']) {
-        text += '\n\nהערות: ' + general['הערות'];
+        content += '\n\nהערות: ' + general['הערות'];
     }
 
     if (options.html) {
-        return $('<div>').text(text).html().replace(/\n/g, '<br>');
+        var headerHtml = $('<div>').text(header).html().replace(/\n/g, '<br>');
+        var contentHtml = $('<div>').text(content).html().replace(/\n/g, '<br>');
+
+        var html;
+        if (options.links) {
+            var linksHtml = '<br><br><a href="https://ug3.technion.ac.il/rishum/course/' + course + '/" target="_blank"><img src="assets/icon_rishum.png" alt="icon"> אתר הרישום</a>';
+
+            if (/^23\d\d\d\d$/.test(course)) {
+                // Only for computer science courses.
+                linksHtml += '<br><a href="https://webcourse.cs.technion.ac.il/' + course + '/" target="_blank"><img src="assets/icon_webcourse.png" alt="icon"> אתר ה-WebCourse</a>';
+            }
+
+            var scansBaseUrl = 'https://script.google.com/macros/s/AKfycbwydtnNiY0Pi5_znthdlZVKy3YP9khMMdtG8nSg_ejzpOl7_S9Y/exec';
+            linksHtml += '<br><a href="' + scansBaseUrl + '?course=' + course + '" target="_blank"><img src="assets/icon_scans.png" alt="icon"> סריקות</a>';
+
+            html = headerHtml + linksHtml + contentHtml;
+        } else {
+            html = headerHtml + contentHtml;
+        }
+
+        return html;
     } else {
-        return text;
+        return header + content;
     }
 };
 
