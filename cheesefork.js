@@ -982,13 +982,27 @@
 
     function firestoreAuthenticatedUserDoc() {
         if (typeof firebase !== 'undefined' && firebase.auth().currentUser !== null) {
-            return firestoreDb.collection('users').doc(firebase.auth().currentUser.uid);
+            var doc = firestoreDb.collection('users').doc(firebase.auth().currentUser.uid);
+
+            var semestersWithoutSubCollection = ['201701', '201702', '201703', '201801'];
+            if (semestersWithoutSubCollection.indexOf(currentSemester) === -1) {
+                doc = doc.collection('semesters').doc(currentSemester);
+            }
+
+            return doc;
         }
         return null;
     }
 
     function firestoreUserDoc(userId) {
-        return firestoreDb.collection('users').doc(userId);
+        var doc = firestoreDb.collection('users').doc(userId);
+
+        var semestersWithoutSubCollection = ['201701', '201702', '201703', '201801'];
+        if (semestersWithoutSubCollection.indexOf(currentSemester) === -1) {
+            doc = doc.collection('semesters').doc(currentSemester);
+        }
+
+        return doc;
     }
 
     // https://stackoverflow.com/a/30810322
