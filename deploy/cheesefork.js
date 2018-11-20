@@ -571,18 +571,19 @@
         var semesterCoursesKey = currentSemester + '_courses';
         var courseKey = currentSemester + '_' + course;
 
-        currentSavedSession[semesterCoursesKey].push(course);
+        var courseNumbers = courseButtonList.getCourseNumbers(true);
+        currentSavedSession[semesterCoursesKey] = courseNumbers;
         currentSavedSession[courseKey] = {};
 
         var doc = firestoreAuthenticatedUserDoc();
         if (doc) {
             var input = {};
-            input[semesterCoursesKey] = firebase.firestore.FieldValue.arrayUnion(course);
+            input[semesterCoursesKey] = courseNumbers;
             input[courseKey] = {};
             doc.update(input);
         } else {
             try {
-                localStorage.setItem(semesterCoursesKey, JSON.stringify(currentSavedSession[semesterCoursesKey]));
+                localStorage.setItem(semesterCoursesKey, JSON.stringify(courseNumbers));
                 localStorage.removeItem(courseKey);
             } catch (e) {
                 // localStorage is not available in IE/Edge when running from a local file.
@@ -596,20 +597,19 @@
         var semesterCoursesKey = currentSemester + '_courses';
         var courseKey = currentSemester + '_' + course;
 
-        currentSavedSession[semesterCoursesKey] = currentSavedSession[semesterCoursesKey].filter(function (item) {
-            return item !== course;
-        });
+        var courseNumbers = courseButtonList.getCourseNumbers(true);
+        currentSavedSession[semesterCoursesKey] = courseNumbers;
         delete currentSavedSession[courseKey];
 
         var doc = firestoreAuthenticatedUserDoc();
         if (doc) {
             var input = {};
-            input[semesterCoursesKey] = firebase.firestore.FieldValue.arrayRemove(course);
+            input[semesterCoursesKey] = courseNumbers;
             input[courseKey] = firebase.firestore.FieldValue.delete();
             doc.update(input);
         } else {
             try {
-                localStorage.setItem(semesterCoursesKey, JSON.stringify(currentSavedSession[semesterCoursesKey]));
+                localStorage.setItem(semesterCoursesKey, JSON.stringify(courseNumbers));
                 localStorage.removeItem(courseKey);
             } catch (e) {
                 // localStorage is not available in IE/Edge when running from a local file.
