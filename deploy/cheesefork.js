@@ -753,8 +753,8 @@
 
                 if (!firstDataLoaded) {
                     onSavedSessionReset();
-                    onLoadedFunc();
                     firstDataLoaded = true;
+                    onLoadedFunc();
                 } else {
                     onSavedSessionChange();
                 }
