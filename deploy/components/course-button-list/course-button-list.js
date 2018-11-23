@@ -105,6 +105,11 @@ CourseButtonList.prototype.removeConflicted = function (course) {
     $('.course-button-list-item-course-' + course, this.element).removeClass('course-button-list-item-conflicted');
 };
 
+CourseButtonList.prototype.isCourseInList = function (course) {
+    var selector = 'li.list-group-item[data-course-number="' + course + '"]';
+    return this.element.find(selector).length > 0;
+};
+
 CourseButtonList.prototype.getCourseNumbers = function (onlySelected) {
     var that = this;
 
