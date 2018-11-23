@@ -25,6 +25,41 @@
     visibility: hidden !important;
 }
 
+/* for unread count badge */
+.unread-count-badge-container {
+    position: relative;
+}
+
+/* https://stackoverflow.com/a/5748155/2604492 */
+.unread-count-badge {
+    background-color: #fa3e3e;
+    border-radius: 0.2rem;
+    color: white;
+    padding: 1px 3px;
+    font-size: .75rem;
+    position: absolute;
+    top: -5px;
+    right: -5px;
+}
+
+/* Course metadata diff */
+.course-metadata-diff-container {
+    white-space: pre-wrap;
+}
+
+.course-metadata-diff-container h5 {
+    margin-top: .5rem;
+}
+
+.course-metadata-diff-old {
+    background-color: #ffdce0;
+    text-decoration: line-through;
+}
+
+.course-metadata-diff-new {
+    background-color: #cdffd8;
+}
+
 /* make the filter footer text align to the right */
 .course-filter-dialog .modal-footer {
     justify-content: space-between;

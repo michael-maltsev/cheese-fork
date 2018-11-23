@@ -23,6 +23,10 @@ CourseManager.prototype.getAllCourses = function () {
     return Object.keys(this.coursesHashmap);
 };
 
+CourseManager.prototype.getCourseData = function (course) {
+    return this.coursesHashmap[course];
+};
+
 CourseManager.prototype.getGeneralInfo = function (course) {
     return this.coursesHashmap[course].general;
 };
