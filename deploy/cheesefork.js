@@ -664,14 +664,6 @@
     }
 
     function selectedLessonSave(course, lessonNumber, lessonType) {
-        var metadataCourseKey = null;
-        var courseData = null;
-        var metadataUpdate = metadataDiff && metadataDiff.propertyIsEnumerable(course);
-        if (metadataUpdate) {
-            metadataCourseKey = currentSemester + '_metadata_' + course;
-            courseData = courseManager.getCourseData(course);
-        }
-
         var courseKey = currentSemester + '_' + course;
 
         currentSavedSession[courseKey][lessonType] = lessonNumber;
@@ -680,38 +672,19 @@
         if (doc) {
             var input = {};
             input[courseKey + '.' + lessonType] = lessonNumber;
-            if (metadataUpdate) {
-                input[metadataCourseKey] = courseData;
-            }
             doc.update(input);
         } else {
             try {
                 localStorage.setItem(courseKey, JSON.stringify(currentSavedSession[courseKey]));
-                if (metadataUpdate) {
-                    localStorage.setItem(metadataCourseKey, JSON.stringify(courseData));
-                }
             } catch (e) {
                 // localStorage is not available in IE/Edge when running from a local file.
             }
         }
 
         onSavedSessionChange();
-
-        if (metadataUpdate) {
-            delete metadataDiff[course];
-            onMetadataDiffChange();
-        }
     }
 
     function selectedLessonUnsave(course, lessonNumber, lessonType) {
-        var metadataCourseKey = null;
-        var courseData = null;
-        var metadataUpdate = metadataDiff && metadataDiff.propertyIsEnumerable(course);
-        if (metadataUpdate) {
-            metadataCourseKey = currentSemester + '_metadata_' + course;
-            courseData = courseManager.getCourseData(course);
-        }
-
         var courseKey = currentSemester + '_' + course;
 
         delete currentSavedSession[courseKey][lessonType];
@@ -720,27 +693,16 @@
         if (doc) {
             var input = {};
             input[courseKey + '.' + lessonType] = firebase.firestore.FieldValue.delete();
-            if (metadataUpdate) {
-                input[metadataCourseKey] = courseData;
-            }
             doc.update(input);
         } else {
             try {
                 localStorage.setItem(courseKey, JSON.stringify(currentSavedSession[courseKey]));
-                if (metadataUpdate) {
-                    localStorage.setItem(metadataCourseKey, JSON.stringify(courseData));
-                }
             } catch (e) {
                 // localStorage is not available in IE/Edge when running from a local file.
             }
         }
 
         onSavedSessionChange();
-
-        if (metadataUpdate) {
-            delete metadataDiff[course];
-            onMetadataDiffChange();
-        }
     }
 
     function customEventSave(eventId, eventData) {
