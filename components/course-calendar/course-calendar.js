@@ -566,13 +566,7 @@ var CourseCalendar = (function () {
         var selectingEvent = !event.selected;
         var conflictedCourses = {};
 
-        if (selectingEvent) {
-            that.onLessonSelected(event.courseNumber, event.lessonData['מס.'], getEventLessonType(event));
-            event.selected = true;
-        } else {
-            that.onLessonUnselected(event.courseNumber, event.lessonData['מס.'], getEventLessonType(event));
-            event.selected = false;
-        }
+        event.selected = selectingEvent;
         updateLessonEvent(calendar, event);
 
         var sameCourseTypeEvents = calendar.fullCalendar('clientEvents', function (cbEvent) {
@@ -602,6 +596,12 @@ var CourseCalendar = (function () {
             var conflicted = getCourseConflictedStatus(calendar, conflictedCourse);
             that.onCourseConflictedStatusChanged(conflictedCourse, conflicted);
         });
+
+        if (selectingEvent) {
+            that.onLessonSelected(event.courseNumber, event.lessonData['מס.'], getEventLessonType(event));
+        } else {
+            that.onLessonUnselected(event.courseNumber, event.lessonData['מס.'], getEventLessonType(event));
+        }
 
         function handleConflictedEvents(event) {
             var conflictedIds = {};

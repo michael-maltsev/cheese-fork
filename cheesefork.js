@@ -1,6 +1,6 @@
 'use strict';
 
-/* global ColorHash, BootstrapDialog, moment, ics, firebase, firebaseui, gtag */
+/* global ColorHash, BootstrapDialog, moment, ics, JsDiff, firebase, firebaseui, gtag */
 /* global CourseManager, CourseSelect, CourseButtonList, CourseExamInfo, CourseCalendar */
 /* global courses_from_rishum, availableSemesters, currentSemester, scheduleSharingUserId, courseNumberForCrawlers */
 
@@ -9,10 +9,10 @@
     var colorHash = new ColorHash();
     var firestoreDb = null;
     var viewingSharedSchedule = false;
-    var coursesChosen = {};
     var previewingFromSelectControl = null;
     var stopScheduleWatching = null;
     var currentSavedSession = null, savedSessionForUndo = null, savedSessionForRedo = null;
+    var metadataDiff = {};
 
     // UI components.
     var loginDialog = null;
@@ -92,13 +92,12 @@
             courseSelect = new CourseSelect($('#course-select'), {
                 courseManager: courseManager,
                 onItemAdd: function (course) {
-                    if (!coursesChosen.propertyIsEnumerable(course)) {
-                        coursesChosen[course] = true;
+                    if (!courseButtonList.isCourseInList(course)) {
                         courseButtonList.addCourse(course);
                         courseCalendar.addCourse(course);
                         selectedCourseSave(course);
                         updateGeneralInfoLine();
-                        courseExamInfo.renderCourses(getSelectedCourses());
+                        courseExamInfo.renderCourses(courseButtonList.getCourseNumbers(true));
                         // Can't apply filter inside onItemAdd since it changes the select contents.
                         setTimeout(function () {
                             courseSelect.filterApply();
@@ -108,17 +107,17 @@
                 onDropdownItemActivate: function (course) {
                     previewingFromSelectControl = course;
 
-                    if (!coursesChosen.propertyIsEnumerable(course)) {
+                    if (!courseButtonList.isCourseInList(course)) {
                         courseCalendar.addCourse(course);
-                        courseExamInfo.renderCourses(getSelectedCourses().concat([course]));
+                        courseExamInfo.renderCourses(courseButtonList.getCourseNumbers(true).concat([course]));
                     }
                     courseExamInfo.setHighlighted(course);
                     courseCalendar.previewCourse(course);
                 },
                 onDropdownItemDeactivate: function (course) {
-                    if (!coursesChosen.propertyIsEnumerable(course)) {
+                    if (!courseButtonList.isCourseInList(course)) {
                         courseCalendar.removeCourse(course);
-                        courseExamInfo.renderCourses(getSelectedCourses());
+                        courseExamInfo.renderCourses(courseButtonList.getCourseNumbers(true));
                     } else {
                         // Remove highlight
                         courseExamInfo.removeHighlighted(course);
@@ -128,7 +127,7 @@
                     previewingFromSelectControl = null;
                 },
                 getSelectedCoursesForFilter: function () {
-                    return getSelectedCourses();
+                    return courseButtonList.getCourseNumbers(true);
                 }
             });
         } else {
@@ -162,17 +161,15 @@
                 courseCalendar.addCourse(course);
                 courseCalendar.previewCourse(course);
                 selectedCourseSave(course);
-                coursesChosen[course] = true;
                 updateGeneralInfoLine();
-                courseExamInfo.renderCourses(getSelectedCourses());
+                courseExamInfo.renderCourses(courseButtonList.getCourseNumbers(true));
                 courseSelect.filterApply();
             },
             onDisableCourse: function (course) {
                 courseCalendar.removeCourse(course);
                 selectedCourseUnsave(course);
-                coursesChosen[course] = false;
                 updateGeneralInfoLine();
-                courseExamInfo.renderCourses(getSelectedCourses());
+                courseExamInfo.renderCourses(courseButtonList.getCourseNumbers(true));
                 courseSelect.filterApply();
             }
         });
@@ -290,6 +287,32 @@
                 semesterSelect.append(link);
             });
 
+            $('#top-navbar-changes').click(function (event) {
+                event.preventDefault();
+
+                gtag('event', 'navbar-changes');
+
+                BootstrapDialog.show({
+                    title: 'שינויים במערכת השעות',
+                    message: getPrettyMetadataDiff(),
+                    buttons: [{
+                        label: 'אשר שינויים',
+                        cssClass: 'btn-primary',
+                        action: function (dialog) {
+                            gtag('event', metadataDiff ? 'metadata-to-current' : 'metadata-first-time');
+
+                            setMetadataToCurrent();
+                            dialog.close();
+                        }
+                    }, {
+                        label: 'סגור',
+                        action: function (dialog) {
+                            dialog.close();
+                        }
+                    }]
+                });
+            });
+
             $('#top-navbar-login').click(function (event) {
                 event.preventDefault();
 
@@ -387,7 +410,7 @@
             courseCalendar.saveAsIcs(icsCal, dateFrom, dateTo);
 
             // Exams.
-            getSelectedCourses().forEach(function (course) {
+            courseButtonList.getCourseNumbers(true).forEach(function (course) {
                 var general = courseManager.getGeneralInfo(course);
                 ['מועד א', 'מועד ב'].forEach(function (moed) {
                     if (general[moed]) {
@@ -528,17 +551,11 @@
         }
     }
 
-    function getSelectedCourses() {
-        return Object.keys(coursesChosen).filter(function (course) {
-            return coursesChosen[course];
-        });
-    }
-
     function updateGeneralInfoLine() {
         var courses = 0;
         var points = 0;
 
-        getSelectedCourses().forEach(function (course) {
+        courseButtonList.getCourseNumbers(true).forEach(function (course) {
             var general = courseManager.getGeneralInfo(course);
             courses++;
             points += parseFloat(general['נקודות']);
@@ -568,22 +585,40 @@
     }
 
     function selectedCourseSave(course) {
+        var metadataCourseKey = null;
+        var courseData = null;
+        var metadataUpdate = !!metadataDiff;
+        if (metadataUpdate) {
+            metadataCourseKey = currentSemester + '_metadata_' + course;
+            courseData = courseManager.getCourseData(course);
+        }
+
         var semesterCoursesKey = currentSemester + '_courses';
         var courseKey = currentSemester + '_' + course;
 
-        currentSavedSession[semesterCoursesKey].push(course);
+        // Keep all of the items from currentSavedSession[semesterCoursesKey], even if there
+        // are numbers of courses which don't exist anymore. Use the button list for the order.
+        var courseNumbers = courseButtonList.getCourseNumbers(true);
+        currentSavedSession[semesterCoursesKey] = courseNumbers.concat(
+            $(currentSavedSession[semesterCoursesKey]).not(courseNumbers).get());
         currentSavedSession[courseKey] = {};
 
         var doc = firestoreAuthenticatedUserDoc();
         if (doc) {
             var input = {};
-            input[semesterCoursesKey] = firebase.firestore.FieldValue.arrayUnion(course);
+            input[semesterCoursesKey] = currentSavedSession[semesterCoursesKey];
             input[courseKey] = {};
+            if (metadataUpdate) {
+                input[metadataCourseKey] = courseData;
+            }
             doc.update(input);
         } else {
             try {
                 localStorage.setItem(semesterCoursesKey, JSON.stringify(currentSavedSession[semesterCoursesKey]));
                 localStorage.removeItem(courseKey);
+                if (metadataUpdate) {
+                    localStorage.setItem(metadataCourseKey, JSON.stringify(courseData));
+                }
             } catch (e) {
                 // localStorage is not available in IE/Edge when running from a local file.
             }
@@ -593,6 +628,8 @@
     }
 
     function selectedCourseUnsave(course) {
+        var metadataCourseKey = currentSemester + '_metadata_' + course;
+
         var semesterCoursesKey = currentSemester + '_courses';
         var courseKey = currentSemester + '_' + course;
 
@@ -606,20 +643,35 @@
             var input = {};
             input[semesterCoursesKey] = firebase.firestore.FieldValue.arrayRemove(course);
             input[courseKey] = firebase.firestore.FieldValue.delete();
+            input[metadataCourseKey] = firebase.firestore.FieldValue.delete();
             doc.update(input);
         } else {
             try {
                 localStorage.setItem(semesterCoursesKey, JSON.stringify(currentSavedSession[semesterCoursesKey]));
                 localStorage.removeItem(courseKey);
+                localStorage.removeItem(metadataCourseKey);
             } catch (e) {
                 // localStorage is not available in IE/Edge when running from a local file.
             }
         }
 
         onSavedSessionChange();
+
+        if (metadataDiff && metadataDiff.propertyIsEnumerable(course)) {
+            delete metadataDiff[course];
+            onMetadataDiffChange();
+        }
     }
 
     function selectedLessonSave(course, lessonNumber, lessonType) {
+        var metadataCourseKey = null;
+        var courseData = null;
+        var metadataUpdate = metadataDiff && metadataDiff.propertyIsEnumerable(course);
+        if (metadataUpdate) {
+            metadataCourseKey = currentSemester + '_metadata_' + course;
+            courseData = courseManager.getCourseData(course);
+        }
+
         var courseKey = currentSemester + '_' + course;
 
         currentSavedSession[courseKey][lessonType] = lessonNumber;
@@ -628,19 +680,38 @@
         if (doc) {
             var input = {};
             input[courseKey + '.' + lessonType] = lessonNumber;
+            if (metadataUpdate) {
+                input[metadataCourseKey] = courseData;
+            }
             doc.update(input);
         } else {
             try {
                 localStorage.setItem(courseKey, JSON.stringify(currentSavedSession[courseKey]));
+                if (metadataUpdate) {
+                    localStorage.setItem(metadataCourseKey, JSON.stringify(courseData));
+                }
             } catch (e) {
                 // localStorage is not available in IE/Edge when running from a local file.
             }
         }
 
         onSavedSessionChange();
+
+        if (metadataUpdate) {
+            delete metadataDiff[course];
+            onMetadataDiffChange();
+        }
     }
 
     function selectedLessonUnsave(course, lessonNumber, lessonType) {
+        var metadataCourseKey = null;
+        var courseData = null;
+        var metadataUpdate = metadataDiff && metadataDiff.propertyIsEnumerable(course);
+        if (metadataUpdate) {
+            metadataCourseKey = currentSemester + '_metadata_' + course;
+            courseData = courseManager.getCourseData(course);
+        }
+
         var courseKey = currentSemester + '_' + course;
 
         delete currentSavedSession[courseKey][lessonType];
@@ -649,16 +720,27 @@
         if (doc) {
             var input = {};
             input[courseKey + '.' + lessonType] = firebase.firestore.FieldValue.delete();
+            if (metadataUpdate) {
+                input[metadataCourseKey] = courseData;
+            }
             doc.update(input);
         } else {
             try {
                 localStorage.setItem(courseKey, JSON.stringify(currentSavedSession[courseKey]));
+                if (metadataUpdate) {
+                    localStorage.setItem(metadataCourseKey, JSON.stringify(courseData));
+                }
             } catch (e) {
                 // localStorage is not available in IE/Edge when running from a local file.
             }
         }
 
         onSavedSessionChange();
+
+        if (metadataUpdate) {
+            delete metadataDiff[course];
+            onMetadataDiffChange();
+        }
     }
 
     function customEventSave(eventId, eventData) {
@@ -749,12 +831,16 @@
                 var session = savedSessionFromFirestoreData(result.exists ? result.data() : {});
                 setScheduleFromSavedSession(session, !firstDataLoaded);
 
+                var metadata = savedMetadataFromFirestoreData(result.exists ? result.data() : {});
+                metadataDiff = metadata ? computeMetadataDiff(metadata) : null;
+                onMetadataDiffChange();
+
                 currentSavedSession = session;
 
                 if (!firstDataLoaded) {
                     onSavedSessionReset();
-                    onLoadedFunc();
                     firstDataLoaded = true;
+                    onLoadedFunc();
                 } else {
                     onSavedSessionChange();
                 }
@@ -770,6 +856,10 @@
                     var session = savedSessionFromLocalStorage();
                     setScheduleFromSavedSession(session, true);
 
+                    var metadata = savedMetadataFromLocalStorage();
+                    metadataDiff = metadata ? computeMetadataDiff(metadata) : null;
+                    onMetadataDiffChange();
+
                     currentSavedSession = session;
                     onSavedSessionChange();
                 }
@@ -783,6 +873,10 @@
 
             var session = savedSessionFromLocalStorage();
             setScheduleFromSavedSession(session, false);
+
+            var metadata = savedMetadataFromLocalStorage();
+            metadataDiff = metadata ? computeMetadataDiff(metadata) : null;
+            onMetadataDiffChange();
 
             currentSavedSession = session;
             onSavedSessionReset();
@@ -816,6 +910,32 @@
         return session;
     }
 
+    function savedMetadataFromLocalStorage() {
+        var semesterCoursesKey = currentSemester + '_courses';
+        var metadata = {};
+        try {
+            var courses = JSON.parse(localStorage.getItem(semesterCoursesKey) || '[]');
+            courses.forEach(function (course) {
+                var metadataCourseKey = currentSemester + '_metadata_' + course;
+                var courseMetadataEncoded = localStorage.getItem(metadataCourseKey);
+                if (courseMetadataEncoded) {
+                    metadata[course] = JSON.parse(courseMetadataEncoded);
+                }
+            });
+
+            // If there's at least one course but no metadata at all, that probably means that
+            // the user built the schedule before the feature was introduced.
+            // Return null to handle the case.
+            if (courses.length > 0 && Object.keys(metadata).length === 0) {
+                metadata = null;
+            }
+        } catch (e) {
+            // localStorage is not available in IE/Edge when running from a local file.
+        }
+
+        return metadata;
+    }
+
     function savedSessionFromFirestoreData(data) {
         // Returns only the data relevant to the current semester from data.
         var semesterCoursesKey = currentSemester + '_courses';
@@ -832,8 +952,31 @@
         return session;
     }
 
+    function savedMetadataFromFirestoreData(data) {
+        var semesterCoursesKey = currentSemester + '_courses';
+        var metadata = {};
+
+        var courses = data[semesterCoursesKey] || [];
+        courses.forEach(function (course) {
+            var metadataCourseKey = currentSemester + '_metadata_' + course;
+            if (data[metadataCourseKey]) {
+                metadata[course] = data[metadataCourseKey];
+            }
+        });
+
+        // If there's at least one course but no metadata at all, that probably means that
+        // the user built the schedule before the feature was introduced.
+        // Return null to handle the case.
+        if (courses.length > 0 && Object.keys(metadata).length === 0) {
+            metadata = null;
+        }
+
+        return metadata;
+    }
+
     function restoreSavedSession(currentSession, sessionToRestore) {
         var newKeys = [], removeKeys = [];
+        var newMetadataCourses = [];
 
         var semesterCoursesKey = currentSemester + '_courses';
         var currentCourses = currentSession[semesterCoursesKey];
@@ -846,6 +989,11 @@
             if (newCourses.indexOf(course) === -1) {
                 var courseKey = currentSemester + '_' + course;
                 removeKeys.push(courseKey);
+
+                if (metadataDiff) {
+                    var metadataCourseKey = currentSemester + '_metadata_' + course;
+                    removeKeys.push(metadataCourseKey);
+                }
             }
         });
 
@@ -853,6 +1001,9 @@
             var courseKey = currentSemester + '_' + course;
             if (currentCourses.indexOf(course) === -1) {
                 newKeys.push(courseKey);
+                if (metadataDiff) {
+                    newMetadataCourses.push(course);
+                }
             } else {
                 var currentLessons = currentSession[courseKey];
                 var newLessons = sessionToRestore[courseKey];
@@ -885,6 +1036,11 @@
                 input[key] = sessionToRestore[key];
             });
 
+            newMetadataCourses.forEach(function (course) {
+                var metadataCourseKey = currentSemester + '_metadata_' + course;
+                input[metadataCourseKey] = courseManager.getCourseData(course);
+            });
+
             doc.update(input);
         } else {
             try {
@@ -894,6 +1050,11 @@
 
                 newKeys.forEach(function (key) {
                     localStorage.setItem(key, JSON.stringify(sessionToRestore[key]));
+                });
+
+                newMetadataCourses.forEach(function (course) {
+                    var metadataCourseKey = currentSemester + '_metadata_' + course;
+                    localStorage.setItem(metadataCourseKey, JSON.stringify(courseManager.getCourseData(course)));
                 });
             } catch (e) {
                 // localStorage is not available in IE/Edge when running from a local file.
@@ -910,15 +1071,13 @@
         }
 
         var semesterCoursesKey = currentSemester + '_courses';
-        coursesChosen = {};
         courseButtonList.clear();
 
         var schedule = {};
 
         var courses = session[semesterCoursesKey] || [];
         courses.forEach(function (course) {
-            if (!coursesChosen.propertyIsEnumerable(course) && courseManager.doesExist(course)) {
-                coursesChosen[course] = true;
+            if (!schedule[course] && courseManager.doesExist(course)) {
                 courseButtonList.addCourse(course);
 
                 var courseKey = currentSemester + '_' + course;
@@ -932,7 +1091,7 @@
 
         courseCalendar.loadSavedSchedule(schedule, customEvents);
         updateGeneralInfoLine();
-        courseExamInfo.renderCourses(getSelectedCourses());
+        courseExamInfo.renderCourses(courseButtonList.getCourseNumbers(true));
 
         if (restoreScrollPosition) {
             $(window).scrollTop(scrollTop); // restore scroll position
@@ -940,11 +1099,10 @@
     }
 
     function resetSchedule() {
-        coursesChosen = {};
         courseButtonList.clear();
         courseCalendar.removeAll();
         updateGeneralInfoLine();
-        courseExamInfo.renderCourses(getSelectedCourses());
+        courseExamInfo.renderCourses([]);
         courseSelect.filterReset();
     }
 
@@ -1003,6 +1161,313 @@
         }
 
         return doc;
+    }
+
+    function computeMetadataDiff(metadata) {
+        var diff = {};
+
+        Object.keys(metadata).forEach(function (course) {
+            var courseMetadata = metadata[course];
+
+            if (!courseManager.doesExist(course)) {
+                diff[course] = {
+                    exists: false,
+                    general: courseMetadata.general
+                };
+                return;
+            }
+
+            var generalCourseDiff = computeCourseGeneralMetadataDiff(courseMetadata.general, courseManager.getGeneralInfo(course));
+            var scheduleCourseDiff = computeCourseScheduleMetadataDiff(courseMetadata.schedule, courseManager.getSchedule(course));
+            if (generalCourseDiff.length > 0 || scheduleCourseDiff.length > 0) {
+                diff[course] = {
+                    exists: true,
+                    changes: generalCourseDiff.concat(scheduleCourseDiff)
+                };
+            }
+        });
+
+        return diff;
+    }
+
+    function computeCourseGeneralMetadataDiff(oldGeneral, newGeneral) {
+        var keyOrder = {
+            'פקולטה'                          : 1,
+            'שם מקצוע'                        : 2,
+            'מספר מקצוע'                      : 3,
+            'אתר הקורס'                       : 4,
+            'נקודות'                          : 5,
+            'הרצאה'                           : 6,
+            'תרגיל'                           : 7,
+            'מעבדה'                           : 8,
+            'סמינר\/פרויקט'                   : 9,
+            'סילבוס'                          : 10,
+            'מקצועות קדם'                     : 11,
+            'מקצועות צמודים'                  : 12,
+            'מקצועות ללא זיכוי נוסף'          : 13,
+            'מקצועות ללא זיכוי נוסף (מכילים)' : 14,
+            'מקצועות ללא זיכוי נוסף (מוכלים)' : 15,
+            'מקצועות זהים'                    : 16,
+            'עבור לסמסטר'                     : 17,
+            'אחראים'                          : 18,
+            'הערות'                           : 19,
+            'מועד הבחינה'                     : 20,
+            'מועד א'                          : 21,
+            'מועד ב'                          : 22,
+            'מיקום'                           : 23
+        };
+        var compareFunction = function (a, b) {
+            if (keyOrder[a] && keyOrder[b]) {
+                return keyOrder[a] - keyOrder[b];
+            } else if (keyOrder[a]) {
+                return -1;
+            } else if (keyOrder[b]) {
+                return 1;
+            } else {
+                return a.localeCompare(b);
+            }
+        };
+
+        var oldText = '';
+        Object.keys(oldGeneral).sort(compareFunction).forEach(function (key) {
+            if (oldGeneral[key] !== newGeneral[key] && oldGeneral[key]) {
+                oldText += key + ': ' + oldGeneral[key] + '\n';
+            }
+        });
+
+        var newText = '';
+        Object.keys(newGeneral).sort(compareFunction).forEach(function (key) {
+            if (newGeneral[key] !== oldGeneral[key] && newGeneral[key]) {
+                newText += key + ': ' + newGeneral[key] + '\n';
+            }
+        });
+
+        if (oldText === '' && newText === '') {
+            return [];
+        }
+
+        return [{
+            title: 'מידע כללי',
+            old: oldText.trim(),
+            new: newText.trim()
+        }];
+    }
+
+    function computeCourseScheduleMetadataDiff(oldSchedule, newSchedule) {
+        var diff = [];
+        var scheduleGroups = {};
+
+        var oldScheduleByGroups = scheduleToGroupOfTexts(oldSchedule);
+        var newScheduleByGroups = scheduleToGroupOfTexts(newSchedule);
+
+        Object.keys(scheduleGroups).sort().forEach(function (typeAndNumber) {
+            if (oldScheduleByGroups[typeAndNumber] !== newScheduleByGroups[typeAndNumber]) {
+                diff.push({
+                    title: typeAndNumber,
+                    old: (oldScheduleByGroups[typeAndNumber] || '').trim(),
+                    new: (newScheduleByGroups[typeAndNumber] || '').trim()
+                });
+            }
+        });
+
+        return diff;
+
+        function scheduleToGroupOfTexts(schedule) {
+            var keyOrder = {
+                'מרצה\/מתרגל' : 1,
+                'יום'         : 2,
+                'שעה'         : 3,
+                'בניין'       : 4,
+                'חדר'         : 5
+            };
+            var compareFunction = function (a, b) {
+                if (keyOrder[a] && keyOrder[b]) {
+                    return keyOrder[a] - keyOrder[b];
+                } else if (keyOrder[a]) {
+                    return -1;
+                } else if (keyOrder[b]) {
+                    return 1;
+                } else {
+                    return a.localeCompare(b);
+                }
+            };
+
+            var lessonsAdded = {};
+
+            var scheduleByGroups = {};
+            schedule.forEach(function (lesson) {
+                if (lessonsAdded.propertyIsEnumerable(lesson['מס.']) && lessonsAdded[lesson['מס.']] !== lesson['קבוצה']) {
+                    return;
+                }
+
+                var lessonText = '';
+                Object.keys(lesson).sort(compareFunction).forEach(function (key) {
+                    if (key !== 'קבוצה' &&
+                        key !== 'מס.' &&
+                        key !== 'סוג' &&
+                        lesson[key]) {
+                        lessonText += key + ': ' + lesson[key] + '\n';
+                    }
+                });
+
+                var typeAndNumber = courseManager.getLessonTypeAndNumber(lesson);
+                if (!scheduleByGroups.propertyIsEnumerable(typeAndNumber)) {
+                    scheduleByGroups[typeAndNumber] = '';
+                }
+
+                scheduleByGroups[typeAndNumber] += lessonText + '\n';
+
+                lessonsAdded[lesson['מס.']] = lesson['קבוצה'];
+                scheduleGroups[typeAndNumber] = true;
+            });
+
+            return scheduleByGroups;
+        }
+    }
+
+    function getPrettyMetadataDiff() {
+        var result;
+
+        if (metadataDiff) {
+            result = $('<div class="course-metadata-diff-container">');
+
+            Object.keys(metadataDiff).sort().forEach(function (course) {
+                var courseDiff = metadataDiff[course];
+                var general, courseTitle;
+                if (courseDiff.exists) {
+                    general = courseManager.getGeneralInfo(course);
+                    courseTitle = general['מספר מקצוע'] + ' - ' + general['שם מקצוע'];
+                    result.append($('<h3>').text(courseTitle));
+
+                    courseDiff.changes.forEach(function (diff) {
+                        result.append($('<h5>').text(diff.title));
+
+                        var jsDiff = JsDiff.diffWords(diff.old, diff.new);
+                        jsDiff.forEach(function (part) {
+                            var partElement = $('<span>').text(part.value);
+                            if (part.added) {
+                                partElement.addClass('course-metadata-diff-new');
+                            }
+                            else if (part.removed) {
+                                partElement.addClass('course-metadata-diff-old');
+                            }
+
+                            result.append(partElement);
+                        });
+                    });
+                } else {
+                    general = courseDiff.general;
+                    courseTitle = general['מספר מקצוע'] + ' - ' + general['שם מקצוע'];
+                    result.append($('<h3>').text(courseTitle)).append($('<span>').text('הקורס לא קיים יותר'));
+                }
+            });
+        } else {
+            result = $('<div>');
+
+            var explanation = 'מעכשיו תוכלו להתעדכן בכל השינויים שקורים בקורסים שלכם דרך CheeseFork! ' +
+                'לחצו על הכפתור <b>אשר שינויים</b>, ובכל פעם שיהיו שינויים באחד הקורסים שאתם רשומים אליו, אתם תראו אותם פה בחלון השינויים.';
+
+            result.html(explanation);
+        }
+
+        return result;
+    }
+
+    function setMetadataToCurrent() {
+        var deletedCourses = [];
+        if (metadataDiff) {
+            deletedCourses = Object.keys(metadataDiff).filter(function (course) {
+                return !metadataDiff[course].exists;
+            });
+        }
+
+        var semesterCoursesKey = currentSemester + '_courses';
+        if (deletedCourses.length > 0) {
+            currentSavedSession[semesterCoursesKey] = $(currentSavedSession[semesterCoursesKey]).not(deletedCourses).get();
+        }
+
+        deletedCourses.forEach(function (course) {
+            var courseKey = currentSemester + '_' + course;
+            delete currentSavedSession[courseKey];
+        });
+
+        var courseNumbers = courseButtonList.getCourseNumbers(true);
+
+        var doc = firestoreAuthenticatedUserDoc();
+        if (doc) {
+            var input = {};
+
+            courseNumbers.forEach(function (course) {
+                var metadataCourseKey = currentSemester + '_metadata_' + course;
+                var courseData = courseManager.getCourseData(course);
+                input[metadataCourseKey] = courseData;
+            });
+
+            if (deletedCourses.length > 0) {
+                input[semesterCoursesKey] = currentSavedSession[semesterCoursesKey];
+            }
+
+            deletedCourses.forEach(function (course) {
+                var courseKey = currentSemester + '_' + course;
+                input[courseKey] = firebase.firestore.FieldValue.delete();
+
+                var metadataCourseKey = currentSemester + '_metadata_' + course;
+                input[metadataCourseKey] = firebase.firestore.FieldValue.delete();
+            });
+
+            doc.update(input);
+        } else {
+            try {
+                courseNumbers.forEach(function (course) {
+                    var metadataCourseKey = currentSemester + '_metadata_' + course;
+                    var courseData = courseManager.getCourseData(course);
+                    localStorage.setItem(metadataCourseKey, JSON.stringify(courseData));
+                });
+
+                if (deletedCourses.length > 0) {
+                    localStorage.setItem(semesterCoursesKey, JSON.stringify(currentSavedSession[semesterCoursesKey]));
+                }
+
+                deletedCourses.forEach(function (course) {
+                    var courseKey = currentSemester + '_' + course;
+                    localStorage.removeItem(courseKey);
+
+                    var metadataCourseKey = currentSemester + '_metadata_' + course;
+                    localStorage.removeItem(metadataCourseKey);
+                });
+            } catch (e) {
+                // localStorage is not available in IE/Edge when running from a local file.
+            }
+        }
+
+        metadataDiff = {};
+        onMetadataDiffChange();
+    }
+
+    function onMetadataDiffChange() {
+        var badgeCount = 0;
+
+        if (metadataDiff) {
+            var diffCourses = Object.keys(metadataDiff);
+            if (diffCourses.length > 0) {
+                badgeCount = diffCourses.reduce(function (accumulator, course) {
+                    var diff = metadataDiff[course];
+                    return accumulator + (diff.exists ? diff.changes.length : 1);
+                }, 0);
+            }
+        } else {
+            // If !metadataDiff, that probably means that
+            // the user built the schedule before the feature was introduced.
+            badgeCount = 1;
+        }
+
+        if (badgeCount > 0) {
+            $('#top-navbar-changes').removeClass('d-none').find('.unread-count-badge').text(badgeCount);
+            $('#top-navbar .navbar-toggler .unread-count-badge').text(badgeCount).removeClass('d-none');
+        } else {
+            $('#top-navbar-changes').addClass('d-none');
+            $('#top-navbar .navbar-toggler .unread-count-badge').addClass('d-none');
+        }
     }
 
     // https://stackoverflow.com/a/30810322

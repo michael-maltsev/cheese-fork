@@ -46,6 +46,14 @@
     <nav id="top-navbar" class="navbar navbar-expand-md navbar-light bg-light">
         <div id="top-navbar-supported-content" class="collapse navbar-collapse top-navbar-content-uninitialized">
             <ul class="navbar-nav mr-auto">
+                <li id="top-navbar-changes" class="nav-item d-none">
+                    <a class="nav-link" href="#">
+                        <i class="fas fa-newspaper unread-count-badge-container">
+                            <span class="unread-count-badge"></span>
+                        </i>
+                        שינויים
+                    </a>
+                </li>
                 <li id="top-navbar-home" class="nav-item d-none">
                     <a class="nav-link" href=".">
                         <i class="fas fa-home"></i>
@@ -97,8 +105,9 @@
                 </li>
             </ul>
         </div>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#top-navbar-supported-content" aria-controls="top-navbar-supported-content" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler unread-count-badge-container" type="button" data-toggle="collapse" data-target="#top-navbar-supported-content" aria-controls="top-navbar-supported-content" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
+            <span class="unread-count-badge d-none"></span>
         </button>
         <a class="navbar-brand" href=".">
             <img src="logo.png" alt="logo" height="30">
@@ -271,6 +280,7 @@
 <script src="modules/selectize/js/standalone/selectize.min.js"></script>
 <script src="modules/color-hash/color-hash.js"></script>
 <script src="modules/ics.js/ics.deps.min.js"></script>
+<script src="modules/jsdiff/diff.min.js"></script>
 <script src="modules/reparse.js"></script>
 <script src="modules/boolean-expression.js"></script>
 <script src="https://www.gstatic.com/firebasejs/5.3.1/firebase-app.js"></script>

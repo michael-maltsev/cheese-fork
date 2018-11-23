@@ -23,7 +23,8 @@ CourseButtonList.prototype.addCourse = function (course) {
     var spanBoldHidden = $('<span class="content-bold-hidden">').text(courseTitle);
 
     var button = $('<li' +
-        ' class="list-group-item active course-button-list-item course-button-list-item-course-' + course + '">' +
+        ' class="list-group-item active course-button-list-item course-button-list-item-course-' + course + '"' +
+        ' data-course-number="' + course + '">' +
         '</li>');
     var badge = $('<span class="badge badge-pill badge-secondary float-right">i</span>');
     var color = that.colorGenerator(course);
@@ -102,6 +103,28 @@ CourseButtonList.prototype.setConflicted = function (course) {
 
 CourseButtonList.prototype.removeConflicted = function (course) {
     $('.course-button-list-item-course-' + course, this.element).removeClass('course-button-list-item-conflicted');
+};
+
+CourseButtonList.prototype.isCourseInList = function (course) {
+    var selector = 'li.list-group-item[data-course-number="' + course + '"]';
+    return this.element.find(selector).length > 0;
+};
+
+CourseButtonList.prototype.getCourseNumbers = function (onlySelected) {
+    var that = this;
+
+    var selector = 'li.list-group-item';
+    if (onlySelected) {
+        selector += '.active';
+    }
+
+    var courseNumbers = [];
+    that.element.find(selector).each(function () {
+        var course = $(this).attr('data-course-number');
+        courseNumbers.push(course);
+    });
+
+    return courseNumbers;
 };
 
 CourseButtonList.prototype.clear = function () {
