@@ -37,8 +37,36 @@
             content.append($('<br><br>'));
 
             var title = courseManager.getTitle(course);
-            var description = courseManager.getDescription(course, {html: true});
+            var description = courseManager.getDescription(course, {html: true, links: true});
             content.append($('<div>').html(description));
+
+            var lessonsAdded = {};
+            courseManager.getSchedule(course).forEach(function (lesson) {
+                if (lessonsAdded.propertyIsEnumerable(lesson['מס.']) && lessonsAdded[lesson['מס.']] !== lesson['קבוצה']) {
+                    return;
+                }
+
+                content.append($('<br>'));
+
+                var typeAndNumber = courseManager.getLessonTypeAndNumber(lesson);
+                content.append($('<div style="font-weight: bold;">').text(typeAndNumber));
+
+                var lessonText = '';
+                [
+                    'מרצה\/מתרגל',
+                    'יום',
+                    'שעה',
+                    'בניין',
+                    'חדר'
+                ].forEach(function (key) {
+                    if (lesson[key]) {
+                        lessonText += key + ': ' + lesson[key] + '\n';
+                    }
+                });
+                content.append($('<div style="white-space: pre-wrap;">').text(lessonText));
+
+                lessonsAdded[lesson['מס.']] = lesson['קבוצה'];
+            });
 
             document.title = title + ' - ' + semseterName + ' - CheeseFork';
         } else {
