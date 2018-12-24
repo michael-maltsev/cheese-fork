@@ -34,11 +34,11 @@
         if (courseManager.doesExist(course)) {
             var url = '?semester=' + encodeURIComponent(currentSemester) + '&course=all';
             content.append($('<a>').text('לרשימת הקורסים').prop('href', url));
-            content.append($('<br><br>'));
+            content.append('<br><br>');
 
             var title = courseManager.getTitle(course);
             var description = courseManager.getDescription(course, {html: true, links: true});
-            content.append($('<div>').html(description));
+            content.append(description);
 
             var lessonsAdded = {};
             courseManager.getSchedule(course).forEach(function (lesson) {
@@ -46,7 +46,7 @@
                     return;
                 }
 
-                content.append($('<br>'));
+                content.append('<br><br>');
 
                 var typeAndNumber = courseManager.getLessonTypeAndNumber(lesson);
                 content.append($('<div style="font-weight: bold;">').text(typeAndNumber));
@@ -63,7 +63,8 @@
                         lessonText += key + ': ' + lesson[key] + '\n';
                     }
                 });
-                content.append($('<div style="white-space: pre-wrap;">').text(lessonText));
+                var lessonHtml = $('<div>').text(lessonText.trim()).html().replace(/\n/g, '<br>');
+                content.append(lessonHtml);
 
                 lessonsAdded[lesson['מס.']] = lesson['קבוצה'];
             });
@@ -78,16 +79,16 @@
                     var url = '?semester=' + encodeURIComponent(semester) + '&course=all';
                     content.append($('<a>').text(text).prop('href', url));
                 }
-                content.append($('<br>'));
+                content.append('<br>');
             });
 
-            content.append($('<br>'));
+            content.append('<br>');
 
             courseManager.getAllCourses().sort().forEach(function (cbCourse) {
                 var title = courseManager.getTitle(cbCourse);
                 var url = '?semester=' + encodeURIComponent(currentSemester) + '&course=' + encodeURIComponent(cbCourse);
                 content.append($('<a>').text(title).prop('href', url));
-                content.append($('<br>'));
+                content.append('<br>');
             });
 
             document.title = semseterName + ' - CheeseFork';
@@ -105,6 +106,9 @@
 
         $('#footer-semester-name').text(semesterFriendlyName(currentSemester));
         $('#footer-semester').removeClass('d-none');
+
+        // The filter form is indexed by Google even though it's hidden, so remove it.
+        $('#filter-form').remove();
 
         $('#page-loader').hide();
     }
