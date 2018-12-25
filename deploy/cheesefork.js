@@ -49,7 +49,8 @@
                 content.append('<br><br>');
 
                 var typeAndNumber = courseManager.getLessonTypeAndNumber(lesson);
-                content.append($('<div style="font-weight: bold;">').text(typeAndNumber));
+                var typeAndNumberHtml = $('<div>').text(typeAndNumber).html().replace(/\n/g, '<br>');
+                content.append(typeAndNumberHtml);
 
                 var lessonText = '';
                 [
@@ -60,10 +61,10 @@
                     'חדר'
                 ].forEach(function (key) {
                     if (lesson[key]) {
-                        lessonText += key + ': ' + lesson[key] + '\n';
+                        lessonText += '\n' + key + ': ' + lesson[key];
                     }
                 });
-                var lessonHtml = $('<div>').text(lessonText.trim()).html().replace(/\n/g, '<br>');
+                var lessonHtml = $('<div>').text(lessonText).html().replace(/\n/g, '<br>');
                 content.append(lessonHtml);
 
                 lessonsAdded[lesson['מס.']] = lesson['קבוצה'];
