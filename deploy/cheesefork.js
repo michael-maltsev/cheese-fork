@@ -53,7 +53,7 @@
                 }
 
                 if (test === 1) {
-                    // Skip.
+                    content.append(' ');
                 } else {
                     content.append('<br><br>');
                 }
