@@ -35,7 +35,6 @@
         if (/^test/.test(course)) {
             test = parseInt(course.slice(4), 10);
             course = '234124';
-            content.append('בדיקה ' + test + ' ');
         }
 
         if (courseManager.doesExist(course)) {
@@ -44,10 +43,11 @@
             content.append('<br><br>');
 
             var title = courseManager.getTitle(course);
-            if (test === 2) {
-                title = 'בדיקה ' + test;
-            }
             var description = courseManager.getDescription(course, {html: true, links: true});
+            if (test === 3) {
+                title = 'בדיקה ' + test;
+                description = 'בדיקה ' + test;
+            }
             content.append(description);
 
             var lessonsAdded = {};
@@ -56,7 +56,7 @@
                     return;
                 }
 
-                if (test === 2) {
+                if (test === 3) {
                     content.append(' ');
                 } else {
                     content.append('<br><br>');
@@ -78,7 +78,7 @@
                         lessonText += '\n' + key + ': ' + lesson[key];
                     }
                 });
-                var lessonHtml = $('<div>').text(lessonText).html().replace(/\n/g, test === 2 ? ' ' : '<br>');
+                var lessonHtml = $('<div>').text(lessonText).html().replace(/\n/g, test === 3 ? ' ' : '<br>');
                 content.append(lessonHtml);
 
                 lessonsAdded[lesson['מס.']] = lesson['קבוצה'];
