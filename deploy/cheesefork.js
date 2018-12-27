@@ -31,6 +31,12 @@
         var content = $('<div class="col-md-12">');
         var semseterName = semesterFriendlyName(currentSemester);
 
+        var test = 0;
+        if (/^test/.test(course)) {
+            test = parseInt(course.slice(4), 10);
+            course = '234124';
+        }
+
         if (courseManager.doesExist(course)) {
             var url = '?semester=' + encodeURIComponent(currentSemester) + '&course=all';
             content.append($('<a>').text('לרשימת הקורסים').prop('href', url));
@@ -46,7 +52,11 @@
                     return;
                 }
 
-                content.append('<br><br>');
+                if (test === 1) {
+                    // Skip.
+                } else {
+                    content.append('<br><br>');
+                }
 
                 var typeAndNumber = courseManager.getLessonTypeAndNumber(lesson);
                 var typeAndNumberHtml = $('<div>').text(typeAndNumber).html().replace(/\n/g, '<br>');
@@ -64,7 +74,7 @@
                         lessonText += '\n' + key + ': ' + lesson[key];
                     }
                 });
-                var lessonHtml = $('<div>').text(lessonText).html().replace(/\n/g, '<br>');
+                var lessonHtml = $('<div>').text(lessonText).html().replace(/\n/g, test === 1 ? ' ' : '<br>');
                 content.append(lessonHtml);
 
                 lessonsAdded[lesson['מס.']] = lesson['קבוצה'];
