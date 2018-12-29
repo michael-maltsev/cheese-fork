@@ -44,7 +44,7 @@
 
             var title = courseManager.getTitle(course);
             var description = courseManager.getDescription(course, {html: true, links: true});
-            if (test === 3) {
+            if (test === 4) {
                 title = 'בדיקה ' + test;
                 description = 'בדיקה ' + test;
             }
@@ -56,7 +56,7 @@
                     return;
                 }
 
-                if (test === 3) {
+                if (test === 4) {
                     content.append(' ');
                 } else {
                     content.append('<br><br>');
@@ -78,7 +78,7 @@
                         lessonText += '\n' + key + ': ' + lesson[key];
                     }
                 });
-                var lessonHtml = $('<div>').text(lessonText).html().replace(/\n/g, test === 3 ? ' ' : '<br>');
+                var lessonHtml = $('<div>').text(lessonText).html().replace(/\n/g, test === 4 ? ' ' : '<br>');
                 content.append(lessonHtml);
 
                 lessonsAdded[lesson['מס.']] = lesson['קבוצה'];
