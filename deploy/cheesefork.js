@@ -31,12 +31,6 @@
         var content = $('<div class="col-md-12">');
         var semseterName = semesterFriendlyName(currentSemester);
 
-        var test = 0;
-        if (/^test/.test(course)) {
-            test = parseInt(course.slice(4), 10);
-            course = '234124';
-        }
-
         if (courseManager.doesExist(course)) {
             var url = '?semester=' + encodeURIComponent(currentSemester) + '&course=all';
             content.append($('<a>').text('לרשימת הקורסים').prop('href', url));
@@ -44,10 +38,6 @@
 
             var title = courseManager.getTitle(course);
             var description = courseManager.getDescription(course, {html: true, links: true});
-            if (test === 4) {
-                title = 'בדיקה ' + test;
-                description = 'בדיקה ' + test;
-            }
             content.append(description);
 
             var lessonsAdded = {};
@@ -56,11 +46,7 @@
                     return;
                 }
 
-                if (test === 4) {
-                    content.append(' ');
-                } else {
-                    content.append('<br><br>');
-                }
+                content.append('<br><br>');
 
                 var typeAndNumber = courseManager.getLessonTypeAndNumber(lesson);
                 var typeAndNumberHtml = $('<div>').text(typeAndNumber).html().replace(/\n/g, '<br>');
@@ -78,7 +64,7 @@
                         lessonText += '\n' + key + ': ' + lesson[key];
                     }
                 });
-                var lessonHtml = $('<div>').text(lessonText).html().replace(/\n/g, test === 4 ? ' ' : '<br>');
+                var lessonHtml = $('<div>').text(lessonText).html().replace(/\n/g, '<br>');
                 content.append(lessonHtml);
 
                 lessonsAdded[lesson['מס.']] = lesson['קבוצה'];
