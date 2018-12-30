@@ -49,8 +49,7 @@
                 content.append('<br><br>');
 
                 var typeAndNumber = courseManager.getLessonTypeAndNumber(lesson);
-                var typeAndNumberHtml = $('<div>').text(typeAndNumber).html().replace(/\n/g, '<br>');
-                content.append(typeAndNumberHtml);
+                content.append($('<div style="font-weight: bold;">').text(typeAndNumber));
 
                 var lessonText = '';
                 [
