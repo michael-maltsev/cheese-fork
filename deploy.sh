@@ -42,8 +42,8 @@ function send_cache_and_exit {
 	exit $1
 }
 
-fetch_semester 201702 || send_cache_and_exit 1
 fetch_semester 201703 || send_cache_and_exit 1
 fetch_semester 201801 || send_cache_and_exit 1
+fetch_semester 201802 || send_cache_and_exit 1
 
 send_cache_and_exit 0
