@@ -1222,16 +1222,21 @@
             }
         };
 
+        var keyExclude = {
+            'אתר הקורס': true,
+            'עבור לסמסטר': true
+        };
+
         var oldText = '';
         Object.keys(oldGeneral).sort(compareFunction).forEach(function (key) {
-            if (oldGeneral[key] !== newGeneral[key] && oldGeneral[key]) {
+            if (!keyExclude[key] && oldGeneral[key] !== newGeneral[key] && oldGeneral[key]) {
                 oldText += key + ': ' + oldGeneral[key] + '\n';
             }
         });
 
         var newText = '';
         Object.keys(newGeneral).sort(compareFunction).forEach(function (key) {
-            if (newGeneral[key] !== oldGeneral[key] && newGeneral[key]) {
+            if (!keyExclude[key] && newGeneral[key] !== oldGeneral[key] && newGeneral[key]) {
                 newText += key + ': ' + newGeneral[key] + '\n';
             }
         });
