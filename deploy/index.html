@@ -292,7 +292,7 @@
         '201701': {start: '2017-10-22', end: '2018-01-25'},
         '201702': {start: '2018-03-20', end: '2018-07-01'},
         '201703': {start: '2018-07-29', end: '2018-09-17'},
-        '201801': {start: '2018-10-21', end: '2019-01-24'}
+        '201801': {start: '2018-10-21', end: '2019-01-24'},
         '201802': {start: '2019-03-17', end: '2019-06-27'}
         //'201803': {start: '2019-07-28', end: '2019-09-12'}
     };
@@ -313,7 +313,7 @@
 
         currentSemester = getParameterByName('semester');
         if (!availableSemesters.propertyIsEnumerable(currentSemester)) {
-            currentSemester = '201801';
+            currentSemester = '201802';
         }
         var script = document.createElement('script');
         script.src = 'courses/courses_' + currentSemester + '.min.js';
