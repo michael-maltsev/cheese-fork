@@ -93,7 +93,7 @@ CourseManager.prototype.getSchedule = function (course) {
                         sadnaId++;
                     }
 
-                    if (sadnaot) {
+                    if (sadnaot.length > 0) {
                         schedule = schedule.concat(sadnaot);
                     }
 
@@ -403,11 +403,11 @@ CourseManager.prototype.filterCourses = function (filters) {
             }
         }
 
-        if (filters.filterWithExam && (general['מועד א'] || general['מועד א'])) {
+        if (filters.filterWithExam && (general['מועד א'] || general['מועד ב'])) {
             return;
         }
 
-        if (filters.filterWithoutExam && !general['מועד א'] && !general['מועד א']) {
+        if (filters.filterWithoutExam && !general['מועד א'] && !general['מועד ב']) {
             return;
         }
 
