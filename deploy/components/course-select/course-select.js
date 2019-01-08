@@ -79,13 +79,14 @@ var CourseSelect = (function () {
                 }
 
                 that.onDropdownItemDeactivate(course);
-            },
-            onDropdownClose: function (dropdown) {
-                dropdown.find('[data-toggle=tooltip]').tooltip('hide');
             }
         }).data('selectize');
 
-        that.courseSelect.$dropdown.tooltip({selector: '[data-toggle=tooltip]'});
+        that.courseSelect.$dropdown
+            .tooltip({selector: '[data-toggle=tooltip]'})
+            .on('mousedown click', '[data-toggle=tooltip]', function () {
+                $(this).tooltip('hide');
+            });
 
         filterInit(that.courseManager);
     }
