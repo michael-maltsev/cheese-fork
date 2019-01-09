@@ -1224,7 +1224,8 @@
 
         var keyExclude = {
             'אתר הקורס': true,
-            'עבור לסמסטר': true
+            'עבור לסמסטר': true,
+            'מיקום': true
         };
 
         var oldText = '';
