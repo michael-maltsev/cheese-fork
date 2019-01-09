@@ -788,12 +788,15 @@
             setScheduleFromSavedSession(session, !firstDataLoaded);
 
             if (result.exists && result.data().displayName) {
-                $('#sharing-user-name').text(result.data().displayName);
+                var displayName = result.data().displayName;
+                $('#sharing-user-name').text(displayName);
                 $('#sharing-user-known').removeClass('d-none');
                 $('#sharing-user-unknown').addClass('d-none');
+                document.title = displayName + ' - CheeseFork - Your Cheesy Scheduler';
             } else {
                 $('#sharing-user-unknown').removeClass('d-none');
                 $('#sharing-user-known').addClass('d-none');
+                document.title = 'CheeseFork - Your Cheesy Scheduler';
             }
 
             if (!firstDataLoaded) {
