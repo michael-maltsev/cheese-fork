@@ -55,9 +55,9 @@ CourseManager.prototype.getSchedule = function (course) {
                 // https://stackoverflow.com/a/4579228
                 if (line.lastIndexOf('סדנאות', 0) === 0 || line.lastIndexOf('סדנת', 0) === 0) {
                     var sadnaotTa = '';
-                    var match = /^מתרגל[ית]? הסדנ(?:א|ה|אות).*?:\s*(.*?)$/m.exec(comment);
+                    var match = /(?:\n|^)מתרגל[ית]? הסדנ(?:א|ה|אות).*?:\s*([\s\S]*?)\s*(?:=|$)/.exec(comment);
                     if (match) {
-                        sadnaotTa = match[1].replace(/\s*,\s*/g, '\n');
+                        sadnaotTa = match[1].replace(/\s+/g, ' ').replace(/\s*,\s*/g, '\n').replace(/ \(גם אחראית?\)/g, '');
                     }
 
                     var sadnaot = [];
