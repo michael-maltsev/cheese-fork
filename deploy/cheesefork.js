@@ -1537,9 +1537,16 @@
             content.append($('<div style="font-weight: bold;">').text(typeAndNumber));
 
             if (lesson['מרצה\/מתרגל']) {
-                var staffUrl = '?semester=' + encodeURIComponent(currentSemester) + '&staff=' + encodeURIComponent(lesson['מרצה\/מתרגל']);
-                var staffLink = $('<a>').text(lesson['מרצה\/מתרגל']).prop('href', staffUrl);
-                content.append($('<div>').text('מרצה\/מתרגל' + ': ').append(staffLink));
+                var staffContents = $('<div>').text('מרצה\/מתרגל' + ': ');
+                lesson['מרצה\/מתרגל'].split('\n').forEach(function (name, i) {
+                    if (i > 0) {
+                        staffContents.append(', ');
+                    }
+                    var staffUrl = '?semester=' + encodeURIComponent(currentSemester) + '&staff=' + encodeURIComponent(name);
+                    var staffLink = $('<a>').text(name).prop('href', staffUrl);
+                    staffContents.append(staffLink);
+                });
+                content.append(staffContents);
             }
 
             if (lesson['יום']) {
