@@ -298,7 +298,6 @@
     };
     var currentSemester;
     var scheduleSharingUserId;
-    var courseNumberForCrawlers;
     (function () {
         // https://stackoverflow.com/a/901144
         function getParameterByName(name, url) {
@@ -320,7 +319,6 @@
         document.write(script.outerHTML);
 
         scheduleSharingUserId = getParameterByName('uid');
-        courseNumberForCrawlers = getParameterByName('course');
     })();
 </script>
 <script src="components/course-select/course-select.js"></script>
