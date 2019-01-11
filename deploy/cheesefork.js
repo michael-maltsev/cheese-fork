@@ -2,7 +2,7 @@
 
 /* global ColorHash, BootstrapDialog, moment, ics, JsDiff, firebase, firebaseui, gtag */
 /* global CourseManager, CourseSelect, CourseButtonList, CourseExamInfo, CourseCalendar */
-/* global courses_from_rishum, availableSemesters, currentSemester, scheduleSharingUserId, courseNumberForCrawlers */
+/* global courses_from_rishum, availableSemesters, currentSemester, scheduleSharingUserId */
 
 (function () {
     var courseManager = new CourseManager(courses_from_rishum);
@@ -21,78 +21,52 @@
     var courseExamInfo = null;
     var courseCalendar = null;
 
-    if (courseNumberForCrawlers !== null) {
-        displayCourseInfoForCrawlers(courseNumberForCrawlers);
-    } else {
+    if (!crawlersInfo()) {
         cheeseforkInit();
     }
 
-    function displayCourseInfoForCrawlers(course) {
-        var content = $('<div class="col-md-12">');
-        var semseterName = semesterFriendlyName(currentSemester);
+    function crawlersInfo() {
+        var courseParameter = getParameterByName('course');
+        var staffParameter = getParameterByName('staff');
+        var roomParameter = getParameterByName('room');
 
-        if (courseManager.doesExist(course)) {
-            var url = '?semester=' + encodeURIComponent(currentSemester) + '&course=all';
-            content.append($('<a>').text('לרשימת הקורסים').prop('href', url));
-            content.append('<br><br>');
-
-            var title = courseManager.getTitle(course);
-            var description = courseManager.getDescription(course, {html: true, links: true});
-            content.append(description);
-
-            var lessonsAdded = {};
-            courseManager.getSchedule(course).forEach(function (lesson) {
-                if (lessonsAdded.propertyIsEnumerable(lesson['מס.']) && lessonsAdded[lesson['מס.']] !== lesson['קבוצה']) {
-                    return;
-                }
-
-                content.append('<br><br>');
-
-                var typeAndNumber = courseManager.getLessonTypeAndNumber(lesson);
-                content.append($('<span style="font-weight: bold;">').text(typeAndNumber));
-
-                var lessonText = '';
-                [
-                    'מרצה\/מתרגל',
-                    'יום',
-                    'שעה',
-                    'בניין',
-                    'חדר'
-                ].forEach(function (key) {
-                    if (lesson[key]) {
-                        lessonText += '\n' + key + ': ' + lesson[key];
-                    }
-                });
-                var lessonHtml = $('<div>').text(lessonText).html().replace(/\n/g, '<br>');
-                content.append(lessonHtml);
-
-                lessonsAdded[lesson['מס.']] = lesson['קבוצה'];
-            });
-
-            document.title = title + ' - ' + semseterName + ' - CheeseFork';
-        } else {
-            Object.keys(availableSemesters).sort().forEach(function (semester) {
-                var text = semesterFriendlyName(semester);
-                if (semester === currentSemester) {
-                    content.append($('<span>').text(text));
-                } else {
-                    var url = '?semester=' + encodeURIComponent(semester) + '&course=all';
-                    content.append($('<a>').text(text).prop('href', url));
-                }
-                content.append('<br>');
-            });
-
-            content.append('<br>');
-
-            courseManager.getAllCourses().sort().forEach(function (cbCourse) {
-                var title = courseManager.getTitle(cbCourse);
-                var url = '?semester=' + encodeURIComponent(currentSemester) + '&course=' + encodeURIComponent(cbCourse);
-                content.append($('<a>').text(title).prop('href', url));
-                content.append('<br>');
-            });
-
-            document.title = semseterName + ' - CheeseFork';
+        if (courseParameter === null && staffParameter === null && roomParameter === null) {
+            return false;
         }
+
+        var content = $('<div class="col-md-12">');
+        var title = semesterFriendlyName(currentSemester) + ' - CheeseFork';
+
+        if (courseParameter !== null) {
+            if (courseManager.doesExist(courseParameter)) {
+                crawlersMakeCourseContent(content, courseParameter);
+                title = courseManager.getTitle(courseParameter) + ' - ' + title;
+            } else {
+                crawlersMakeListHeader(content, 'course');
+                crawlersMakeCourseListContent(content);
+                title = 'קורסים - ' + title;
+            }
+        }
+        else if (staffParameter !== null) {
+            if (crawlersMakeStaffContent(content, staffParameter)) {
+                title = staffParameter + ' - ' + title;
+            } else {
+                crawlersMakeListHeader(content, 'staff');
+                crawlersMakeStaffListContent(content);
+                title = 'סגל - ' + title;
+            }
+        }
+        else { // if (roomParameter !== null)
+            if (crawlersMakeRoomContent(content, roomParameter)) {
+                title = roomParameter + ' - ' + title;
+            } else {
+                crawlersMakeListHeader(content, 'room');
+                crawlersMakeRoomListContent(content);
+                title = 'חדרים - ' + title;
+            }
+        }
+
+        document.title = title;
 
         $('#content-container').html(content);
 
@@ -111,6 +85,283 @@
         $('#filter-form').remove();
 
         $('#page-loader').hide();
+
+        return true;
+    }
+
+    function crawlersMakeListHeader(content, currentList) {
+        Object.keys(availableSemesters).sort().forEach(function (semester) {
+            var text = semesterFriendlyName(semester);
+            if (semester === currentSemester) {
+                content.append($('<span>').text(text));
+            } else {
+                var url = '?semester=' + encodeURIComponent(semester) + '&course=all';
+                content.append($('<a>').text(text).prop('href', url));
+            }
+            content.append('<br>');
+        });
+
+        content.append('<br>');
+
+        var listToText = {
+            'course': 'קורסים',
+            'staff': 'סגל',
+            'room': 'חדרים'
+        };
+
+        ['course', 'staff', 'room'].forEach(function (list) {
+            var text = listToText[list];
+            if (list === currentList) {
+                content.append($('<span>').text(text));
+            } else {
+                var url = '?semester=' + encodeURIComponent(currentSemester) + '&' + encodeURIComponent(list) + '=all';
+                content.append($('<a>').text(text).prop('href', url));
+            }
+            content.append('<br>');
+        });
+
+        content.append('<br>');
+    }
+
+    function crawlersMakeCourseContent(content, course) {
+        var url = '?semester=' + encodeURIComponent(currentSemester) + '&course=all';
+        content.append($('<a>').text('לרשימת הקורסים').prop('href', url));
+        content.append('<br><br>');
+
+        var description = courseManager.getDescription(course, {html: true, links: true});
+        content.append($('<div>').html(description));
+
+        var lessonsAdded = {};
+        courseManager.getSchedule(course).forEach(function (lesson) {
+            if (lessonsAdded.propertyIsEnumerable(lesson['מס.']) && lessonsAdded[lesson['מס.']] !== lesson['קבוצה']) {
+                return;
+            }
+
+            content.append('<br>');
+
+            var typeAndNumber = courseManager.getLessonTypeAndNumber(lesson);
+            content.append($('<div style="font-weight: bold;">').text(typeAndNumber));
+
+            if (lesson['מרצה\/מתרגל']) {
+                var staffUrl = '?semester=' + encodeURIComponent(currentSemester) + '&staff=' + encodeURIComponent(lesson['מרצה\/מתרגל']);
+                var staffLink = $('<a>').text(lesson['מרצה\/מתרגל']).prop('href', staffUrl);
+                content.append($('<div>').text('מרצה\/מתרגל' + ': ').append(staffLink));
+            }
+
+            if (lesson['יום']) {
+                content.append($('<div>').text('יום' + ': ' + lesson['יום']));
+            }
+
+            if (lesson['שעה']) {
+                content.append($('<div>').text('שעה' + ': ' + lesson['שעה']));
+            }
+
+            if (lesson['בניין']) {
+                content.append($('<div>').text('בניין' + ': ' + lesson['בניין']));
+
+                if (lesson['חדר']) {
+                    var roomUrl = '?semester=' + encodeURIComponent(currentSemester) + '&room=' + encodeURIComponent(lesson['בניין'] + ' ' + lesson['חדר']);
+                    var roomLink = $('<a>').text(lesson['חדר']).prop('href', roomUrl);
+                    content.append($('<div>').text('חדר' + ': ').append(roomLink));
+                }
+            }
+            else if (lesson['חדר']) {
+                content.append($('<div>').text('חדר' + ': ' + lesson['חדר']));
+            }
+
+            lessonsAdded[lesson['מס.']] = lesson['קבוצה'];
+        });
+    }
+
+    function crawlersMakeCourseListContent(content) {
+        courseManager.getAllCourses().sort().forEach(function (cbCourse) {
+            var title = courseManager.getTitle(cbCourse);
+            var url = '?semester=' + encodeURIComponent(currentSemester) + '&course=' + encodeURIComponent(cbCourse);
+            content.append($('<a>').text(title).prop('href', url));
+            content.append('<br>');
+        });
+    }
+
+    function crawlersMakeStaffContent(content, staff) {
+        var schedule = [];
+        courseManager.getAllCourses().forEach(function (course) {
+            var lessonsAdded = {};
+            courseManager.getSchedule(course).forEach(function (lesson) {
+                if (lessonsAdded.propertyIsEnumerable(lesson['מס.']) && lessonsAdded[lesson['מס.']] !== lesson['קבוצה']) {
+                    return;
+                }
+
+                if (lesson['מרצה\/מתרגל'] && lesson['מרצה\/מתרגל'].split('\n').indexOf(staff) !== -1) {
+                    var time = null;
+                    if (lesson['יום']) {
+                        if (lesson['שעה']) {
+                            time = 'יום ' + lesson['יום'] + ' ' + lesson['שעה'];
+                        } else {
+                            time = 'יום ' + lesson['יום'];
+                        }
+                    }
+
+                    schedule.push({course: course, time: time});
+                }
+
+                lessonsAdded[lesson['מס.']] = lesson['קבוצה'];
+            });
+        });
+
+        if (schedule.length === 0) {
+            return false;
+        }
+
+        var url = '?semester=' + encodeURIComponent(currentSemester) + '&staff=all';
+        content.append($('<a>').text('לרשימת הסגל').prop('href', url));
+        content.append('<br><br>');
+
+        content.append($('<b>').text(staff));
+        content.append('<br>');
+
+        schedule.sort(function (a, b) {
+            if (!a.time && !b.time) {
+                return 0;
+            } else if (!a.time) {
+                return 1;
+            } else if (!b.time) {
+                return -1;
+            } else {
+                return a.time.localeCompare(b.time, undefined, {numeric: true});
+            }
+        }).forEach(function (item) {
+            if (item.time) {
+                content.append($('<span>').text(item.time + ' - '));
+            }
+
+            var url = '?semester=' + encodeURIComponent(currentSemester) + '&course=' + encodeURIComponent(item.course);
+            var courseTitle = courseManager.getTitle(item.course);
+            content.append($('<a>').text(courseTitle).prop('href', url));
+            content.append('<br>');
+        });
+
+        return true;
+    }
+
+    function crawlersMakeStaffListContent(content) {
+        var staff = {};
+        courseManager.getAllCourses().forEach(function (course) {
+            courseManager.getSchedule(course).forEach(function (lesson) {
+                if (lesson['מרצה\/מתרגל']) {
+                    lesson['מרצה\/מתרגל'].split('\n').forEach(function (name) {
+                        staff[name] = true;
+                    });
+                }
+            });
+        });
+
+        Object.keys(staff).sort().forEach(function (name) {
+            var url = '?semester=' + encodeURIComponent(currentSemester) + '&staff=' + encodeURIComponent(name);
+            content.append($('<a>').text(name).prop('href', url));
+            content.append('<br>');
+        });
+    }
+
+    function crawlersMakeRoomContent(content, room) {
+        var schedule = [];
+        courseManager.getAllCourses().forEach(function (course) {
+            var lessonsAdded = {};
+            courseManager.getSchedule(course).forEach(function (lesson) {
+                if (lessonsAdded.propertyIsEnumerable(lesson['מס.']) && lessonsAdded[lesson['מס.']] !== lesson['קבוצה']) {
+                    return;
+                }
+
+                var roomCompare = null;
+                if (lesson['בניין']) {
+                    if (lesson['חדר']) {
+                        roomCompare = lesson['בניין'] + ' ' + lesson['חדר'];
+                    } else {
+                        roomCompare = lesson['בניין'];
+                    }
+                }
+
+                if (roomCompare && room === roomCompare) {
+                    var time = null;
+                    if (lesson['יום']) {
+                        if (lesson['שעה']) {
+                            time = 'יום ' + lesson['יום'] + ' ' + lesson['שעה'];
+                        } else {
+                            time = 'יום ' + lesson['יום'];
+                        }
+                    }
+
+                    schedule.push({course: course, time: time});
+                }
+
+                lessonsAdded[lesson['מס.']] = lesson['קבוצה'];
+            });
+        });
+
+        if (schedule.length === 0) {
+            return false;
+        }
+
+        var url = '?semester=' + encodeURIComponent(currentSemester) + '&room=all';
+        content.append($('<a>').text('לרשימת החדרים').prop('href', url));
+        content.append('<br><br>');
+
+        content.append($('<b>').text(room));
+        content.append('<br>');
+
+        schedule.sort(function (a, b) {
+            if (!a.time && !b.time) {
+                return 0;
+            } else if (!a.time) {
+                return 1;
+            } else if (!b.time) {
+                return -1;
+            } else {
+                return a.time.localeCompare(b.time, undefined, {numeric: true});
+            }
+        }).forEach(function (item) {
+            if (item.time) {
+                content.append($('<span>').text(item.time + ' - '));
+            }
+
+            var url = '?semester=' + encodeURIComponent(currentSemester) + '&course=' + encodeURIComponent(item.course);
+            var courseTitle = courseManager.getTitle(item.course);
+            content.append($('<a>').text(courseTitle).prop('href', url));
+            content.append('<br>');
+        });
+
+        return true;
+    }
+
+    function crawlersMakeRoomListContent(content) {
+        var rooms = {};
+        courseManager.getAllCourses().forEach(function (course) {
+            courseManager.getSchedule(course).forEach(function (lesson) {
+                if (lesson['בניין']) {
+                    if (lesson['חדר']) {
+                        rooms[lesson['בניין'] + ' ' + lesson['חדר']] = true;
+                    } else {
+                        rooms[lesson['בניין']] = true;
+                    }
+                }
+            });
+        });
+
+        Object.keys(rooms).sort().forEach(function (room) {
+            var url = '?semester=' + encodeURIComponent(currentSemester) + '&room=' + encodeURIComponent(room);
+            content.append($('<a>').text(room).prop('href', url));
+            content.append('<br>');
+        });
+    }
+
+    // https://stackoverflow.com/a/901144
+    function getParameterByName(name, url) {
+        if (!url) url = window.location.href;
+        name = name.replace(/[\[\]]/g, "\\$&");
+        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+            results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, " "));
     }
 
     function cheeseforkInit() {
