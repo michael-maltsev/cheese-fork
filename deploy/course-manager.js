@@ -57,7 +57,7 @@ CourseManager.prototype.getSchedule = function (course) {
                     var sadnaotTa = '';
                     var match = /^מתרגל[ית]? הסדנ(?:א|ה|אות).*?:\s*(.*?)$/m.exec(comment);
                     if (match) {
-                        sadnaotTa = match[1];
+                        sadnaotTa = match[1].replace(/\s*,\s*/g, '\n');
                     }
 
                     var sadnaot = [];
