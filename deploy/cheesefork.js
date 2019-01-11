@@ -1262,8 +1262,7 @@
                             var partElement = $('<span>').text(part.value);
                             if (part.added) {
                                 partElement.addClass('course-metadata-diff-new');
-                            }
-                            else if (part.removed) {
+                            } else if (part.removed) {
                                 partElement.addClass('course-metadata-diff-old');
                             }
 
@@ -1440,8 +1439,7 @@
                 crawlersMakeCourseListContent(content);
                 title = 'קורסים - ' + title;
             }
-        }
-        else if (staffParameter !== null) {
+        } else if (staffParameter !== null) {
             if (crawlersMakeStaffContent(content, staffParameter)) {
                 title = staffParameter + ' - ' + title;
             } else {
@@ -1449,8 +1447,7 @@
                 crawlersMakeStaffListContent(content);
                 title = 'סגל - ' + title;
             }
-        }
-        else { // if (roomParameter !== null)
+        } else { // if (roomParameter !== null)
             if (crawlersMakeRoomContent(content, roomParameter)) {
                 title = roomParameter + ' - ' + title;
             } else {
@@ -1557,16 +1554,16 @@
                 content.append($('<div>').text('שעה' + ': ' + lesson['שעה']));
             }
 
-            if (lesson['בניין']) {
+            if (lesson['בניין'] && lesson['חדר']) {
                 content.append($('<div>').text('בניין' + ': ' + lesson['בניין']));
-
-                if (lesson['חדר']) {
-                    var roomUrl = '?semester=' + encodeURIComponent(currentSemester) + '&room=' + encodeURIComponent(lesson['בניין'] + ' ' + lesson['חדר']);
-                    var roomLink = $('<a>').text(lesson['חדר']).prop('href', roomUrl);
-                    content.append($('<div>').text('חדר' + ': ').append(roomLink));
-                }
-            }
-            else if (lesson['חדר']) {
+                var roomUrl = '?semester=' + encodeURIComponent(currentSemester) + '&room=' + encodeURIComponent(lesson['בניין'] + ' ' + lesson['חדר']);
+                var roomLink = $('<a>').text(lesson['חדר']).prop('href', roomUrl);
+                content.append($('<div>').text('חדר' + ': ').append(roomLink));
+            } else if (lesson['בניין']) {
+                var roomUrl = '?semester=' + encodeURIComponent(currentSemester) + '&room=' + encodeURIComponent(lesson['בניין']);
+                var roomLink = $('<a>').text(lesson['בניין']).prop('href', roomUrl);
+                content.append($('<div>').text('בניין' + ': ').append(roomLink));
+            } else if (lesson['חדר']) {
                 content.append($('<div>').text('חדר' + ': ' + lesson['חדר']));
             }
 
