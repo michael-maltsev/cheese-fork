@@ -200,6 +200,7 @@
                     firebaseAuthUIInit(function () {
                         watchSavedSchedule(function () {
                             $('#page-loader').hide();
+                            showTechnionScansPopup();
                         });
                     });
                     firebaseAuthUIInitialized = true;
@@ -212,9 +213,67 @@
             if (!firebaseAuthUIInitialized) {
                 watchSavedSchedule(function () {
                     $('#page-loader').hide();
+                    showTechnionScansPopup();
                 });
             }
         }
+    }
+
+    function showTechnionScansPopup() {
+        try {
+            var dontShowDate = localStorage.getItem('dontShowTechnionScansPopup');
+            if (dontShowDate) {
+                var days = (Date.now() - parseInt(dontShowDate, 10)) / (24 * 3600 * 1000);
+                if (days <= 7) {
+                    return;
+                }
+            }
+        } catch (e) {
+            // localStorage is not available in IE/Edge when running from a local file.
+        }
+
+        BootstrapDialog.show({
+            title: 'סריקות לקראת המבחנים',
+            message: 'לומדים למבחנים? (אם לא, אולי אתם צריכים להתחיל 🙂)<br>' +
+                'מחפשים סריקות של סטודנטים מסמסטרים קודמים ללמוד מהם?<br>' +
+                'קיבלתם ציון טוב, ויש לכם סריקות שיכולות לעזור לאחרים?<br>' +
+                '<br>' +
+                'אתם מוזמנים ' +
+                    '<a href="https://michael-maltsev.github.io/technion-scans/" target="_blank" onclick="gtag(\'event\', \'scans-click-link\')">להיכנס למערכת הסריקות</a>' +
+                    ', להיעזר ולעזור.<br>' +
+                'בהצלחה במבחנים!<br>' +
+                '<br>' +
+                '<div class="form-check">' +
+                    '<input class="form-check-input" type="checkbox" id="dont-show-technion-scans-popup"> ' +
+                    '<label class="form-check-label" for="dont-show-technion-scans-popup">' +
+                    'אל תציג את ההודעה שוב' +
+                    '</label>' +
+                '</div>',
+            buttons: [{
+                label: 'מעבר למערכת הסריקות',
+                cssClass: 'btn-primary',
+                action: function (dialog) {
+                    gtag('event', 'scans-click-button');
+
+                    var win = window.open('https://michael-maltsev.github.io/technion-scans/', '_blank');
+                    if (win) {
+                        win.focus();
+                    }
+                }
+            }, {
+                label: 'סגור',
+                action: function (dialog) {
+                    dialog.close();
+                }
+            }],
+            onhide: function (dialog) {
+                if (document.getElementById('dont-show-technion-scans-popup').checked) {
+                    gtag('event', 'scans-dont-show');
+
+                    localStorage.setItem('dontShowTechnionScansPopup', Date.now().toString());
+                }
+            }
+        });
     }
 
     function navbarInit() {
@@ -1390,7 +1449,7 @@
             fallbackCopyTextToClipboard(text);
             return;
         }
-        navigator.clipboard.writeText(text).then(function() {
+        navigator.clipboard.writeText(text).then(function () {
             onSuccess();
         }, function (err) {
             onFailure();
