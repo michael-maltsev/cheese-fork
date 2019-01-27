@@ -162,7 +162,7 @@ CourseManager.prototype.getDescription = function (course, options) {
 
             linksHtml += '<br><a href="https://www.facebook.com/search/groups/?q=' + course + '" target="_blank"><img src="assets/icon_facebook.png" alt="icon"> חיפוש קבוצה בפייסבוק</a>';
 
-            var scansBaseUrl = 'https://michael-maltsev.github.io/technion-scans/';
+            var scansBaseUrl = 'https://tscans.cf/';
             linksHtml += '<br><a href="' + scansBaseUrl + '?course=' + course + '" target="_blank"><img src="assets/icon_scans.png" alt="icon"> סריקות</a>';
 
             html = headerHtml + linksHtml + contentHtml;
