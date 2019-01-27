@@ -239,7 +239,7 @@
                 'קיבלתם ציון טוב, ויש לכם סריקות שיכולות לעזור לאחרים?<br>' +
                 '<br>' +
                 'אתם מוזמנים ' +
-                    '<a href="https://michael-maltsev.github.io/technion-scans/" target="_blank" onclick="gtag(\'event\', \'scans-click-link\')">להיכנס למערכת הסריקות</a>' +
+                    '<a href="https://tscans.cf/" target="_blank" onclick="gtag(\'event\', \'scans-click-link\')">להיכנס למערכת הסריקות</a>' +
                     ', להיעזר ולעזור.<br>' +
                 'בהצלחה במבחנים!<br>' +
                 '<br>' +
@@ -255,7 +255,7 @@
                 action: function (dialog) {
                     gtag('event', 'scans-click-button');
 
-                    var win = window.open('https://michael-maltsev.github.io/technion-scans/', '_blank');
+                    var win = window.open('https://tscans.cf/', '_blank');
                     if (win) {
                         win.focus();
                     }
