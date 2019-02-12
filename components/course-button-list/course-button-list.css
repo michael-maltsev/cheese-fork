@@ -32,9 +32,9 @@
 }
 
 .course-button-list-item-hovered {
-    -webkit-box-shadow: inset 0 0 0 3px #CC0000;
-    -moz-box-shadow: inset 0 0 0 3px #CC0000;
-    box-shadow: inset 0 0 0 3px #CC0000;
+    -webkit-box-shadow: inset 0 0 0 2px #CC0000;
+    -moz-box-shadow: inset 0 0 0 2px #CC0000;
+    box-shadow: inset 0 0 0 2px #CC0000;
     border-color: #CC0000 !important;
     font-weight: bold;
 }
