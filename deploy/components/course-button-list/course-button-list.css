@@ -1,5 +1,6 @@
 .course-button-list-item.active {
     background: linear-gradient(to top, rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.1));
+    background-origin: border-box;
     border-color: rgba(0, 0, 0, 0);
 }
 
