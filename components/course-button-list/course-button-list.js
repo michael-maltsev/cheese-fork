@@ -83,11 +83,7 @@ CourseButtonList.prototype.addCourse = function (course) {
         } else {
             button.addClass('active');
             var color = that.colorGenerator(course);
-            var rgbaColor = 'rgba(' + parseInt(color.slice(-6, -4), 16)
-                + ',' + parseInt(color.slice(-4, -2), 16)
-                + ',' + parseInt(color.slice(-2), 16)
-                +',0.75)';
-            button.css({'background-color': rgbaColor, 'border-color': rgbaColor});
+            button.css({'background-color': color, 'border-color': color});
             that.onEnableCourse(course);
         }
     }
