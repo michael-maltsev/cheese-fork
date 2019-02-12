@@ -1,9 +1,3 @@
-.course-button-list-item {
-    -webkit-appearance: button;
-}
-
-/* The following two rules are for non-WebKit browsers */
-/* WebKit will ignore it because of the previous rule */
 .course-button-list-item.active {
     background: linear-gradient(to top, rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.1));
 }
