@@ -32,7 +32,7 @@ CourseButtonList.prototype.addCourse = function (course) {
         + ',' + parseInt(color.slice(-4, -2), 16)
         + ',' + parseInt(color.slice(-2), 16)
         + ',0.75)';
-    button.css({'background-color': rgbaColor, 'border-color': rgbaColor})
+    button.css('background-color', rgbaColor)
         .click(function () {
             if (!that.readonly) {
                 onCourseButtonClick($(this), course);
@@ -82,7 +82,7 @@ CourseButtonList.prototype.addCourse = function (course) {
     function onCourseButtonClick(button, course) {
         if (button.hasClass('active')) {
             button.removeClass('active').removeClass('course-button-list-item-conflicted');
-            button.css({'background-color': '', 'border-color': ''});
+            button.css('background-color', '');
             that.onDisableCourse(course);
         } else {
             button.addClass('active');
@@ -91,7 +91,7 @@ CourseButtonList.prototype.addCourse = function (course) {
                 + ',' + parseInt(color.slice(-4, -2), 16)
                 + ',' + parseInt(color.slice(-2), 16)
                 + ',0.75)';
-            button.css({'background-color': rgbaColor, 'border-color': rgbaColor});
+            button.css('background-color', rgbaColor);
             that.onEnableCourse(course);
         }
     }
