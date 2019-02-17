@@ -15,6 +15,11 @@
     cursor: default;
 }
 
+/* Remove opcaity layer - https://github.com/fullcalendar/fullcalendar/issues/3684 */
+.course-calendar .fc-event .fc-bg {
+    display: none;
+}
+
 /* Keep the not-allowed cursor, which is otherwise overwritten by the above rule */
 .fc-not-allowed .fc-event {
     cursor: not-allowed;
