@@ -5,7 +5,7 @@
 /* global courses_from_rishum, availableSemesters, currentSemester, scheduleSharingUserId */
 
 (function () {
-    var courseManager = new CourseManager(courses_from_rishum);
+    var courseManager = null;
     var colorHash = new ColorHash();
     var firestoreDb = null;
     var viewingSharedSchedule = false;
@@ -21,9 +21,12 @@
     var courseExamInfo = null;
     var courseCalendar = null;
 
-    if (!crawlersInfo()) {
-        cheeseforkInit();
-    }
+    $(document).ready(function () {
+        courseManager = new CourseManager(courses_from_rishum);
+        if (!crawlersInfo()) {
+            cheeseforkInit();
+        }
+    });
 
     function cheeseforkInit() {
         $('[data-toggle="tooltip"]').tooltip();
