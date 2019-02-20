@@ -5,7 +5,7 @@
 /* global courses_from_rishum, availableSemesters, currentSemester, scheduleSharingUserId */
 
 (function () {
-    var courseManager = null;
+    var courseManager = new CourseManager(courses_from_rishum);
     var colorHash = new ColorHash();
     var firestoreDb = null;
     var viewingSharedSchedule = false;
@@ -21,50 +21,14 @@
     var courseExamInfo = null;
     var courseCalendar = null;
 
-    if (scheduleSharingUserId) {
-        viewingSharedSchedule = true;
-        firebaseInit();
-        firestoreDbInit();
-        watchSharedSchedule(function () {
-            $('#page-loader').hide();
-        });
-    } else {
-        var firebaseAuthUIInitialized = false;
-
-        if (typeof firebase !== 'undefined') {
-            try {
-                firebaseInit();
-                firestoreDbInit();
-                firebaseAuthUIInit(function () {
-                    watchSavedSchedule(function () {
-                        $('#page-loader').hide();
-                        showTechnionScansPopup();
-                    });
-                });
-                firebaseAuthUIInitialized = true;
-            } catch (e) {
-                // Firebase UI doesn't work on Edge/IE in private mode.
-                // Will fall back to offline mode.
-            }
-        }
-
-        if (!firebaseAuthUIInitialized) {
-            watchSavedSchedule(function () {
-                $('#page-loader').hide();
-                showTechnionScansPopup();
-            });
-        }
+    if (!crawlersInfo()) {
+        cheeseforkInit();
     }
-
-    $(document).ready(function () {
-        courseManager = new CourseManager(courses_from_rishum);
-        if (!crawlersInfo()) {
-            cheeseforkInit();
-        }
-    });
 
     function cheeseforkInit() {
         $('[data-toggle="tooltip"]').tooltip();
+
+        viewingSharedSchedule = scheduleSharingUserId ? true : false;
 
         navbarInit();
 
@@ -219,6 +183,40 @@
         $('#footer-semester').removeClass('d-none');
 
         $('#right-content-bar').removeClass('invisible');
+
+        if (viewingSharedSchedule) {
+            firebaseInit();
+            firestoreDbInit();
+            watchSharedSchedule(function () {
+                $('#page-loader').hide();
+            });
+        } else {
+            var firebaseAuthUIInitialized = false;
+
+            if (typeof firebase !== 'undefined') {
+                try {
+                    firebaseInit();
+                    firestoreDbInit();
+                    firebaseAuthUIInit(function () {
+                        watchSavedSchedule(function () {
+                            $('#page-loader').hide();
+                            showTechnionScansPopup();
+                        });
+                    });
+                    firebaseAuthUIInitialized = true;
+                } catch (e) {
+                    // Firebase UI doesn't work on Edge/IE in private mode.
+                    // Will fall back to offline mode.
+                }
+            }
+
+            if (!firebaseAuthUIInitialized) {
+                watchSavedSchedule(function () {
+                    $('#page-loader').hide();
+                    showTechnionScansPopup();
+                });
+            }
+        }
     }
 
     function showTechnionScansPopup() {
@@ -502,26 +500,24 @@
         // Listen to change in auth state so it displays the correct UI for when
         // the user is signed in or not.
         firebase.auth().onAuthStateChanged(function (user) {
-            $(document).ready(function () {
-                user ? handleSignedInUser(user) : handleSignedOutUser();
-                if (!authInitialized) {
-                    onInitialized();
-                    authInitialized = true;
-                } else if (user) {
-                    // Slow reload.
-                    $('#page-loader').show();
-                    stopScheduleWatching();
-                    resetSchedule();
-                    watchSavedSchedule(function () {
-                        $('#page-loader').hide();
-                    });
-                } else {
-                    // Fast reload.
-                    stopScheduleWatching();
-                    resetSchedule();
-                    watchSavedSchedule(function () {});
-                }
-            });
+            user ? handleSignedInUser(user) : handleSignedOutUser();
+            if (!authInitialized) {
+                onInitialized();
+                authInitialized = true;
+            } else if (user) {
+                // Slow reload.
+                $('#page-loader').show();
+                stopScheduleWatching();
+                resetSchedule();
+                watchSavedSchedule(function () {
+                    $('#page-loader').hide();
+                });
+            } else {
+                // Fast reload.
+                stopScheduleWatching();
+                resetSchedule();
+                watchSavedSchedule(function () {});
+            }
         });
 
         function handleSignedInUser(user) {
@@ -759,27 +755,25 @@
 
         var doc = firestoreUserDoc(scheduleSharingUserId);
         doc.onSnapshot(function (result) {
-            $(document).ready(function () {
-                var session = result.exists ? savedSessionFromFirestoreData(result.data()) : {};
-                setScheduleFromSavedSession(session, !firstDataLoaded);
+            var session = result.exists ? savedSessionFromFirestoreData(result.data()) : {};
+            setScheduleFromSavedSession(session, !firstDataLoaded);
 
-                if (result.exists && result.data().displayName) {
-                    var displayName = result.data().displayName;
-                    $('#sharing-user-name').text(displayName);
-                    $('#sharing-user-known').removeClass('d-none');
-                    $('#sharing-user-unknown').addClass('d-none');
-                    document.title = displayName + ' - CheeseFork - Your Cheesy Scheduler';
-                } else {
-                    $('#sharing-user-unknown').removeClass('d-none');
-                    $('#sharing-user-known').addClass('d-none');
-                    document.title = 'CheeseFork - Your Cheesy Scheduler';
-                }
+            if (result.exists && result.data().displayName) {
+                var displayName = result.data().displayName;
+                $('#sharing-user-name').text(displayName);
+                $('#sharing-user-known').removeClass('d-none');
+                $('#sharing-user-unknown').addClass('d-none');
+                document.title = displayName + ' - CheeseFork - Your Cheesy Scheduler';
+            } else {
+                $('#sharing-user-unknown').removeClass('d-none');
+                $('#sharing-user-known').addClass('d-none');
+                document.title = 'CheeseFork - Your Cheesy Scheduler';
+            }
 
-                if (!firstDataLoaded) {
-                    onLoadedFunc();
-                    firstDataLoaded = true;
-                }
-            });
+            if (!firstDataLoaded) {
+                onLoadedFunc();
+                firstDataLoaded = true;
+            }
         }, function (error) {
             alert('Error loading data from server: ' + error);
         });
@@ -802,24 +796,22 @@
                     doc.set({displayName: firebase.auth().currentUser.displayName}, {merge: true});
                 }
 
-                $(document).ready(function () {
-                    var session = savedSessionFromFirestoreData(result.exists ? result.data() : {});
-                    setScheduleFromSavedSession(session, !firstDataLoaded);
+                var session = savedSessionFromFirestoreData(result.exists ? result.data() : {});
+                setScheduleFromSavedSession(session, !firstDataLoaded);
 
-                    var metadata = savedMetadataFromFirestoreData(result.exists ? result.data() : {});
-                    metadataDiff = metadata ? computeMetadataDiff(metadata) : null;
-                    onMetadataDiffChange();
+                var metadata = savedMetadataFromFirestoreData(result.exists ? result.data() : {});
+                metadataDiff = metadata ? computeMetadataDiff(metadata) : null;
+                onMetadataDiffChange();
 
-                    currentSavedSession = session;
+                currentSavedSession = session;
 
-                    if (!firstDataLoaded) {
-                        onSavedSessionReset();
-                        firstDataLoaded = true;
-                        onLoadedFunc();
-                    } else {
-                        onSavedSessionChange();
-                    }
-                });
+                if (!firstDataLoaded) {
+                    onSavedSessionReset();
+                    firstDataLoaded = true;
+                    onLoadedFunc();
+                } else {
+                    onSavedSessionChange();
+                }
             }, function (error) {
                 alert('Error loading data from server: ' + error);
             });
@@ -841,25 +833,23 @@
                 }
             };
 
-            $(document).ready(function () {
-                window.addEventListener('storage', onStorageEvent);
+            window.addEventListener('storage', onStorageEvent);
 
-                stopScheduleWatching = function () {
-                    window.removeEventListener('storage', onStorageEvent);
-                };
+            stopScheduleWatching = function () {
+                window.removeEventListener('storage', onStorageEvent);
+            };
 
-                var session = savedSessionFromLocalStorage();
-                setScheduleFromSavedSession(session, false);
+            var session = savedSessionFromLocalStorage();
+            setScheduleFromSavedSession(session, false);
 
-                var metadata = savedMetadataFromLocalStorage();
-                metadataDiff = metadata ? computeMetadataDiff(metadata) : null;
-                onMetadataDiffChange();
+            var metadata = savedMetadataFromLocalStorage();
+            metadataDiff = metadata ? computeMetadataDiff(metadata) : null;
+            onMetadataDiffChange();
 
-                currentSavedSession = session;
-                onSavedSessionReset();
+            currentSavedSession = session;
+            onSavedSessionReset();
 
-                onLoadedFunc();
-            });
+            onLoadedFunc();
         }
     }
 
