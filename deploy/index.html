@@ -270,6 +270,23 @@
 
     gtag('config', 'UA-115440973-1');
 </script>
+<script src="modules/fullcalendar/lib/jquery.min.js"></script>
+<script src="modules/popper/popper.js"></script>
+<script src="modules/bootstrap-rtl/js/bootstrap.min.js"></script>
+<script src="modules/bootstrap4-dialog/js/bootstrap-dialog.min.js"></script>
+<script src="modules/fullcalendar/lib/moment.min.js"></script>
+<script src="modules/fullcalendar/fullcalendar.min.js"></script>
+<script src='modules/fullcalendar/locale/he.js'></script>
+<script src="modules/selectize/js/standalone/selectize.min.js"></script>
+<script src="modules/color-hash/color-hash.js"></script>
+<script src="modules/ics.js/ics.deps.min.js"></script>
+<script src="modules/jsdiff/diff.min.js"></script>
+<script src="modules/reparse.js"></script>
+<script src="modules/boolean-expression.js"></script>
+<script src="https://www.gstatic.com/firebasejs/5.3.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/5.3.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/5.3.1/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/ui/3.3.0/firebase-ui-auth__iw.js"></script>
 <script>
     var availableSemesters = {
         '201701': {start: '2017-10-22', end: '2018-01-25'},
@@ -299,29 +316,11 @@
         }
         var script = document.createElement('script');
         script.src = 'courses/courses_' + currentSemester + '.min.js';
-        script.defer = true;
         document.write(script.outerHTML);
 
         scheduleSharingUserId = getParameterByName('uid');
     })();
 </script>
-<script src="modules/fullcalendar/lib/jquery.min.js"></script>
-<script src="modules/popper/popper.js"></script>
-<script src="modules/bootstrap-rtl/js/bootstrap.min.js"></script>
-<script src="modules/bootstrap4-dialog/js/bootstrap-dialog.min.js"></script>
-<script src="modules/fullcalendar/lib/moment.min.js"></script>
-<script src="modules/fullcalendar/fullcalendar.min.js"></script>
-<script src='modules/fullcalendar/locale/he.js'></script>
-<script src="modules/selectize/js/standalone/selectize.min.js"></script>
-<script src="modules/color-hash/color-hash.js"></script>
-<script src="modules/ics.js/ics.deps.min.js"></script>
-<script src="modules/jsdiff/diff.min.js"></script>
-<script src="modules/reparse.js"></script>
-<script src="modules/boolean-expression.js"></script>
-<script src="https://www.gstatic.com/firebasejs/5.3.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/5.3.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/5.3.1/firebase-firestore.js"></script>
-<script src="https://www.gstatic.com/firebasejs/ui/3.3.0/firebase-ui-auth__iw.js"></script>
 <script src="components/course-select/course-select.js"></script>
 <script src="components/course-button-list/course-button-list.js"></script>
 <script src="components/course-exam-info/course-exam-info.js"></script>
