@@ -241,7 +241,7 @@
                 'קיבלתם ציון טוב, ויש לכם סריקות שיכולות לעזור לאחרים?<br>' +
                 '<br>' +
                 'אתם מוזמנים ' +
-                    '<a href="https://tscans.cf/" target="_blank" onclick="gtag(\'event\', \'scans-click-link\')">להיכנס למערכת הסריקות</a>' +
+                    '<a href="https://tscans.cf/" target="_blank" rel="noopener" onclick="gtag(\'event\', \'scans-click-link\')">להיכנס למערכת הסריקות</a>' +
                     ', להיעזר ולעזור.<br>' +
                 'בהצלחה במבחנים!<br>' +
                 '<br>' +
@@ -257,7 +257,7 @@
                 action: function (dialog) {
                     gtag('event', 'scans-click-button');
 
-                    var win = window.open('https://tscans.cf/', '_blank');
+                    var win = window.open('https://tscans.cf/', '_blank', 'noopener');
                     if (win) {
                         win.focus();
                     }
@@ -360,7 +360,7 @@
                 var url = location.protocol + '//' + location.host + location.pathname +
                     '?semester=' + encodeURIComponent(currentSemester) +
                     '&uid=' + encodeURIComponent(firebase.auth().currentUser.uid);
-                var urlElement = $('<a target="_blank">לחצו כאן לפתיחה</a>').prop('href', url);
+                var urlElement = $('<a target="_blank" rel="noopener">לחצו כאן לפתיחה</a>').prop('href', url);
                 var shareDialogContent = $('<div>הקישור לשיתוף המערכת: </div>').append(urlElement).append('.');
 
                 BootstrapDialog.show({
