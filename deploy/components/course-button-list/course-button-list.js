@@ -50,7 +50,7 @@ CourseButtonList.prototype.addCourse = function (course) {
 
     // Add tooltip to badge.
     var courseDescriptionHtml = that.courseManager.getDescription(course, {html: true});
-    var courseDescriptionHtmlWithLinks = that.courseManager.getDescription(course, {html: true, links: true});
+    var courseDescriptionHtmlWithLinks = that.courseManager.getDescription(course, {html: true, links: true, logging: true});
     badge.hover(
         function () {
             $(this).removeClass('badge-secondary');
