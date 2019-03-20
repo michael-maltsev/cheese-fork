@@ -153,17 +153,24 @@ CourseManager.prototype.getDescription = function (course, options) {
 
         var html;
         if (options.links) {
-            var linksHtml = '<br><br><a href="https://ug3.technion.ac.il/rishum/course/' + course + '/" target="_blank" rel="noopener"><img src="assets/icon_rishum.png" alt="icon"> אתר הרישום</a>';
+            var loggingProps = options.logging ? ' onclick="gtag(\'event\', \'info-click-link-rishum\')"' : '';
+            var linksHtml = '<br><br><a href="https://ug3.technion.ac.il/rishum/course/' + course + '/" target="_blank" rel="noopener"' + loggingProps + '>' +
+                '<img src="assets/icon_rishum.png" alt="icon"> אתר הרישום</a>';
 
             if (/^23\d\d\d\d$/.test(course)) {
                 // Only for computer science courses.
-                linksHtml += '<br><a href="https://webcourse.cs.technion.ac.il/' + course + '/" target="_blank" rel="noopener"><img src="assets/icon_webcourse.png" alt="icon"> אתר ה-WebCourse</a>';
+                loggingProps = options.logging ? ' onclick="gtag(\'event\', \'info-click-link-webcourse\')"' : '';
+                linksHtml += '<br><a href="https://webcourse.cs.technion.ac.il/' + course + '/" target="_blank" rel="noopener"' + loggingProps + '>' +
+                    '<img src="assets/icon_webcourse.png" alt="icon"> אתר ה-WebCourse</a>';
             }
 
-            linksHtml += '<br><a href="https://www.facebook.com/search/groups/?q=' + course + '" target="_blank" rel="noopener"><img src="assets/icon_facebook.png" alt="icon"> חיפוש קבוצה בפייסבוק</a>';
+            loggingProps = options.logging ? ' onclick="gtag(\'event\', \'info-click-link-facebook\')"' : '';
+            linksHtml += '<br><a href="https://www.facebook.com/search/groups/?q=' + course + '" target="_blank" rel="noopener"' + loggingProps + '>' +
+                '<img src="assets/icon_facebook.png" alt="icon"> חיפוש קבוצה בפייסבוק</a>';
 
-            var scansBaseUrl = 'https://tscans.cf/';
-            linksHtml += '<br><a href="' + scansBaseUrl + '?course=' + course + '" target="_blank" rel="noopener"><img src="assets/icon_scans.png" alt="icon"> סריקות</a>';
+            loggingProps = options.logging ? ' onclick="gtag(\'event\', \'info-click-link-tscans\')"' : '';
+            linksHtml += '<br><a href="https://tscans.cf/?course=' + course + '" target="_blank" rel="noopener"' + loggingProps + '>' +
+                '<img src="assets/icon_scans.png" alt="icon"> סריקות</a>';
 
             html = headerHtml + linksHtml + contentHtml;
         } else {
