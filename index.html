@@ -312,7 +312,7 @@
 
         currentSemester = getParameterByName('semester');
         if (!availableSemesters.propertyIsEnumerable(currentSemester)) {
-            currentSemester = '201802';
+            currentSemester = Object.keys(availableSemesters).sort().pop();
         }
         var script = document.createElement('script');
         script.src = 'courses/courses_' + currentSemester + '.min.js';
