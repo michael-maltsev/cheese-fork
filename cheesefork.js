@@ -200,7 +200,7 @@
                     firebaseAuthUIInit(function () {
                         watchSavedSchedule(function () {
                             $('#page-loader').hide();
-                            showTechnionScansPopup();
+                            showThursdayGraphPopup() || showTechnionScansPopup();
                         });
                     });
                     firebaseAuthUIInitialized = true;
@@ -213,21 +213,83 @@
             if (!firebaseAuthUIInitialized) {
                 watchSavedSchedule(function () {
                     $('#page-loader').hide();
-                    showTechnionScansPopup();
+                    showThursdayGraphPopup() || showTechnionScansPopup();
                 });
             }
         }
     }
 
+    function showThursdayGraphPopup() {
+        var currentDate = new Date();
+        var currentDay = currentDate.getDay();
+        var currentHours = currentDate.getHours();
+        if (currentDay < 5 ||
+            (currentDay === 5 && currentHours < 8) ||
+            (currentDay === 6 && currentHours > 4) ||
+            currentDay > 6) {
+            // Not Thursday 08:00 to Friday 04:00.
+            //return false;
+        }
+
+        try {
+            var dontShowDate = localStorage.getItem('dontShowThursdayGraphPopup');
+            if (dontShowDate) {
+                var days = (Date.now() - parseInt(dontShowDate, 10)) / (24 * 3600 * 1000);
+                if (days <= 365) {
+                    return false;
+                }
+            }
+        } catch (e) {
+            // localStorage is not available in IE/Edge when running from a local file.
+        }
+
+        BootstrapDialog.show({
+            title: 'הגרף השבועי',
+            message: 'חדש! מעכשיו בכל יום חמישי יפורסם גרף מעניין הקשור למקצועות בטכניון בעמוד הפייסבוק שלנו. תהנו ☺<br>' +
+                '<br>' +
+                '<div class="form-check">' +
+                    '<input class="form-check-input" type="checkbox" id="dont-show-technion-scans-popup"> ' +
+                    '<label class="form-check-label" for="dont-show-technion-scans-popup">' +
+                    'אל תציג את ההודעה שוב' +
+                    '</label>' +
+                '</div>' +
+                '<br>' +
+                '<iframe style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowTransparency="true" allow="encrypted-media"></iframe>',
+            onshown: function (dialog) {
+                var modalBody = dialog.getModalBody();
+                var width = modalBody.width();
+                var height = modalBody.height() * 1.5;
+                var frameSrc = 'https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fcheesefork.technion%2F&tabs=timeline' +
+                    '&width=' + width + '&height=' + height + '&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=true&appId=863730240682785';
+                modalBody.find('iframe').width(width).height(height).attr('src', frameSrc);
+            },
+            buttons: [{
+                label: 'סגור',
+                action: function (dialog) {
+                    dialog.close();
+                }
+            }],
+            onhide: function (dialog) {
+                if (document.getElementById('dont-show-technion-scans-popup').checked) {
+                    gtag('event', 'scans-dont-show');
+
+                    localStorage.setItem('dontShowThursdayGraphPopup', Date.now().toString());
+                }
+            }
+        });
+
+        return true;
+    }
+
     function showTechnionScansPopup() {
-        return; // disabled
+        return false; // disabled
 
         try {
             var dontShowDate = localStorage.getItem('dontShowTechnionScansPopup');
             if (dontShowDate) {
                 var days = (Date.now() - parseInt(dontShowDate, 10)) / (24 * 3600 * 1000);
                 if (days <= 7) {
-                    return;
+                    return false;
                 }
             }
         } catch (e) {
@@ -236,21 +298,21 @@
 
         BootstrapDialog.show({
             title: 'סריקות לקראת המבחנים',
-            message: 'לומדים למבחנים? (אם לא, אולי אתם צריכים להתחיל 🙂)<br>' +
-                'מחפשים סריקות של סטודנטים מסמסטרים קודמים ללמוד מהם?<br>' +
-                'קיבלתם ציון טוב, ויש לכם סריקות שיכולות לעזור לאחרים?<br>' +
-                '<br>' +
-                'אתם מוזמנים ' +
-                    '<a href="https://tscans.cf/" target="_blank" rel="noopener" onclick="gtag(\'event\', \'scans-click-link\')">להיכנס למערכת הסריקות</a>' +
-                    ', להיעזר ולעזור.<br>' +
-                'בהצלחה במבחנים!<br>' +
-                '<br>' +
-                '<div class="form-check">' +
-                    '<input class="form-check-input" type="checkbox" id="dont-show-technion-scans-popup"> ' +
-                    '<label class="form-check-label" for="dont-show-technion-scans-popup">' +
-                    'אל תציג את ההודעה שוב' +
-                    '</label>' +
-                '</div>',
+            message: 'לומדים למבחנים? (אם לא, אולי אתם צריכים להתחיל ☺️)<br>' +
+            'מחפשים סריקות של סטודנטים מסמסטרים קודמים ללמוד מהם?<br>' +
+            'קיבלתם ציון טוב, ויש לכם סריקות שיכולות לעזור לאחרים?<br>' +
+            '<br>' +
+            'אתם מוזמנים ' +
+            '<a href="https://tscans.cf/" target="_blank" rel="noopener" onclick="gtag(\'event\', \'scans-click-link\')">להיכנס למערכת הסריקות</a>' +
+            ', להיעזר ולעזור.<br>' +
+            'בהצלחה במבחנים!<br>' +
+            '<br>' +
+            '<div class="form-check">' +
+            '<input class="form-check-input" type="checkbox" id="dont-show-technion-scans-popup"> ' +
+            '<label class="form-check-label" for="dont-show-technion-scans-popup">' +
+            'אל תציג את ההודעה שוב' +
+            '</label>' +
+            '</div>',
             buttons: [{
                 label: 'מעבר למערכת הסריקות',
                 cssClass: 'btn-primary',
@@ -276,6 +338,8 @@
                 }
             }
         });
+
+        return true;
     }
 
     function navbarInit() {
