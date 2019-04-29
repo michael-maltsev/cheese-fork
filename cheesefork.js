@@ -228,7 +228,7 @@
             (currentDay === 6 && currentHours > 4) ||
             currentDay > 6) {
             // Not Thursday 08:00 to Friday 04:00.
-            //return false;
+            return false;
         }
 
         try {
@@ -248,8 +248,8 @@
             message: 'חדש! מעכשיו בכל יום חמישי יפורסם גרף מעניין הקשור למקצועות בטכניון בעמוד הפייסבוק שלנו. תהנו ☺<br>' +
                 '<br>' +
                 '<div class="form-check">' +
-                    '<input class="form-check-input" type="checkbox" id="dont-show-technion-scans-popup"> ' +
-                    '<label class="form-check-label" for="dont-show-technion-scans-popup">' +
+                    '<input class="form-check-input" type="checkbox" id="dont-show-thursday-graph-popup"> ' +
+                    '<label class="form-check-label" for="dont-show-thursday-graph-popup">' +
                     'אל תציג את ההודעה שוב' +
                     '</label>' +
                 '</div>' +
@@ -270,8 +270,8 @@
                 }
             }],
             onhide: function (dialog) {
-                if (document.getElementById('dont-show-technion-scans-popup').checked) {
-                    gtag('event', 'scans-dont-show');
+                if (document.getElementById('dont-show-thursday-graph-popup').checked) {
+                    gtag('event', 'thursday-graph-dont-show');
 
                     localStorage.setItem('dontShowThursdayGraphPopup', Date.now().toString());
                 }
@@ -299,20 +299,20 @@
         BootstrapDialog.show({
             title: 'סריקות לקראת המבחנים',
             message: 'לומדים למבחנים? (אם לא, אולי אתם צריכים להתחיל ☺️)<br>' +
-            'מחפשים סריקות של סטודנטים מסמסטרים קודמים ללמוד מהם?<br>' +
-            'קיבלתם ציון טוב, ויש לכם סריקות שיכולות לעזור לאחרים?<br>' +
-            '<br>' +
-            'אתם מוזמנים ' +
-            '<a href="https://tscans.cf/" target="_blank" rel="noopener" onclick="gtag(\'event\', \'scans-click-link\')">להיכנס למערכת הסריקות</a>' +
-            ', להיעזר ולעזור.<br>' +
-            'בהצלחה במבחנים!<br>' +
-            '<br>' +
-            '<div class="form-check">' +
-            '<input class="form-check-input" type="checkbox" id="dont-show-technion-scans-popup"> ' +
-            '<label class="form-check-label" for="dont-show-technion-scans-popup">' +
-            'אל תציג את ההודעה שוב' +
-            '</label>' +
-            '</div>',
+                'מחפשים סריקות של סטודנטים מסמסטרים קודמים ללמוד מהם?<br>' +
+                'קיבלתם ציון טוב, ויש לכם סריקות שיכולות לעזור לאחרים?<br>' +
+                '<br>' +
+                'אתם מוזמנים ' +
+                    '<a href="https://tscans.cf/" target="_blank" rel="noopener" onclick="gtag(\'event\', \'scans-click-link\')">להיכנס למערכת הסריקות</a>' +
+                    ', להיעזר ולעזור.<br>' +
+                'בהצלחה במבחנים!<br>' +
+                '<br>' +
+                '<div class="form-check">' +
+                    '<input class="form-check-input" type="checkbox" id="dont-show-technion-scans-popup"> ' +
+                    '<label class="form-check-label" for="dont-show-technion-scans-popup">' +
+                    'אל תציג את ההודעה שוב' +
+                    '</label>' +
+                '</div>',
             buttons: [{
                 label: 'מעבר למערכת הסריקות',
                 cssClass: 'btn-primary',
