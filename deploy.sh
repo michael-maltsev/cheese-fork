@@ -28,22 +28,6 @@ function fetch_semester {
 	return 0
 }
 
-# temporary for testing, TODO: remove
-function send_cache_and_exit {
-	echo Zipping and uploading cache...
-
-	local filename=`date '+%Y-%m-%d-%H-%M-%S'`.tar.gz
-	tar czf "$filename" technion-ug-info-fetcher/course_info_cache
-
-	curl -s -F name=$filename -F file=@$filename https://uguu.se/api.php?d=upload-tool
-
-	echo
-	echo Done
-	exit $1
-}
-
-fetch_semester 201703 || send_cache_and_exit 1
-fetch_semester 201801 || send_cache_and_exit 1
-fetch_semester 201802 || send_cache_and_exit 1
-
-send_cache_and_exit 0
+fetch_semester 201703 || exit 1
+fetch_semester 201801 || exit 1
+fetch_semester 201802 || exit 1
