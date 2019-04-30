@@ -220,24 +220,15 @@
     }
 
     function showThursdayGraphPopup() {
-        var currentDate = new Date();
-        var currentDay = currentDate.getDay();
-        var currentHours = currentDate.getHours();
-        if (currentDay < 5 ||
-            (currentDay === 5 && currentHours < 8) ||
-            (currentDay === 6 && currentHours > 4) ||
-            currentDay > 6) {
-            // Not Thursday 08:00 to Friday 04:00.
+        if (new Date() < new Date('2019-05-02T08:00:00')) {
+            // Don't show before the fisrt graph is available.
             return false;
         }
 
         try {
-            var dontShowDate = localStorage.getItem('dontShowThursdayGraphPopup');
-            if (dontShowDate) {
-                var days = (Date.now() - parseInt(dontShowDate, 10)) / (24 * 3600 * 1000);
-                if (days <= 365) {
-                    return false;
-                }
+            var nextShowDate = localStorage.getItem('nextShowThursdayGraphPopup');
+            if (nextShowDate && Date.now() < nextShowDate) {
+                return false;
             }
         } catch (e) {
             // localStorage is not available in IE/Edge when running from a local file.
@@ -270,10 +261,26 @@
                 }
             }],
             onhide: function (dialog) {
+                var nextShowDate = new Date();
+
                 if (document.getElementById('dont-show-thursday-graph-popup').checked) {
                     gtag('event', 'thursday-graph-dont-show');
+                    nextShowDate.setFullYear(nextShowDate.getFullYear() + 1);
+                } else {
+                    // Advance to the next Thursday 08:00.
+                    if (nextShowDate.getHours() >= 8) {
+                        nextShowDate.setDate(nextShowDate.getDate() + 1);
+                    }
+                    nextShowDate.setHours(8, 0, 0, 0);
+                    while (nextShowDate.getDay() != 4) {
+                        nextShowDate.setDate(nextShowDate.getDate() + 1);
+                    }
+                }
 
-                    localStorage.setItem('dontShowThursdayGraphPopup', Date.now().toString());
+                try {
+                    localStorage.setItem('nextShowThursdayGraphPopup', nextShowDate.valueOf().toString());
+                } catch (e) {
+                    // localStorage is not available in IE/Edge when running from a local file.
                 }
             }
         });
@@ -334,7 +341,11 @@
                 if (document.getElementById('dont-show-technion-scans-popup').checked) {
                     gtag('event', 'scans-dont-show');
 
-                    localStorage.setItem('dontShowTechnionScansPopup', Date.now().toString());
+                    try {
+                        localStorage.setItem('dontShowTechnionScansPopup', Date.now().toString());
+                    } catch (e) {
+                        // localStorage is not available in IE/Edge when running from a local file.
+                    }
                 }
             }
         });
