@@ -249,7 +249,7 @@
             onshown: function (dialog) {
                 var modalBody = dialog.getModalBody();
                 var width = modalBody.width();
-                var height = modalBody.height() * 1.5;
+                var height = Math.floor(modalBody.height() * 1.5);
                 var frameSrc = 'https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fcheesefork.technion%2F&tabs=timeline' +
                     '&width=' + width + '&height=' + height + '&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=true&appId=863730240682785';
                 modalBody.find('iframe').width(width).height(height).attr('src', frameSrc);
