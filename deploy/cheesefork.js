@@ -220,8 +220,8 @@
     }
 
     function showThursdayGraphPopup() {
-        if (new Date() < new Date('2019-05-02T08:00:00')) {
-            // Don't show before the fisrt graph is available.
+        if (new Date() < new Date('2019-05-09T08:00:00')) {
+            // Don't show before the first graph is available.
             return false;
         }
 
