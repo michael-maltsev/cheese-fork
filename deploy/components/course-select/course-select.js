@@ -192,47 +192,51 @@ var CourseSelect = (function () {
             }));
         });
 
-        var selectMoedAMin = $('#filter-moed-a-min');
-        var selectMoedAMax = $('#filter-moed-a-max');
+        if (moedAMin && moedAMax) {
+            var selectMoedAMin = $('#filter-moed-a-min');
+            var selectMoedAMax = $('#filter-moed-a-max');
 
-        var date, dateStrFull, dateStrShort;
+            var date, dateStrFull, dateStrShort;
 
-        for (date = moedAMin.clone(); !date.isAfter(moedAMax); date.add(1, 'days')) {
-            dateStrFull = date.format();
-            dateStrShort = date.format('DD/MM');
-            selectMoedAMin.append($('<option>', {
-                value: dateStrFull,
-                text: dateStrShort,
-                selected: date.isSame(moedAMin)
-            }));
-            selectMoedAMax.append($('<option>', {
-                value: dateStrFull,
-                text: dateStrShort,
-                selected: date.isSame(moedAMax)
-            }));
+            for (date = moedAMin.clone(); !date.isAfter(moedAMax); date.add(1, 'days')) {
+                dateStrFull = date.format();
+                dateStrShort = date.format('DD/MM');
+                selectMoedAMin.append($('<option>', {
+                    value: dateStrFull,
+                    text: dateStrShort,
+                    selected: date.isSame(moedAMin)
+                }));
+                selectMoedAMax.append($('<option>', {
+                    value: dateStrFull,
+                    text: dateStrShort,
+                    selected: date.isSame(moedAMax)
+                }));
+            }
+
+            selectMoedAMax.val(dateStrFull);
         }
 
-        selectMoedAMax.val(dateStrFull);
+        if (moedBMin && moedBMax) {
+            var selectMoedBMin = $('#filter-moed-b-min');
+            var selectMoedBMax = $('#filter-moed-b-max');
 
-        var selectMoedBMin = $('#filter-moed-b-min');
-        var selectMoedBMax = $('#filter-moed-b-max');
+            for (date = moedBMin.clone(); !date.isAfter(moedBMax); date.add(1, 'days')) {
+                dateStrFull = date.format();
+                dateStrShort = date.format('DD/MM');
+                selectMoedBMin.append($('<option>', {
+                    value: dateStrFull,
+                    text: dateStrShort,
+                    selected: date.isSame(moedBMin)
+                }));
+                selectMoedBMax.append($('<option>', {
+                    value: dateStrFull,
+                    text: dateStrShort,
+                    selected: date.isSame(moedBMax)
+                }));
+            }
 
-        for (date = moedBMin.clone(); !date.isAfter(moedBMax); date.add(1, 'days')) {
-            dateStrFull = date.format();
-            dateStrShort = date.format('DD/MM');
-            selectMoedBMin.append($('<option>', {
-                value: dateStrFull,
-                text: dateStrShort,
-                selected: date.isSame(moedBMin)
-            }));
-            selectMoedBMax.append($('<option>', {
-                value: dateStrFull,
-                text: dateStrShort,
-                selected: date.isSame(moedBMax)
-            }));
+            selectMoedBMax.val(dateStrFull);
         }
-
-        selectMoedBMax.val(dateStrFull);
     }
 
     CourseSelect.prototype.filterOpen = function () {
