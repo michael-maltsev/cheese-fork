@@ -305,7 +305,10 @@
 
         BootstrapDialog.show({
             title: 'סריקות לקראת המבחנים',
-            message: 'לומדים למבחנים? (אם לא, אולי אתם צריכים להתחיל ☺️)<br>' +
+            message: '<a href="https://tscans.cf/" target="_blank" rel="noopener" onclick="gtag(\'event\', \'scans-click-logo\')">' +
+                    '<img src="https://tscans.cf/scanner_technion.png" width="30%" class="mx-auto d-block">' +
+                '</a><br>' +
+                'לומדים למבחנים? (אם לא, אולי אתם צריכים להתחיל ☺️)<br>' +
                 'מחפשים סריקות של סטודנטים מסמסטרים קודמים ללמוד מהם?<br>' +
                 'קיבלתם ציון טוב, ויש לכם סריקות שיכולות לעזור לאחרים?<br>' +
                 '<br>' +
