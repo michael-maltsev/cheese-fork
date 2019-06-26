@@ -241,7 +241,7 @@
                 '<div class="form-check">' +
                     '<input class="form-check-input" type="checkbox" id="dont-show-thursday-graph-popup"> ' +
                     '<label class="form-check-label" for="dont-show-thursday-graph-popup">' +
-                    'אל תציג את ההודעה שוב' +
+                    'אל תציג את ההודעה פעם בשבוע' +
                     '</label>' +
                 '</div>' +
                 '<br>' +
