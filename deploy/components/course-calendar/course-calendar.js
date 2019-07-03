@@ -262,27 +262,25 @@ var CourseCalendar = (function () {
     }
 
     function updateCalendarMaxDayAndTime(calendar) {
+        var fridayStartTime = calendar.fullCalendar('getCalendar').moment('2017-01-06T00:00:00');
+        var saturdayStartTime = calendar.fullCalendar('getCalendar').moment('2017-01-07T00:00:00');
         var minTime = calendar.fullCalendar('getCalendar').moment('2017-01-01T08:30:00');
         var maxTime = calendar.fullCalendar('getCalendar').moment('2017-01-01T18:30:00');
-        var friday = false;
+        var maxDay = 4;
 
         calendar.fullCalendar('clientEvents', function (event) {
-            var endDay = event.end.day() + ((event.end.hour() === 0 && event.end.minute() === 0) ? (-1) : 0);
-            if (event.start.day() === 5 || endDay === 5) {
-                friday = true;
+            if (maxDay < 6 && event.end.isAfter(saturdayStartTime)) {
+                maxDay = 6;
+            } else if (maxDay < 5 && event.end.isAfter(fridayStartTime)) {
+                maxDay = 5;
             }
 
             var start = event.start.clone().set({year: 2017, month: 0, date: 1});
             var end = event.end.clone().set({year: 2017, month: 0, date: 1});
 
-            // Fix-up for 24:00 which is treated as 00:00 of the next day.
-            if (end.hour() === 0 && end.minute() === 0) {
-                end.hour(24);
-            }
-
             if (event.end.day() !== event.start.day()) {
                 // Event spans to more than one day, display up to 24:00/00:00 to make sure it's visible.
-                if (event.end.day() === 0) {
+                if (event.end.date() === 1) {
                     start = calendar.fullCalendar('getCalendar').moment('2017-01-01T00:00:00');
                 } else {
                     end = calendar.fullCalendar('getCalendar').moment('2017-01-01T24:00:00');
@@ -302,7 +300,10 @@ var CourseCalendar = (function () {
 
         minTime = minTime.format('HH:mm:ss');
         maxTime = maxTime.format('kk:mm:ss');
-        var hiddenDays = friday ? [6] : [5, 6];
+        var hiddenDays = [];
+        for (var i = maxDay + 1; i < 7; i++) {
+            hiddenDays.push(i);
+        }
 
         // Only apply options that changed, avoids re-rendering if not needed, which is very slow.
         var newOptions = {};
