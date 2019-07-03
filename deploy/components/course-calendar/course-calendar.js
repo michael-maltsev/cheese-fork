@@ -267,7 +267,8 @@ var CourseCalendar = (function () {
         var friday = false;
 
         calendar.fullCalendar('clientEvents', function (event) {
-            if (event.start.day() === 5) {
+            var endDay = event.end.day() + ((event.end.hour() === 0 && event.end.minute() === 0) ? (-1) : 0);
+            if (event.start.day() === 5 || endDay === 5) {
                 friday = true;
             }
 
@@ -277,6 +278,15 @@ var CourseCalendar = (function () {
             // Fix-up for 24:00 which is treated as 00:00 of the next day.
             if (end.hour() === 0 && end.minute() === 0) {
                 end.hour(24);
+            }
+
+            if (event.end.day() !== event.start.day()) {
+                // Event spans to more than one day, display up to 24:00/00:00 to make sure it's visible.
+                if (event.end.day() === 0) {
+                    start = calendar.fullCalendar('getCalendar').moment('2017-01-01T00:00:00');
+                } else {
+                    end = calendar.fullCalendar('getCalendar').moment('2017-01-01T24:00:00');
+                }
             }
 
             if (minTime.isAfter(start)) {
@@ -290,7 +300,7 @@ var CourseCalendar = (function () {
             return false;
         });
 
-        minTime = minTime.format('kk:mm:ss');
+        minTime = minTime.format('HH:mm:ss');
         maxTime = maxTime.format('kk:mm:ss');
         var hiddenDays = friday ? [6] : [5, 6];
 
@@ -505,6 +515,10 @@ var CourseCalendar = (function () {
     }
 
     function onCustomEventUpdated(event) {
+        var that = this;
+        var calendar = that.element;
+
+        updateCalendarMaxDayAndTime(calendar);
         this.onCustomEventUpdated(event.id.replace(/^custom_event_/, ''), {
             title: event.title,
             start: event.start.format(),
