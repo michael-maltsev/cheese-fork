@@ -360,7 +360,7 @@
         if (!viewingSharedSchedule) {
             var semesterSelect = $('#top-navbar-semester').find('.dropdown-menu');
 
-            Object.keys(availableSemesters).sort().forEach(function (semester) {
+            Object.keys(availableSemesters).sort().reverse().forEach(function (semester) {
                 var link = $('<a class="dropdown-item">')
                     .prop('href', '?semester=' + encodeURIComponent(semester))
                     .text(semesterFriendlyName(semester));
