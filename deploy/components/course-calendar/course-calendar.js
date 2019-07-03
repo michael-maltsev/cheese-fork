@@ -38,8 +38,8 @@ var CourseCalendar = (function () {
             selectHelper: true,
             selectOverlap: true,
             select: onSelect.bind(that),
-            eventDrop: onCustomEventUpdated.bind(that),
-            eventResize: onCustomEventUpdated.bind(that),
+            eventDrop: onCustomEventMoveResize.bind(that),
+            eventResize: onCustomEventMoveResize.bind(that),
             eventClick: onEventClick.bind(that),
             eventMouseover: onEventMouseover.bind(that),
             eventMouseout: onEventMouseout.bind(that),
@@ -477,6 +477,7 @@ var CourseCalendar = (function () {
 
     function onSelect(start, end) {
         var that = this;
+        var calendar = that.element;
 
         BootstrapDialog.show({
             title: 'הוספת אירוע מותאם אישית',
@@ -485,7 +486,7 @@ var CourseCalendar = (function () {
                 dialog.getModalBody().find('textarea').focus();
             },
             onhide: function (dialog) {
-                that.element.fullCalendar('unselect');
+                calendar.fullCalendar('unselect');
             },
             buttons: [{
                 label: 'הוסף',
@@ -500,12 +501,13 @@ var CourseCalendar = (function () {
 
                     var eventIdCounter = Math.round(Date.now() / 1000);
                     var eventId = 'custom_event_' + eventIdCounter;
-                    while (that.element.fullCalendar('clientEvents', eventId).length > 0) {
+                    while (calendar.fullCalendar('clientEvents', eventId).length > 0) {
                         eventIdCounter++;
                         eventId = 'custom_event_' + eventIdCounter;
                     }
 
-                    that.element.fullCalendar('renderEvent', makeCustomEvent(that, eventId, eventTitle, start, end));
+                    calendar.fullCalendar('renderEvent', makeCustomEvent(that, eventId, eventTitle, start, end));
+                    updateCalendarMaxDayAndTime(calendar);
 
                     that.onCustomEventAdded(eventIdCounter, {
                         title: eventTitle,
@@ -517,12 +519,13 @@ var CourseCalendar = (function () {
         });
     }
 
-    function onCustomEventUpdated(event) {
+    function onCustomEventMoveResize(event) {
         var that = this;
         var calendar = that.element;
 
         updateCalendarMaxDayAndTime(calendar);
-        this.onCustomEventUpdated(event.id.replace(/^custom_event_/, ''), {
+
+        that.onCustomEventUpdated(event.id.replace(/^custom_event_/, ''), {
             title: event.title,
             start: event.start.format(),
             end: event.end.format()
@@ -557,7 +560,7 @@ var CourseCalendar = (function () {
 
                         event.title = eventTitle;
                         event.backgroundColor = that.colorGenerator(eventTitle);
-                        that.element.fullCalendar('updateEvent', event);
+                        calendar.fullCalendar('updateEvent', event);
 
                         that.onCustomEventUpdated(event.id.replace(/^custom_event_/, ''), {
                             title: eventTitle,
@@ -570,7 +573,8 @@ var CourseCalendar = (function () {
                     action: function (dialog) {
                         dialog.close();
 
-                        that.element.fullCalendar('removeEvents', event.id);
+                        calendar.fullCalendar('removeEvents', event.id);
+                        updateCalendarMaxDayAndTime(calendar);
 
                         that.onCustomEventRemoved(event.id.replace(/^custom_event_/, ''));
                     }
