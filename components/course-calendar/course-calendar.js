@@ -269,10 +269,12 @@ var CourseCalendar = (function () {
         var maxDay = 4;
 
         calendar.fullCalendar('clientEvents', function (event) {
-            if (maxDay < 6 && event.end.isAfter(saturdayStartTime)) {
-                maxDay = 6;
-            } else if (maxDay < 5 && event.end.isAfter(fridayStartTime)) {
-                maxDay = 5;
+            if (event.start.week() === 1) {
+                if (maxDay < 6 && event.end.isAfter(saturdayStartTime)) {
+                    maxDay = 6;
+                } else if (maxDay < 5 && event.end.isAfter(fridayStartTime)) {
+                    maxDay = 5;
+                }
             }
 
             var start = event.start.clone().set({year: 2017, month: 0, date: 1});
