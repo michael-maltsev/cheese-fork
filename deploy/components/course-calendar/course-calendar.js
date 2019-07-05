@@ -954,23 +954,16 @@ var CourseCalendar = (function () {
                 }
 
                 var begin = event.start.clone().set(dateFromObject);
-                var end = event.end.clone().set(dateFromObject);
                 var eventDay = event.start.day();
 
                 // If setting the day will move us to the past, add 7 days
                 // to move forward to the next week.
                 if (eventDay < begin.day()) {
                     begin.add(7, 'days');
-                    end.add(7, 'days');
                 }
 
                 begin.day(eventDay);
-                end.day(eventDay);
-
-                // Fix-up for 24:00 which is treated as 00:00 of the next day.
-                if (end.hour() === 0 && end.minute() === 0) {
-                    end.hour(24);
-                }
+                var end = event.end.clone().add(begin.diff(event.start), 'milliseconds');
 
                 icsCal.addEvent(subject, description, location, begin.format(), end.format(), rrule);
                 count++;
