@@ -262,19 +262,15 @@ var CourseCalendar = (function () {
     }
 
     function updateCalendarMaxDayAndTime(calendar) {
-        var fridayStartTime = calendar.fullCalendar('getCalendar').moment('2017-01-06T00:00:00');
-        var saturdayStartTime = calendar.fullCalendar('getCalendar').moment('2017-01-07T00:00:00');
         var minTime = calendar.fullCalendar('getCalendar').moment('2017-01-01T08:30:00');
         var maxTime = calendar.fullCalendar('getCalendar').moment('2017-01-01T18:30:00');
         var maxDay = 4;
 
         calendar.fullCalendar('clientEvents', function (event) {
-            if (event.start.week() === 1) {
-                if (maxDay < 6 && event.end.isAfter(saturdayStartTime)) {
-                    maxDay = 6;
-                } else if (maxDay < 5 && event.end.isAfter(fridayStartTime)) {
-                    maxDay = 5;
-                }
+            // Subtract one minute to treat 24:00 as the previous day.
+            var endDay = event.end.clone().add(-1, 'minute').day();
+            if (maxDay < endDay) {
+                maxDay = endDay;
             }
 
             var start = event.start.clone().set({year: 2017, month: 0, date: 1});
@@ -468,6 +464,10 @@ var CourseCalendar = (function () {
             textColor: 'white',
             borderColor: 'white',
             editable: !courseCalendar.readonly,
+            constraint: {
+                start: '2017-01-01T00:00:00',
+                end: '2017-01-07T24:00:00'
+            },
             courseNumber: null,
             lessonData: null,
             selected: true,
