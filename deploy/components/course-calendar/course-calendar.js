@@ -277,12 +277,8 @@ var CourseCalendar = (function () {
             var end = event.end.clone().set({year: 2017, month: 0, date: 1});
 
             if (event.end.day() !== event.start.day()) {
-                // Event spans to more than one day, display up to 24:00/00:00 to make sure it's visible.
-                if (event.end.date() === 1) {
-                    start = calendar.fullCalendar('getCalendar').moment('2017-01-01T00:00:00');
-                } else {
-                    end = calendar.fullCalendar('getCalendar').moment('2017-01-01T24:00:00');
-                }
+                // Event spans to more than one day, display up to 24:00 to make sure it's visible.
+                end = calendar.fullCalendar('getCalendar').moment('2017-01-01T24:00:00');
             }
 
             if (minTime.isAfter(start)) {
