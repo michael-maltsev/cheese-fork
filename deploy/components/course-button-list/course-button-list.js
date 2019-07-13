@@ -67,7 +67,25 @@ CourseButtonList.prototype.addCourse = function (course) {
         $(this).tooltip('hide');
         BootstrapDialog.show({
             title: courseTitle,
-            message: $('<div>').html(courseDescriptionHtmlWithLinks)
+            message: $('<div>').html(courseDescriptionHtmlWithLinks + '<br><br><div id="disqus_thread"></div>'),
+            onshown: function (dialog) {
+                var disqusConfig = function () {
+                    this.page.url = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '') + location.pathname + '#!' + 'course_comments_' + course;
+                    this.page.identifier = 'course_comments_' + course;
+                };
+                if (typeof DISQUS === 'undefined') {
+                    window.disqus_config = disqusConfig;
+                    var d = document, s = d.createElement('script');
+                    s.src = 'https://cheesefork.disqus.com/embed.js';
+                    s.setAttribute('data-timestamp', +new Date());
+                    (d.head || d.body).appendChild(s);
+                } else {
+                    DISQUS.reset({
+                        reload: true,
+                        config: disqusConfig
+                    });
+                }
+            },
         });
     }).prop('title', courseDescriptionHtml)
         .attr('data-toggle', 'tooltip')
