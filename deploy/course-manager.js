@@ -64,12 +64,12 @@ CourseManager.prototype.getSchedule = function (course) {
                     var sadnaId = 101;
                     for (i++; i < commentLines.length; i++) {
                         line = commentLines[i];
-                        match = /^ימי ([א-ו])' (\d+)\.(\d+)-(\d+)\.(\d+)\s*,\s*(.*?) (\d+)(?:\s*,\s*(.*?))?$/.exec(line);
+                        match = /^ימי ([א-ו])' (\d+)\.(\d+)-(\d+)\.(\d+)(?:\s*,\s*(.*?) (\d+)(?:\s*,\s*(.*?))?)?$/.exec(line);
                         if (!match) {
                             break;
                         }
 
-                        var building = match[6];
+                        var building = match[6] || '';
                         switch (building) {
                             case 'פ\'':
                                 building = 'פישבך';
@@ -88,7 +88,7 @@ CourseManager.prototype.getSchedule = function (course) {
                             'יום': match[1],
                             'שעה': match[2] + ':' + match[3] + ' - ' + match[4] + ':' + match[5],
                             'בניין': building,
-                            'חדר': match[7]
+                            'חדר': match[7] || ''
                         });
                         sadnaId++;
                     }
