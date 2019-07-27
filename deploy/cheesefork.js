@@ -272,7 +272,7 @@
                         nextShowDate.setDate(nextShowDate.getDate() + 1);
                     }
                     nextShowDate.setHours(8, 0, 0, 0);
-                    while (nextShowDate.getDay() != 4) {
+                    while (nextShowDate.getDay() !== 4) {
                         nextShowDate.setDate(nextShowDate.getDate() + 1);
                     }
                 }

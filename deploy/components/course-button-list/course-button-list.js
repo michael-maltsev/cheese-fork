@@ -1,6 +1,6 @@
 'use strict';
 
-/* global BootstrapDialog, gtag */
+/* global BootstrapDialog, gtag, DISQUS */
 
 function CourseButtonList(element, options) {
     this.element = element;
@@ -85,7 +85,7 @@ CourseButtonList.prototype.addCourse = function (course) {
                         config: disqusConfig
                     });
                 }
-            },
+            }
         });
     }).prop('title', courseDescriptionHtml)
         .attr('data-toggle', 'tooltip')
