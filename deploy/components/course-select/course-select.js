@@ -192,11 +192,11 @@ var CourseSelect = (function () {
             }));
         });
 
+        var date, dateStrFull, dateStrShort;
+
         if (moedAMin && moedAMax) {
             var selectMoedAMin = $('#filter-moed-a-min');
             var selectMoedAMax = $('#filter-moed-a-max');
-
-            var date, dateStrFull, dateStrShort;
 
             for (date = moedAMin.clone(); !date.isAfter(moedAMax); date.add(1, 'days')) {
                 dateStrFull = date.format();
