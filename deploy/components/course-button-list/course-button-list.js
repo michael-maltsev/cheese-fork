@@ -134,10 +134,10 @@ CourseButtonList.prototype.updateDisqusUnreadCounters = function () {
         return;
     }
 
-    var disqusScriptUrl = 'https://cheesefork.disqus.com/count-data.js?';
-    courseNumbers.forEach(function (course) {
-        disqusScriptUrl += '1=course_comments_' + course + '&';
+    var disqusScriptUrlParams = courseNumbers.map(function (course) {
+        return '1=course_comments_' + course;
     });
+    var disqusScriptUrl = 'https://cheesefork.disqus.com/count-data.js?' + disqusScriptUrlParams.join('&');
 
     window.DISQUSWIDGETS = {
         displayCount: function (data) {
