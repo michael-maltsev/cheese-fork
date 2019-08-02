@@ -138,7 +138,6 @@ CourseButtonList.prototype.updateDisqusUnreadCounters = function () {
     courseNumbers.forEach(function (course) {
         disqusScriptUrl += '1=course_comments_' + course + '&';
     });
-    disqusScriptUrl += '_=' + Date.now();
 
     window.DISQUSWIDGETS = {
         displayCount: function (data) {
