@@ -38,6 +38,7 @@
                 onItemAdd: function (course) {
                     if (!courseButtonList.isCourseInList(course)) {
                         courseButtonList.addCourse(course);
+                        courseButtonList.updateDisqusUnreadCounters();
                         courseCalendar.addCourse(course);
                         selectedCourseSave(course);
                         updateGeneralInfoLine();
@@ -272,7 +273,7 @@
                         nextShowDate.setDate(nextShowDate.getDate() + 1);
                     }
                     nextShowDate.setHours(8, 0, 0, 0);
-                    while (nextShowDate.getDay() != 4) {
+                    while (nextShowDate.getDay() !== 4) {
                         nextShowDate.setDate(nextShowDate.getDate() + 1);
                     }
                 }
@@ -1133,6 +1134,8 @@
                 schedule[course] = lessons;
             }
         });
+
+        courseButtonList.updateDisqusUnreadCounters();
 
         var semesterCustomEventsKey = currentSemester + '_custom_events';
         var customEvents = session[semesterCustomEventsKey] || {};

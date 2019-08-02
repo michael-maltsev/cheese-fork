@@ -1,6 +1,6 @@
 'use strict';
 
-/* global BootstrapDialog, gtag */
+/* global BootstrapDialog, gtag, DISQUS */
 
 function CourseButtonList(element, options) {
     this.element = element;
@@ -11,6 +11,13 @@ function CourseButtonList(element, options) {
     this.onHoverOut = options.onHoverOut;
     this.onEnableCourse = options.onEnableCourse;
     this.onDisableCourse = options.onDisableCourse;
+
+    try {
+        this.disqusReadCounters = JSON.parse(localStorage.getItem('disqusReadCounters') || '{}');
+    } catch (e) {
+        // localStorage is not available in IE/Edge when running from a local file.
+        this.disqusReadCounters = {};
+    }
 }
 
 CourseButtonList.prototype.addCourse = function (course) {
@@ -23,10 +30,12 @@ CourseButtonList.prototype.addCourse = function (course) {
     var spanBoldHidden = $('<span class="content-bold-hidden">').text(courseTitle);
 
     var button = $('<li' +
-        ' class="list-group-item active course-button-list-item course-button-list-item-course-' + course + '"' +
+        ' class="list-group-item active course-button-list-item"' +
         ' data-course-number="' + course + '">' +
         '</li>');
-    var badge = $('<span class="badge badge-pill badge-secondary float-right">i</span>');
+    var badge = $('<span class="badge badge-pill badge-secondary float-right course-button-list-unread-count-badge-container">' +
+        '<span class="course-button-list-unread-count-badge d-none"></span>i' +
+        '</span>');
     var color = that.colorGenerator(course);
     //var rgbaColor = 'rgba(' + parseInt(color.slice(-6, -4), 16)
     //    + ',' + parseInt(color.slice(-4, -2), 16)
@@ -64,6 +73,8 @@ CourseButtonList.prototype.addCourse = function (course) {
 
         gtag('event', 'course-button-list-info-click');
 
+        that.disqusMarkCourseAsRead(course);
+
         $(this).tooltip('hide');
         BootstrapDialog.show({
             title: courseTitle,
@@ -85,7 +96,7 @@ CourseButtonList.prototype.addCourse = function (course) {
                         config: disqusConfig
                     });
                 }
-            },
+            }
         });
     }).prop('title', courseDescriptionHtml)
         .attr('data-toggle', 'tooltip')
@@ -115,20 +126,75 @@ CourseButtonList.prototype.addCourse = function (course) {
     }
 };
 
+CourseButtonList.prototype.updateDisqusUnreadCounters = function () {
+    var that = this;
+
+    var courseNumbers = that.getCourseNumbers(false);
+    if (courseNumbers.length === 0) {
+        return;
+    }
+
+    var disqusScriptUrl = 'https://cheesefork.disqus.com/count-data.js?';
+    courseNumbers.forEach(function (course) {
+        disqusScriptUrl += '1=course_comments_' + course + '&';
+    });
+    disqusScriptUrl += '_=' + Date.now();
+
+    window.DISQUSWIDGETS = {
+        displayCount: function (data) {
+            var counts = (data && data.counts) || [];
+            counts.forEach(function (countItem) {
+                var match = /^course_comments_(\d+)$/.exec(countItem.id);
+                if (!match) {
+                    return;
+                }
+
+                var course = match[1];
+
+                var count = countItem.comments - (that.disqusReadCounters[course] || 0);
+                if (count <= 0) {
+                    return;
+                }
+
+                var selector = 'li.list-group-item[data-course-number="' + course + '"] .course-button-list-unread-count-badge';
+                that.element.find(selector).text(count).removeClass('d-none');
+            });
+        }
+    };
+
+    $.getScript(disqusScriptUrl);
+};
+
+CourseButtonList.prototype.disqusMarkCourseAsRead = function (course) {
+    var that = this;
+
+    var selector = 'li.list-group-item[data-course-number="' + course + '"] .course-button-list-unread-count-badge';
+    var countBadge = that.element.find(selector);
+    countBadge.addClass('d-none');
+    var count = parseInt(countBadge.text(), 10);
+
+    this.disqusReadCounters[course] = count;
+    localStorage.setItem('disqusReadCounters', JSON.stringify(this.disqusReadCounters));
+};
+
 CourseButtonList.prototype.setHovered = function (course) {
-    $('.course-button-list-item-course-' + course, this.element).addClass('course-button-list-item-hovered');
+    var selector = 'li.list-group-item[data-course-number="' + course + '"]';
+    this.element.find(selector).addClass('course-button-list-item-hovered');
 };
 
 CourseButtonList.prototype.removeHovered = function (course) {
-    $('.course-button-list-item-course-' + course, this.element).removeClass('course-button-list-item-hovered');
+    var selector = 'li.list-group-item[data-course-number="' + course + '"]';
+    this.element.find(selector).removeClass('course-button-list-item-hovered');
 };
 
 CourseButtonList.prototype.setConflicted = function (course) {
-    $('.course-button-list-item-course-' + course, this.element).addClass('course-button-list-item-conflicted');
+    var selector = 'li.list-group-item[data-course-number="' + course + '"]';
+    this.element.find(selector).addClass('course-button-list-item-conflicted');
 };
 
 CourseButtonList.prototype.removeConflicted = function (course) {
-    $('.course-button-list-item-course-' + course, this.element).removeClass('course-button-list-item-conflicted');
+    var selector = 'li.list-group-item[data-course-number="' + course + '"]';
+    this.element.find(selector).removeClass('course-button-list-item-conflicted');
 };
 
 CourseButtonList.prototype.isCourseInList = function (course) {

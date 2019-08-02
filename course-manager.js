@@ -198,7 +198,7 @@ CourseManager.prototype.parseExamDateTime = function (strDate) {
         return null;
     }
 
-    var date =  match[3] + '-' + match[2] + '-' + match[1];
+    var date = match[3] + '-' + match[2] + '-' + match[1];
 
     var startHour = '00';
     if (match[4] !== undefined) {
