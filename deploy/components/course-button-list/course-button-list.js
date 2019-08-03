@@ -169,10 +169,14 @@ CourseButtonList.prototype.disqusMarkCourseAsRead = function (course) {
 
     var selector = 'li.list-group-item[data-course-number="' + course + '"] .course-button-list-unread-count-badge';
     var countBadge = that.element.find(selector);
+    if (countBadge.hasClass('d-none')) {
+        return;
+    }
+
     countBadge.addClass('d-none');
     var count = parseInt(countBadge.text(), 10);
 
-    this.disqusReadCounters[course] = count;
+    this.disqusReadCounters[course] = (this.disqusReadCounters[course] || 0) + count;
     localStorage.setItem('disqusReadCounters', JSON.stringify(this.disqusReadCounters));
 };
 
