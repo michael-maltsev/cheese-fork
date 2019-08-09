@@ -26,8 +26,8 @@ CourseButtonList.prototype.addCourse = function (course) {
     var courseTitle = that.courseManager.getTitle(course);
 
     // A wrapper div for proper word wrapping of the content text.
-    var spanAbsolute = $('<div class="content-wrapper">').html($('<span class="content-absolute">').text(courseTitle));
-    var spanBoldHidden = $('<span class="content-bold-hidden">').text(courseTitle);
+    var spanAbsolute = $('<div class="content-wrapper"></div>').html($('<span class="content-absolute"></span>').text(courseTitle));
+    var spanBoldHidden = $('<span class="content-bold-hidden"></span>').text(courseTitle);
 
     var button = $('<li' +
         ' class="list-group-item active course-button-list-item"' +

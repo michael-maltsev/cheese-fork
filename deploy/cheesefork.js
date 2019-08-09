@@ -364,7 +364,7 @@
             var semesterSelect = $('#top-navbar-semester').find('.dropdown-menu');
 
             Object.keys(availableSemesters).sort().reverse().forEach(function (semester) {
-                var link = $('<a class="dropdown-item">')
+                var link = $('<a class="dropdown-item"></a>')
                     .prop('href', '?semester=' + encodeURIComponent(semester))
                     .text(semesterFriendlyName(semester));
                 if (semester === currentSemester) {
@@ -1388,7 +1388,7 @@
         var result;
 
         if (metadataDiff) {
-            result = $('<div class="course-metadata-diff-container">');
+            result = $('<div class="course-metadata-diff-container"></div>');
 
             Object.keys(metadataDiff).sort().forEach(function (course) {
                 var courseDiff = metadataDiff[course];
@@ -1571,7 +1571,7 @@
             return false;
         }
 
-        var content = $('<div class="col-md-12">');
+        var content = $('<div class="col-md-12"></div>');
         var title = semesterFriendlyName(currentSemester) + ' - CheeseFork';
 
         if (courseParameter !== null) {
@@ -1675,7 +1675,7 @@
             content.append('<br>');
 
             var typeAndNumber = courseManager.getLessonTypeAndNumber(lesson);
-            content.append($('<div style="font-weight: bold;">').text(typeAndNumber));
+            content.append($('<div style="font-weight: bold;"></div>').text(typeAndNumber));
 
             if (lesson['מרצה\/מתרגל']) {
                 var staffContents = $('<div>').text('מרצה\/מתרגל' + ': ');
