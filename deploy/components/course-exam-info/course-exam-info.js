@@ -106,8 +106,8 @@ CourseExamInfo.prototype.renderCourses = function (courses) {
                 tooltipText = dateWithTime || date;
             }
 
-            var spanAbsolute = $('<span class="content-absolute">').text(elementText);
-            var spanBoldHidden = $('<span class="content-bold-hidden">').text(elementText);
+            var spanAbsolute = $('<span class="content-absolute"></span>').text(elementText);
+            var spanBoldHidden = $('<span class="content-bold-hidden"></span>').text(elementText);
 
             daysText.append(spanAbsolute, spanBoldHidden);
 

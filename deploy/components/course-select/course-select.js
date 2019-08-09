@@ -280,7 +280,7 @@ var CourseSelect = (function () {
 
         var footer = that.filterDialog.getModalFooter();
         footer.css('flex-wrap', 'wrap');
-        $('<span id="filter-result">').addClass('bootstrap-dialog-message')
+        $('<span id="filter-result"></span>').addClass('bootstrap-dialog-message')
             .css({'margin-bottom': '.25rem'}).prependTo(footer);
 
         filterForm.submit(function (event) {
