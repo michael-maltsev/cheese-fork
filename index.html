@@ -28,6 +28,8 @@
     <link rel="stylesheet" media="print" href="modules/fullcalendar/fullcalendar.print.min.css">
     <link rel="stylesheet" href="modules/selectize/css/selectize.bootstrap4.css">
     <link rel="stylesheet" href="modules/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="modules/intro.js/introjs.min.css">
+    <link rel="stylesheet" href="modules/intro.js/introjs-rtl.min.css">
     <link rel="stylesheet" href="loader.css">
     <link rel="stylesheet" href="components/course-select/course-select.css">
     <link rel="stylesheet" href="components/course-button-list/course-button-list.css">
@@ -60,7 +62,7 @@
                         המערכת שלי
                     </a>
                 </li>
-                <li id="top-navbar-login" class="nav-item d-none">
+                <li id="top-navbar-login" class="nav-item d-none" data-intro="היכנסו על מנת לגשת למערכת מכל מקום (אופציונאלי אך מאוד מומלץ)">
                     <a class="nav-link" href="#">
                         <i class="fas fa-sign-in-alt"></i>
                         כניסה
@@ -118,9 +120,11 @@
     <div id="content-container" class="row">
         <div id="right-content-bar" class="col-md-2 my-2 my-md-0 invisible">
             <div class="d-flex flex-column h-100">
-                <select id="course-select" placeholder="לחצו לבחירת מקצוע...">
-                    <option value="">לחצו לבחירת מקצוע...</option>
-                </select>
+                <div data-intro="ביחרו את המקצועות הרצויים">
+                    <select id="course-select" placeholder="לחצו לבחירת מקצוע...">
+                        <option value="">לחצו לבחירת מקצוע...</option>
+                    </select>
+                </div>
 
                 <div id="shared-schedule-title">
                     <h3 id="sharing-user-unknown" class="d-none">מציג מערכת של משתמש אחר</h3>
@@ -138,7 +142,7 @@
                 </div>
             </div>
         </div>
-        <div id="course-calendar" class="col-md-10"></div>
+        <div id="course-calendar" class="col-md-10" data-intro="תתחילו לבנות את המערכת שלכם בצורה אינטראקטיבית ונוחה"></div>
     </div>
 
     <div class="d-none">
@@ -281,6 +285,7 @@
 <script src="modules/color-hash/color-hash.js"></script>
 <script src="modules/ics.js/ics.deps.min.js"></script>
 <script src="modules/jsdiff/diff.min.js"></script>
+<script src="modules/intro.js/intro.min.js"></script>
 <script src="modules/reparse.js"></script>
 <script src="modules/boolean-expression.js"></script>
 <script src="https://www.gstatic.com/firebasejs/5.3.1/firebase-app.js"></script>
