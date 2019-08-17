@@ -1,6 +1,6 @@
 'use strict';
 
-/* global ColorHash, BootstrapDialog, moment, ics, JsDiff, firebase, firebaseui, gtag */
+/* global introJs, ColorHash, BootstrapDialog, ics, JsDiff, firebase, firebaseui, gtag */
 /* global CourseManager, CourseSelect, CourseButtonList, CourseExamInfo, CourseCalendar */
 /* global courses_from_rishum, availableSemesters, currentSemester, scheduleSharingUserId */
 
@@ -201,7 +201,7 @@
                     firebaseAuthUIInit(function () {
                         watchSavedSchedule(function () {
                             $('#page-loader').hide();
-                            showThursdayGraphPopup() || showTechnionScansPopup();
+                            showExtraContentOnLoad();
                         });
                     });
                     firebaseAuthUIInitialized = true;
@@ -214,10 +214,52 @@
             if (!firebaseAuthUIInitialized) {
                 watchSavedSchedule(function () {
                     $('#page-loader').hide();
-                    showThursdayGraphPopup() || showTechnionScansPopup();
+                    showExtraContentOnLoad();
                 });
             }
         }
+    }
+
+    function showExtraContentOnLoad() {
+        return showIntro() || showThursdayGraphPopup() || showTechnionScansPopup();
+    }
+
+    function showIntro() {
+        try {
+            var dontShowDate = localStorage.getItem('dontShowIntro');
+            if (dontShowDate) {
+                //var days = (Date.now() - parseInt(dontShowDate, 10)) / (24 * 3600 * 1000);
+                //if (days <= 7) {
+                    return false;
+                //}
+            }
+        } catch (e) {
+            // localStorage is not available in IE/Edge when running from a local file.
+        }
+
+        if (courseButtonList.getCourseNumbers(true).length > 0) {
+            return false;
+        }
+
+        introJs().setOptions({
+            nextLabel: 'הבא',
+            prevLabel: 'קודם',
+            skipLabel: 'דלג',
+            doneLabel: 'בואו נתחיל',
+            disableInteraction: true,
+            exitOnOverlayClick: false,
+            showStepNumbers: false,
+            scrollToElement: false,
+            helperElementPadding: 0
+        }).onexit(function () {
+            try {
+                localStorage.setItem('dontShowIntro', Date.now().toString());
+            } catch (e) {
+                // localStorage is not available in IE/Edge when running from a local file.
+            }
+        }).start();
+
+        return true;
     }
 
     function showThursdayGraphPopup() {
