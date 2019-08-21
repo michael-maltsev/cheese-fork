@@ -228,10 +228,7 @@
         try {
             var dontShowDate = localStorage.getItem('dontShowIntro');
             if (dontShowDate) {
-                //var days = (Date.now() - parseInt(dontShowDate, 10)) / (24 * 3600 * 1000);
-                //if (days <= 7) {
-                    return false;
-                //}
+                return false;
             }
         } catch (e) {
             // localStorage is not available in IE/Edge when running from a local file.
@@ -340,7 +337,7 @@
             var dontShowDate = localStorage.getItem('dontShowTechnionScansPopup');
             if (dontShowDate) {
                 var days = (Date.now() - parseInt(dontShowDate, 10)) / (24 * 3600 * 1000);
-                if (days <= 7) {
+                if (days <= 30) {
                     return false;
                 }
             }
