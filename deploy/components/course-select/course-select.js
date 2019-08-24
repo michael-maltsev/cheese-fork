@@ -26,15 +26,26 @@ var CourseSelect = (function () {
             render: {
                 option: function (item) {
                     if (item.value === 'filter') {
-                        var text = 'סינון קורסים';
+                        var filterCoursesText = 'סינון קורסים';
+                        var filterCoursesHint = 'לחצו כאן לסינון מתקדם של הקורסים המוצגים';
 
+                        var filterCoursesElement = $('<abbr>').text(filterCoursesText)
+                            .prop('title', filterCoursesHint)
+                            .attr({
+                                'data-toggle': 'tooltip',
+                                'data-placement': 'right',
+                                'data-boundary': 'viewport'
+                            });
+
+                        var filteredStateText = '';
                         if (that.filteredCoursesCount < that.allCoursesCount) {
-                            text += ' (' + that.filteredCoursesCount + '/' + that.allCoursesCount + ')';
+                            filteredStateText = ' (' + that.filteredCoursesCount + '/' + that.allCoursesCount + ')';
                         }
 
-                        return $('<div>').addClass('option font-weight-bold').text(text);
+                        return $('<div>').addClass('option font-weight-bold').append(filterCoursesElement)
+                            .append(document.createTextNode(filteredStateText)).get(0);
                     } else if (item.value === 'partial') {
-                        return $('<div>').addClass('option font-italic').text('מציג 200 קורסים ראשונים');
+                        return $('<div>').addClass('option font-italic').text('מציג 200 קורסים ראשונים').get(0);
                     }
 
                     var course = item.value;
