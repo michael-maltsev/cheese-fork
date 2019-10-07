@@ -57,14 +57,14 @@ CourseManager.prototype.getSchedule = function (course) {
                     var sadnaotTa = '';
                     var match = /(?:\n|^)מתרגל[ית]? הסדנ(?:א|ה|אות).*?:\s*([\s\S]*?)\s*(?:=|$)/.exec(comment);
                     if (match) {
-                        sadnaotTa = match[1].replace(/\s+/g, ' ').replace(/\s*,\s*/g, '\n').replace(/ \(גם אחראית?\)/g, '').trim();
+                        sadnaotTa = match[1].replace(/\s+/g, ' ').replace(/\s*,\s*/g, '\n').replace(/ \(גם אחראי[תם]?\)/g, '').trim();
                     }
 
                     var sadnaot = [];
                     var sadnaId = 101;
                     for (i++; i < commentLines.length; i++) {
                         line = commentLines[i];
-                        match = /^ימי ([א-ו])' (\d+)\.(\d+)-(\d+)\.(\d+)(?:\s*,\s*(.*?) (\d+)(?:\s*,\s*(.*?))?)?$/.exec(line);
+                        match = /^ימי ([א-ו])',? (\d+)\.(\d+)-(\d+)\.(\d+)(?:\s*,\s*(.*?) (\d+)(?:\s*,\s*(.*?))?)?$/.exec(line);
                         if (!match) {
                             break;
                         }
