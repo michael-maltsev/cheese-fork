@@ -64,7 +64,7 @@ CourseManager.prototype.getSchedule = function (course) {
                     var sadnaId = 101;
                     for (i++; i < commentLines.length; i++) {
                         line = commentLines[i];
-                        match = /^ימי ([א-ו])',? (\d+)\.(\d+)-(\d+)\.(\d+)(?:\s*,\s*(.*?) (\d+)(?:\s*,\s*(.*?))?)?$/.exec(line);
+                        match = /^ב?(?:ימי|יום) ([א-ו])',? (\d+)\.(\d+)-(\d+)\.(\d+)(?:\s*,\s*(.*?) (\d+)(?:\s*,\s*(.*?))?)?$/.exec(line);
                         if (!match) {
                             break;
                         }
