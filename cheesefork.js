@@ -331,7 +331,7 @@
     }
 
     function showTechnionScansPopup() {
-        //return false; // disabled
+        return false; // disabled
 
         try {
             var dontShowDate = localStorage.getItem('dontShowTechnionScansPopup');
