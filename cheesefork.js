@@ -332,7 +332,9 @@
 
     function showTechnionScansPopup() {
         var inSemesterPeriod = Object.keys(availableSemesters).some(function (semester) {
-            return Date.now() >= new Date(semester.start) && Date.now() <= new Date(semester.end);
+            var now = Date.now();
+            var item = availableSemesters[semester];
+            return now >= new Date(item.start) && now <= new Date(item.end);
         });
         if (inSemesterPeriod) {
             return false;
