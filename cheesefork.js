@@ -331,7 +331,12 @@
     }
 
     function showTechnionScansPopup() {
-        return false; // disabled
+        var inSemesterPeriod = Object.keys(availableSemesters).some(function (semester) {
+            return Date.now() >= new Date(semester.start) && Date.now() <= new Date(semester.end);
+        });
+        if (inSemesterPeriod) {
+            return false;
+        }
 
         try {
             var dontShowDate = localStorage.getItem('dontShowTechnionScansPopup');
