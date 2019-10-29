@@ -961,6 +961,9 @@ var CourseCalendar = (function () {
                 begin.day(eventDay);
                 var end = event.end.clone().add(begin.diff(event.start), 'milliseconds');
 
+                // https://stackoverflow.com/a/667274
+                description = description.replace('\n', '\\n');
+
                 icsCal.addEvent(subject, description, location, begin.format(), end.format(), rrule);
                 count++;
             }
