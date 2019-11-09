@@ -562,7 +562,7 @@
                 });
             };
 
-            if (typeof firebase === 'undefined' || firebase.auth().currentUser === null) {
+            if (viewingSharedSchedule || typeof firebase === 'undefined' || firebase.auth().currentUser === null) {
                 if (!icsCal.download(semesterFriendlyNameForFileName(currentSemester))) {
                     errorEmptySchedule();
                 }
