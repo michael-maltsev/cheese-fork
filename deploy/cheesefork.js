@@ -8,6 +8,7 @@
     var courseManager = new CourseManager(courses_from_rishum);
     var colorHash = new ColorHash();
     var firestoreDb = null;
+    var firebaseStorage = null;
     var viewingSharedSchedule = false;
     var previewingFromSelectControl = null;
     var stopScheduleWatching = null;
@@ -187,7 +188,6 @@
 
         if (viewingSharedSchedule) {
             firebaseInit();
-            firestoreDbInit();
             watchSharedSchedule(function () {
                 $('#page-loader').hide();
             });
@@ -197,7 +197,6 @@
             if (typeof firebase !== 'undefined') {
                 try {
                     firebaseInit();
-                    firestoreDbInit();
                     firebaseAuthUIInit(function () {
                         watchSavedSchedule(function () {
                             $('#page-loader').hide();
@@ -555,13 +554,71 @@
                 });
             });
 
-            if (!icsCal.download(semesterFriendlyName(currentSemester))) {
+            var errorEmptySchedule = function () {
                 BootstrapDialog.show({
                     title: 'אופס',
                     message: 'המערכת ריקה',
                     size: BootstrapDialog.SIZE_SMALL
                 });
+            };
+
+            if (typeof firebase === 'undefined' || firebase.auth().currentUser === null) {
+                if (!icsCal.download(semesterFriendlyNameForFileName(currentSemester))) {
+                    errorEmptySchedule();
+                }
+
+                return;
             }
+
+            var calendar = icsCal.build();
+            if (!calendar) {
+                errorEmptySchedule();
+                return;
+            }
+
+            var calFilePath = firebase.auth().currentUser.uid + '/' + semesterFriendlyNameForFileName(currentSemester) + '.ics';
+            var calendarUrl = 'https://files.cheesefork.cf/' + calFilePath;
+
+            var exportCalendarDialog = BootstrapDialog.show({
+                title: ' ייצוא לקובץ iCalendar',
+                message: 'קובץ ה-iCalendar נשמר בשרת של CheeseFork ומסתנכרן אוטומטית עם המערכת שבניתם בכל פתיחה של חלון זה. ' +
+                    'הקישור קבוע פר משתמש וסמסטר, כך שניתן לייבא את הקישור עצמו לכלי שתומך בכך. ' +
+                    'עבור כל עדכון נוסף מספיק לפתוח את החלון פעם נוספת, במקום הורדה וייבוא בכל פעם של הקובץ.<br>' +
+                    '<br>' +
+                    'הקישור לקובץ iCalendar: <span id="calendar-link-placeholder">מעדכן את הקובץ בשרת...</span>.',
+                onshow: function (dialog) {
+                    dialog.getButton('copy-link').disable();
+                },
+                buttons: [{
+                    id: 'copy-link',
+                    label: 'העתק קישור',
+                    cssClass: 'btn-primary',
+                    action: function (dialog) {
+                        copyToClipboard(calendarUrl, function () {
+                            dialog.close();
+                        }, function () {
+                            alert('ההעתקה נכשלה');
+                        });
+                    }
+                }, {
+                    label: 'סגור',
+                    action: function (dialog) {
+                        dialog.close();
+                    }
+                }]
+            });
+
+            var storageRef = firebaseStorage.ref();
+            var calFileRef = storageRef.child(calFilePath);
+
+            calFileRef.putString(calendar).then(function (snapshot) {
+                var urlElement = $('<a target="_blank" rel="noopener">לחצו כאן להורדה</a>').prop('href', calendarUrl);
+                exportCalendarDialog.getModalBody().find('#calendar-link-placeholder').html(urlElement);
+
+                exportCalendarDialog.getButton('copy-link').enable();
+            }, function (error) {
+                alert('Error saving calendar to server: ' + error.message);
+            });
         });
     }
 
@@ -575,11 +632,11 @@
             messagingSenderId: '916559682433'
         };
         firebase.initializeApp(config);
-    }
 
-    function firestoreDbInit() {
         firestoreDb = firebase.firestore();
         firestoreDb.settings({timestampsInSnapshots: true}); // silence a warning
+
+        firebaseStorage = firebase.app().storage('gs://files.cheesefork.cf');
     }
 
     function firebaseAuthUIInit(onInitialized) {
@@ -677,6 +734,25 @@
 
             case '03':
                 return 'קיץ ' + (year + 1);
+
+            default:
+                return semester;
+        }
+    }
+
+    function semesterFriendlyNameForFileName(semester) {
+        var year = parseInt(semester.slice(0, 4), 10);
+        var semesterCode = semester.slice(4);
+
+        switch (semesterCode) {
+            case '01':
+                return 'winter-' + year + '-' + (year + 1);
+
+            case '02':
+                return 'spring-' + (year + 1);
+
+            case '03':
+                return 'summer-' + (year + 1);
 
             default:
                 return semester;
