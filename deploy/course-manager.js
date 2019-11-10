@@ -69,6 +69,12 @@ CourseManager.prototype.getSchedule = function (course) {
                             break;
                         }
 
+                        // If the TA name is a number, it's not a TA name but a room number.
+                        if (match[6] && !match[7] && match[8] && /^\d+$/.test(match[8])) {
+                            match[7] = match[8];
+                            match[8] = null;
+                        }
+
                         var building = match[6] || '';
                         switch (building) {
                             case 'פ\'':
