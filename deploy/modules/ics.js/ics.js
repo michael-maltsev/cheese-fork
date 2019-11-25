@@ -1,7 +1,7 @@
 /* global saveAs, Blob, BlobBuilder, console */
 /* exported ics */
 
-var ics = function(uidDomain, prodId) {
+var ics = function(uidDomain, prodId, extraHeaders) {
   'use strict';
 
   if (navigator.userAgent.indexOf('MSIE') > -1 && navigator.userAgent.indexOf('MSIE 10') == -1) {
@@ -18,7 +18,7 @@ var ics = function(uidDomain, prodId) {
     'BEGIN:VCALENDAR',
     'PRODID:' + prodId,
     'VERSION:2.0'
-  ].join(SEPARATOR);
+  ].concat(extraHeaders || []).join(SEPARATOR);
   var calendarEnd = SEPARATOR + 'END:VCALENDAR';
   var BYDAY_VALUES = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
 
