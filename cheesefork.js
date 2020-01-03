@@ -333,7 +333,11 @@
         var inSemesterPeriod = Object.keys(availableSemesters).some(function (semester) {
             var now = Date.now();
             var item = availableSemesters[semester];
-            return now >= new Date(item.start) && now <= new Date(item.end);
+            var startDate = new Date(item.start);
+            var endDate = new Date(item.end);
+            // Subtract several days from end date for an early notification.
+            endDate.setDate(endDate.getDate() - 7);
+            return now >= startDate && now <= endDate;
         });
         if (inSemesterPeriod) {
             return false;
