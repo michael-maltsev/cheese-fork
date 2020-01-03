@@ -28,6 +28,6 @@ function fetch_semester {
 	return 0
 }
 
-fetch_semester 201802 || exit 1
 fetch_semester 201803 || exit 1
 fetch_semester 201901 || exit 1
+fetch_semester 201902 || exit 1
