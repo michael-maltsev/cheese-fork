@@ -126,3 +126,10 @@
 .bootstrap-dialog .bootstrap-dialog-footer-buttons .btn {
     margin-right: .5rem;
 }
+
+/* intro.js - [done,prev,next] buttons order change to [prev,next,done]: https://stackoverflow.com/questions/42263288 */
+/* Also, change "done" button color from light gray to dark gray */
+.introjs-donebutton {
+    float: left;
+    color: #333;
+}
