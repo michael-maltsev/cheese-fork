@@ -537,6 +537,8 @@
 
             gtag('event', 'navbar-export');
 
+            $(this).find('[data-toggle="tooltip"]').tooltip('hide');
+
             var extraCalendarHeaders = [
                 'NAME:' + semesterFriendlyName(currentSemester),
 
