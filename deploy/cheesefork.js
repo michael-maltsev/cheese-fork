@@ -85,9 +85,7 @@
 
         courseButtonList = new CourseButtonList($('#course-button-list'), {
             courseManager: courseManager,
-            colorGenerator: function (course) {
-                return colorHash.hex(course);
-            },
+            colorGenerator: courseColorGenerator,
             readonly: viewingSharedSchedule,
             onHoverIn: function (course) {
                 courseExamInfo.setHovered(course);
@@ -122,9 +120,7 @@
 
         courseExamInfo = new CourseExamInfo($('#course-exam-info'), {
             courseManager: courseManager,
-            colorGenerator: function (course) {
-                return colorHash.hex(course);
-            },
+            colorGenerator: courseColorGenerator,
             onHoverIn: function (course) {
                 courseButtonList.setHovered(course);
                 if (previewingFromSelectControl) {
@@ -143,9 +139,7 @@
 
         courseCalendar = new CourseCalendar($('#course-calendar'), {
             courseManager: courseManager,
-            colorGenerator: function (course) {
-                return colorHash.hex(course);
-            },
+            colorGenerator: courseColorGenerator,
             readonly: viewingSharedSchedule,
             onCourseHoverIn: function (course) {
                 courseButtonList.setHovered(course);
@@ -217,6 +211,16 @@
                 });
             }
         }
+    }
+
+    function courseColorGenerator(course) {
+        var str = course;
+        // Fixup: both 114036 and 114246 get a green color, and both are taken at the same semester.
+        // So here we cause the color of 114246 to be different.
+        if (str === '114246') {
+            str = 'a' + str;
+        }
+        return colorHash.hex(str);
     }
 
     function showExtraContentOnLoad() {
