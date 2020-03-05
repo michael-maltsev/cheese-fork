@@ -964,6 +964,12 @@ var CourseCalendar = (function () {
                 // https://stackoverflow.com/a/667274
                 description = description.replace('\n', '\\n');
 
+                // Causes timezone to be added to the formatted string,
+                // fixes a time shift issue in Safari.
+                // https://stackoverflow.com/q/54210749
+                begin.local();
+                end.local();
+
                 icsCal.addEvent(subject, description, location, begin.format(), end.format(), rrule);
                 count++;
             }
