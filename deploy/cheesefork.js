@@ -649,7 +649,12 @@
             var storageRef = firebaseStorage.ref();
             var calFileRef = storageRef.child(calFilePath);
 
-            calFileRef.putString(calendar).then(function (snapshot) {
+            calFileRef.putString(calendar, 'raw', {
+                // Ask browsers not to cache the request.
+                // https://stackoverflow.com/q/42788488
+                // https://stackoverflow.com/q/41938969
+                cacheControl: 'public, max-age=0'
+            }).then(function (snapshot) {
                 var urlElement = $('<a target="_blank" rel="noopener">לחצו כאן להורדה</a>').prop('href', calendarUrl);
                 exportCalendarDialog.getModalBody().find('#calendar-link-placeholder').html(urlElement);
 
