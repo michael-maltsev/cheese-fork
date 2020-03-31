@@ -1,3 +1,104 @@
+/* --- Temporary, no spoilers --- */
+
+body.cf2cf {
+    background: #e0e0e0 url(https://choicefreak.appspot.com/media/images/brickwall.png);
+    font-family: sans-serif;
+}
+
+body.cf2cf
+#top-navbar {
+    padding: 0;
+}
+
+body.cf2cf
+#top-navbar .navbar-brand {
+    margin-top: -13px;
+    margin-left: -9px !important;
+}
+
+body.cf2cf
+#top-navbar .navbar-brand span {
+    font-size: small;
+    font-weight: unset !important;
+}
+
+body.cf2cf
+#top-navbar .navbar-brand img {
+    display: none;
+}
+
+body.cf2cf
+#top-navbar .navbar-brand span::after {
+    content: "Beta";
+    font-size: x-small;
+    color: red;
+    vertical-align: super;
+}
+
+body.cf2cf
+#course-calendar {
+    padding-left: 3px;
+    padding-right: 3px;
+}
+
+body.cf2cf
+#top-navbar .navbar-nav {
+    margin-right: -15px;
+}
+
+body.cf2cf
+#right-content-bar {
+    padding-left: 3px;
+    padding-right: 3px;
+}
+
+body.cf2cf
+.fc-axis.fc-time.fc-widget-content {
+    font-size: x-small !important;
+}
+
+body.cf2cf
+#course-calendar .fc-view-container {
+    background-color: white;
+}
+
+body.cf2cf
+#course-calendar .fc-head-container.fc-widget-header {
+    border-bottom-style: double;
+    border-bottom-color: pink;
+    border-bottom-width: 2px;
+}
+
+body.cf2cf
+#course-calendar .calendar-item-unselected {
+    background-color: white !important;
+}
+
+body.cf2cf
+#course-calendar .calendar-item-selected {
+    background: radial-gradient(ellipse at center, rgb(96,108,136) 0%,rgb(63,76,107) 100%);
+}
+
+body.cf2cf
+.course-button-list-item {
+    background: #f8f8f8 !important;
+    padding: 0.15rem 0.25rem;
+    border: none;
+    font-size: 90% !important;
+}
+
+body.cf2cf
+.course-button-list-item.active {
+    background: rgb(86,98,126) !important;
+}
+
+body.cf2cf
+.exam-info-item {
+    background: rgb(86,98,126) !important;
+}
+
+/* --- End of temporary, no spoilers --- */
+
 @media screen and (max-width: 350px) {
     #top-navbar .navbar-brand {
         font-size: 1rem;

@@ -426,6 +426,24 @@
                 semesterSelect.append(link);
             });
 
+            $('#top-navbar-wtf').click(function (event) {
+                event.preventDefault();
+
+                gtag('event', 'navbar-wtf');
+
+                var body = $('body');
+                body.toggleClass('cf2cf');
+
+                // Update calendar with the changes.
+                $('#course-calendar').fullCalendar('option', {});
+
+                try {
+                    localStorage.setItem('2020-04-01-cf2cf', body.hasClass('cf2cf').toString());
+                } catch (e) {
+                    // localStorage is not available in IE/Edge when running from a local file.
+                }
+            });
+
             $('#top-navbar-changes').click(function (event) {
                 event.preventDefault();
 
