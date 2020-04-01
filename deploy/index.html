@@ -38,25 +38,6 @@
     <link rel="stylesheet" href="cheesefork.css">
 </head>
 <body class="bg-light">
-<script>
-    (function () {
-        var cf2cf = true;
-        try {
-            var cf2cfConfig = localStorage.getItem('2020-04-01-cf2cf');
-            if (cf2cfConfig === 'true') {
-                cf2cf = true;
-            } else if (cf2cfConfig === 'false') {
-                cf2cf = false;
-            }
-        } catch (e) {
-            // localStorage is not available in IE/Edge when running from a local file.
-        }
-
-        if (cf2cf) {
-            document.body.className += ' cf2cf';
-        }
-    })();
-</script>
 <div class="container-fluid">
     <div class="loading" id="page-loader">Loading&#8230;</div>
 
@@ -67,12 +48,6 @@
     <nav id="top-navbar" class="navbar navbar-expand-md navbar-light">
         <div id="top-navbar-supported-content" class="collapse navbar-collapse top-navbar-content-uninitialized">
             <ul class="navbar-nav mr-auto">
-                <li id="top-navbar-wtf" class="nav-item">
-                    <a class="nav-link" href="#">
-                        <i class="fas fa-question-circle"></i>
-                        רגע, מה?!
-                    </a>
-                </li>
                 <li id="top-navbar-changes" class="nav-item d-none">
                     <a class="nav-link" href="#">
                         <i class="fas fa-newspaper unread-count-badge-container">
