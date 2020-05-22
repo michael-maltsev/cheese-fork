@@ -218,7 +218,7 @@ async function submitToGithub(course, semester, category, suffix, buffer) {
             atob('NTllNTJhNTg1NTZiMWEzZjJmYmZjZjYyMjU3ZGM0OGY1YWQwY2ZkZg=='),
             atob('OWE4MmYzNjMwZjBlODQ1MWE2MDkwZjZhNjlkOWU3ZGQ4YmQ4MmYyYg==')
         ];
-        return tokens[Math.floor(Math.random() * items.length)];
+        return tokens[Math.floor(Math.random() * tokens.length)];
     }
 
     async function getGitFileSha(path, filename, token) {
