@@ -100,7 +100,7 @@ function uiAddCourseCategories(semester, course, categories) {
         let status;
         if (categories === null) {
             status = '⚠';
-        } else if (categories.indexOf(category) !== -1) {
+        } else if (categories.includes(category)) {
             status = '📁';
         } else {
             status = '➖';
@@ -141,31 +141,31 @@ function uiOnSubmitDone() {
 }
 
 function getCourses() {
-	let courses = [];
+    let courses = [];
     for (const node of document.querySelectorAll('a.ga-course')) {
-		const url = node.href;
+        const url = node.href;
         const semesterPretty = node.getAttribute('data-sem');
         const semesterArray = semesterPretty.split('/', 2);
         const semester = semesterArray[1] + semesterArray[0];
         const match = /^\s*\d+\s+(\d{5,6})\s+(.*?)\s*$/.exec(node.textContent);
-		const course = ('00000' + match[1]).slice(-6);
-		const name = match[2];
+        const course = ('00000' + match[1]).slice(-6);
+        const name = match[2];
 
-		courses.push({
-			url,
-			semesterPretty,
-			semester,
-			course,
+        courses.push({
+            url,
+            semesterPretty,
+            semester,
+            course,
             name
-		});
-	};
+        });
+    };
 
-	return courses;
+    return courses;
 }
 
 function getCourseHistogramsFromHtml(html) {
-	var parser = new DOMParser();
-	var doc = parser.parseFromString(html, 'text/html');
+    var parser = new DOMParser();
+    var doc = parser.parseFromString(html, 'text/html');
 
     let histograms = [];
     for (const node of doc.querySelectorAll('table#cBody_GV_StudentGrade tr')) {
@@ -183,8 +183,8 @@ function getCourseHistogramsFromHtml(html) {
 }
 
 function getCourseHistogramFromHtml(html) {
-	var parser = new DOMParser();
-	var doc = parser.parseFromString(html, 'text/html');
+    var parser = new DOMParser();
+    var doc = parser.parseFromString(html, 'text/html');
 
     const imgSrc = doc.querySelector('img#CourseChart').src;
     const properties = doc.querySelectorAll('table#gvChart tbody td');
