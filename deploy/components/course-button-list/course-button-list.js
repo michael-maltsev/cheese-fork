@@ -1,6 +1,6 @@
 'use strict';
 
-/* global BootstrapDialog, gtag, DISQUS */
+/* global HistogramBrowser, BootstrapDialog, gtag, DISQUS */
 
 function CourseButtonList(element, options) {
     this.element = element;
@@ -78,7 +78,15 @@ CourseButtonList.prototype.addCourse = function (course) {
         $(this).tooltip('hide');
         BootstrapDialog.show({
             title: courseTitle,
-            message: $('<div>').html(courseDescriptionHtmlWithLinks + '<br><br><div id="disqus_thread"></div>'),
+            size: BootstrapDialog.SIZE_WIDE,
+            message: $('<div>').html(courseDescriptionHtmlWithLinks + '<br><br>' +
+                '<p class="text-center font-weight-bold h6">היסטוגרמות</p><div class="inline_histograms"></div><br>' +
+                '<div id="disqus_thread"></div>'
+            ),
+            onshow: function (dialog) {
+                var histogramBrowser = new HistogramBrowser(dialog.getModalBody().find('.inline_histograms'));
+                histogramBrowser.loadHistograms(course);
+            },
             onshown: function (dialog) {
                 var disqusConfig = function () {
                     this.page.url = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '') + location.pathname + '#!' + 'course_comments_' + course;
