@@ -80,11 +80,11 @@ CourseButtonList.prototype.addCourse = function (course) {
             title: courseTitle,
             size: BootstrapDialog.SIZE_WIDE,
             message: $('<div>').html(courseDescriptionHtmlWithLinks + '<br><br>' +
-                '<p class="text-center font-weight-bold h6">היסטוגרמות</p><div class="inline_histograms"></div><br>' +
+                '<p class="text-center font-weight-bold h6">היסטוגרמות</p><div class="inline-histograms"></div><br>' +
                 '<div id="disqus_thread"></div>'
             ),
             onshow: function (dialog) {
-                var histogramBrowser = new HistogramBrowser(dialog.getModalBody().find('.inline_histograms'));
+                var histogramBrowser = new HistogramBrowser(dialog.getModalBody().find('.inline-histograms'));
                 histogramBrowser.loadHistograms(course);
             },
             onshown: function (dialog) {
