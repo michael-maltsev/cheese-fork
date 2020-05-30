@@ -106,15 +106,55 @@ CourseButtonList.prototype.addCourse = function (course) {
                 }
             }
         });
-    }).prop('title', courseDescriptionHtml)
-        .attr('data-toggle', 'tooltip')
-        .tooltip({
-            html: true,
-            placement: 'right',
-            template: '<div class="tooltip" role="tooltip"><div class="arrow"></div><div class="tooltip-inner course-description-tooltip-inner"></div></div>',
-            trigger: 'hover'
-        });
+    });
+
+    function setRegularTooltip(tip) {
+        badge.prop('title', courseDescriptionHtml)
+            .attr('data-toggle', 'tooltip')
+            .tooltip({
+                html: true,
+                placement: 'right',
+                template: '<div class="tooltip" role="tooltip"><div class="arrow"></div><div class="tooltip-inner course-description-tooltip-inner"></div></div>',
+                trigger: 'hover'
+            }).on('hidden.bs.tooltip', function () {
+                tip !== true && tip.tooltip('hide');
+            });
+    }
+
+    try {
+        window.course_button_list_promo_shown = window.course_button_list_promo_shown || !!localStorage.getItem('dontShowHistogramsTip');
+    } catch (e) {
+        // localStorage is not available in IE/Edge when running from a local file.
+    }
+
+    if (window.course_button_list_promo_shown) {
+        setRegularTooltip(window.course_button_list_promo_shown);
+    } else {
+        badge.prop('title', 'חדש, היסטוגרמות!<br>לחצו כאן')
+            .attr('data-toggle', 'tooltip')
+            .tooltip({
+                container: '.container-fluid',
+                html: true,
+                placement: 'right',
+                template: '<div class="tooltip" role="tooltip"><div class="bs-tooltip-left"><div class="arrow"></div></div><div class="tooltip-inner"></div></div>',
+                trigger: 'manual'
+            }).on('hidden.bs.tooltip', function () {
+                badge.tooltip('dispose');
+                setRegularTooltip(true);
+                window.course_button_list_promo_shown = true;
+                try {
+                    localStorage.setItem('dontShowHistogramsTip', Date.now().toString());
+                } catch (e) {
+                    // localStorage is not available in IE/Edge when running from a local file.
+                }
+            });
+    }
     that.element.append(button);
+
+    if (!window.course_button_list_promo_shown) {
+        badge.tooltip('show');
+        window.course_button_list_promo_shown = badge;
+    }
 
     function onCourseButtonClick(button, course) {
         if (button.hasClass('active')) {
@@ -231,5 +271,15 @@ CourseButtonList.prototype.getCourseNumbers = function (onlySelected) {
 };
 
 CourseButtonList.prototype.clear = function () {
+    if (window.course_button_list_promo_shown) {
+        var tip = window.course_button_list_promo_shown;
+        tip !== true && tip.tooltip('hide');
+        try {
+            localStorage.setItem('dontShowHistogramsTip', Date.now().toString());
+        } catch (e) {
+            // localStorage is not available in IE/Edge when running from a local file.
+        }
+        window.course_button_list_promo_shown = true;
+    }
     this.element.empty();
 };
