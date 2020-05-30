@@ -27,6 +27,12 @@
     }
 
     function cheeseforkInit() {
+        // Use overlayScrollbars only if the scrollbar has width.
+        // On desktop it usually does, on mobile it ususally doesn't.
+        if (getScrollBarWidth() > 0) {
+            $('body').overlayScrollbars({ }).removeClass('os-host-rtl');
+        }
+
         $('[data-toggle="tooltip"]').tooltip();
 
         viewingSharedSchedule = scheduleSharingUserId ? true : false;
@@ -2069,5 +2075,13 @@
         if (!results) return null;
         if (!results[2]) return '';
         return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+
+    // https://stackoverflow.com/a/19015262
+    function getScrollBarWidth() {
+        var $outer = $('<div>').css({visibility: 'hidden', width: 100, overflow: 'scroll'}).appendTo('body'),
+            widthWithScroll = $('<div>').css({width: '100%'}).appendTo($outer).outerWidth();
+        $outer.remove();
+        return 100 - widthWithScroll;
     }
 })();
