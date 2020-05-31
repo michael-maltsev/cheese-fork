@@ -147,8 +147,11 @@ function getCourses() {
         const semesterPretty = node.getAttribute('data-sem');
         const semesterArray = semesterPretty.split('/', 2);
         const semester = semesterArray[1] + semesterArray[0];
-        const match = /^\s*\d+\s+(\d{5,6})\s+(.*?)\s*$/.exec(node.textContent);
-        const course = ('00000' + match[1]).slice(-6);
+        const match = /^\s*\d+\s+(\d{5,8})\s+(.*?)\s*$/.exec(node.textContent);
+        // For some reason, sometimes there are 8-digit course numbers,
+        // in which case the last two digits have an extra, unknown meaning.
+        const courseBeforePadding = match[1].length > 6 ? match[1].slice(0, -2) : match[1];
+        const course = ('00000' + courseBeforePadding).slice(-6);
         const name = match[2];
 
         courses.push({
