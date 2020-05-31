@@ -113,6 +113,12 @@
     cursor: default;
 }
 
+/* Fixes: Scroll and focus issue with multiple modals open */
+/* https://github.com/nakupanda/bootstrap3-dialog/issues/70 */
+.modal {
+    overflow: auto !important;
+}
+
 /* bootstrap4-dialog RTL fix */
 .bootstrap-dialog .bootstrap-dialog-header {
     flex-grow: 1;
@@ -132,4 +138,9 @@
 .introjs-donebutton {
     float: left;
     color: #333;
+}
+
+/* Make z-index smaller than bootstrap4-dialog popup */
+html.os-html>.os-host>.os-scrollbar {
+    z-index: 999;
 }

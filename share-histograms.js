@@ -75,10 +75,10 @@ function uiCreateTable(courses) {
         for (const category of histogramCategories) {
             let content = '...';
             html += '<td class="' + category + '">' + content + '</td>';
-        };
+        }
 
         html += '</tr>';
-    };
+    }
 
     html += '</tbody></table>';
 
@@ -106,34 +106,34 @@ function uiAddCourseCategories(semester, course, categories) {
             status = '➖';
         }
         uiUpdateItemStatus(semester, course, category, status);
-    };
+    }
 }
 
 function uiOnFirstLoadingDone() {
     uiUpdateTitle('מוכן');
 
-    const submit_button = document.getElementById('grabber_submit_button');
-    submit_button.style.display = '';
-    submit_button.onclick = () => {
-        submit_button.style.display = 'none';
+    const submitButton = document.getElementById('grabber_submit_button');
+    submitButton.style.display = '';
+    submitButton.onclick = () => {
+        submitButton.style.display = 'none';
         uiUpdateTitle('משתף...');
         submitHistograms().catch(reason => uiOnError(reason.message));
         return false;
-    }
+    };
 }
 
 function uiOnError(message) {
     alert('Error: ' + message);
     uiUpdateTitle('שגיאה');
 
-    const try_again_button = document.getElementById('grabber_try_again_button');
-    try_again_button.style.display = '';
-    try_again_button.onclick = () => {
-        try_again_button.style.display = 'none';
+    const tryAgainButton = document.getElementById('grabber_try_again_button');
+    tryAgainButton.style.display = '';
+    tryAgainButton.onclick = () => {
+        tryAgainButton.style.display = 'none';
         uiUpdateTitle('טוען נתונים...');
         run().catch(reason => uiOnError(reason.message));
         return false;
-    }
+    };
 }
 
 function uiOnSubmitDone() {
@@ -158,7 +158,7 @@ function getCourses() {
             course,
             name
         });
-    };
+    }
 
     return courses;
 }
@@ -176,7 +176,7 @@ function getCourseHistogramsFromHtml(html) {
                 histograms.push({ category, url: histogramLink.href });
             }
         }
-    };
+    }
 
     histograms.sort((a, b) => histogramCategories.indexOf(a.category) - histogramCategories.indexOf(b.category));
     return histograms;
@@ -249,7 +249,7 @@ async function submitToGithub(course, semester, category, suffix, buffer) {
     }
 
     // https://stackoverflow.com/a/9458996
-    function ArrayBufferToBase64(buffer) {
+    function arrayBufferToBase64(buffer) {
         let binary = '';
         let bytes = new Uint8Array(buffer);
         let len = bytes.byteLength;
@@ -273,10 +273,10 @@ async function submitToGithub(course, semester, category, suffix, buffer) {
 
     let data = {
         'message': 'New submission',
-        'content': ArrayBufferToBase64(buffer)
+        'content': arrayBufferToBase64(buffer)
     };
     if (serverSha) {
-        data['sha'] = serverSha;
+        data.sha = serverSha;
     }
 
     let attemptNum = 0;

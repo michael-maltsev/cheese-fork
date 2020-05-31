@@ -1,0 +1,47 @@
+.histogram-container.histogram-activated .histogram-overlay-message {
+    display: none;
+}
+
+.histogram-container:not(.histogram-activated) .histogram-content {
+    filter: blur(15px);
+    pointer-events: none;
+}
+
+.histogram-container .histogram-content {
+    transition: filter .5s;
+}
+
+.histogram-overlay-message {
+    position: absolute;
+    z-index: 1;
+    left: 0;
+    right: 0;
+    margin: 20px 25%;
+    text-align: center;
+}
+
+.histogram-overlay-message-button-container {
+    margin-bottom: 6px;
+}
+
+/* https://stackoverflow.com/a/21992458 */
+.histogram-image-container {
+    /* image resolution: 800x450 */
+    padding-bottom: 56.25%;
+    position: relative;
+}
+
+.histogram-image {
+    width: 100%;
+    height: 100%;
+    display: block;
+    position: absolute;
+}
+
+.histogram-modal-guide-content p {
+    margin-bottom: .5rem;
+}
+
+.histogram-modal-guide-content li {
+    margin-bottom: 1rem;
+}
