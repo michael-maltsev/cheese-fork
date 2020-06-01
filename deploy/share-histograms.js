@@ -219,12 +219,7 @@ async function submitToGithub(course, semester, category, suffix, buffer) {
             atob('NTNjNzA3MDc2NzM5MDJkYjI5ZGMzZTkxN2JlODdmNWI4YTMzZDdjNg=='),
             atob('MTA4MjQxYTJkYmNkYmZkZDQ2YWI0NDliZTJkZTVmMTYxZGZiZThhZQ=='),
             atob('NTllNTJhNTg1NTZiMWEzZjJmYmZjZjYyMjU3ZGM0OGY1YWQwY2ZkZg=='),
-            atob('OWE4MmYzNjMwZjBlODQ1MWE2MDkwZjZhNjlkOWU3ZGQ4YmQ4MmYyYg=='),
-            atob('ZGI2MjgwNzcyY2FkNjM0N2IzMDVkMGI1NWRjOTk1MzZjNDhmYjY0MA=='),
-            atob('NGJhNTUzNDdiNzY0MzE2ZWJlN2JlNDBkOGQ4MmE1ZmE2MTVhZDU3Ng=='),
-            atob('NzhlMjNlOWYyZWFmZGY0ZmY0ZjQ2ODNiZGU5YzRhNTExZjVlZWZlZA=='),
-            atob('NDFiMTk2OTVkNmFmMzFhZmJjODY1OGI4ZWEyMTQ5NjM2MzQ4YjA5YQ=='),
-            atob('NzkzODk5ODFiNDhkNmI2NWNmODMxMDI0YWNhM2ZkYjQxMDgwNGM4Yg==')
+            atob('OWE4MmYzNjMwZjBlODQ1MWE2MDkwZjZhNjlkOWU3ZGQ4YmQ4MmYyYg==')
         ];
         return tokens[Math.floor(Math.random() * tokens.length)];
     }
