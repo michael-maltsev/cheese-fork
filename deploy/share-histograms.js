@@ -113,7 +113,7 @@ function uiOnFirstLoadingDone() {
     uiUpdateTitle('מוכן');
 
     const submitButton = document.getElementById('grabber_submit_button');
-    submitButton.style.display = '';
+    submitButton.style.display = 'inline-block;';
     submitButton.onclick = () => {
         submitButton.style.display = 'none';
         uiUpdateTitle('משתף...');
@@ -127,7 +127,7 @@ function uiOnError(message) {
     uiUpdateTitle('שגיאה');
 
     const tryAgainButton = document.getElementById('grabber_try_again_button');
-    tryAgainButton.style.display = '';
+    tryAgainButton.style.display = 'inline-block;';
     tryAgainButton.onclick = () => {
         tryAgainButton.style.display = 'none';
         uiUpdateTitle('טוען נתונים...');
