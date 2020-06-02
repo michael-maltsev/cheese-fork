@@ -311,20 +311,34 @@ async function submitToGithub(course, semester, category, suffix, buffer) {
     }
 }
 
+async function fetchValidRespose(url, name) {
+    let lastStatus;
+    for (let i = 0; i < 4; i++) {
+        const result = await fetch(url);
+        if (result.ok) {
+            return result;
+        }
+
+        lastStatus = result.status;
+    }
+
+    throw new Error(`Fetching ${name} returned ` + lastStatus);
+}
+
 async function submitHistograms() {
     for (const item of histogramUploadQueue) {
         uiUpdateItemStatus(item.semester, item.course, item.category, '...');
 
-        await fetch(item.courseUrl);
+        await fetchValidRespose(item.courseUrl, 'course page');
 
-        const html = await (await fetch(item.histogramUrl)).text();
+        const html = await (await fetchValidRespose(item.histogramUrl, 'histogram page')).text();
 
         const histogram = getCourseHistogramFromHtml(html);
 
         const properties = new TextEncoder().encode(JSON.stringify(histogram.properties, null, 2)).buffer;
         const propertiesResult = await submitToGithub(item.course, item.semester, item.category, '.json', properties);
 
-        const image = await (await fetch(histogram.imgSrc)).arrayBuffer();
+        const image = await (await fetchValidRespose(histogram.imgSrc, 'histogram image')).arrayBuffer();
         const imageResult = await submitToGithub(item.course, item.semester, item.category, '.png', image);
 
         if (propertiesResult === 'exists' && imageResult === 'exists') {
@@ -342,7 +356,7 @@ async function run() {
     uiCreateTable(courses);
 
     for (const course of courses) {
-        const html = await (await fetch(course.url)).text();
+        const html = await (await fetchValidRespose(course.url, 'course page')).text();
 
         const histograms = getCourseHistogramsFromHtml(html);
 
