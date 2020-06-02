@@ -176,7 +176,11 @@ function getCourseHistogramsFromHtml(html) {
         if (histogramCategories.includes(category)) {
             const histogramLink = node.querySelector('a[data-histogram]');
             if (histogramLink) {
-                histograms.push({ category, url: histogramLink.href });
+                const url = histogramLink.href.replace(/&lang=[a-z]+$/, '');
+                histograms.push({
+                    category,
+                    url
+                });
             }
         }
     }
