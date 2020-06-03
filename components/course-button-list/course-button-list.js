@@ -114,7 +114,7 @@ CourseButtonList.prototype.addCourse = function (course) {
             .tooltip({
                 html: true,
                 placement: 'right',
-                template: '<div class="tooltip" role="tooltip"><div class="arrow"></div><div class="tooltip-inner course-description-tooltip-inner"></div></div>',
+                template: '<div class="tooltip" role="tooltip"><div class="arrow arrow-fix-placement"></div><div class="tooltip-inner course-description-tooltip-inner"></div></div>',
                 trigger: 'hover'
             }).on('hidden.bs.tooltip', function () {
                 tip !== true && tip.tooltip('hide');
@@ -136,7 +136,7 @@ CourseButtonList.prototype.addCourse = function (course) {
                 container: '.container-fluid',
                 html: true,
                 placement: 'right',
-                template: '<div class="tooltip" role="tooltip"><div class="bs-tooltip-left"><div class="arrow"></div></div><div class="tooltip-inner"></div></div>',
+                template: '<div class="tooltip" role="tooltip"><div class="arrow arrow-fix-placement"></div><div class="tooltip-inner"></div></div>',
                 trigger: 'manual'
             }).on('hidden.bs.tooltip', function () {
                 badge.tooltip('dispose');

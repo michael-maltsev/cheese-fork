@@ -61,3 +61,28 @@
     top: -5px;
     left: 10px;
 }
+
+/* Fix tooltip arrow direction */
+.tooltip[x-placement^=left] .arrow-fix-placement {
+    right: 0;
+    left: auto;
+}
+
+.tooltip[x-placement^=right] .arrow-fix-placement {
+    left: 0;
+    right: auto;
+}
+
+.tooltip[x-placement^=left] .arrow-fix-placement::before {
+    left: 0;
+    right: auto;
+    border-width: .4rem 0 .4rem .4rem;
+    border-left-color: #000;
+}
+
+.tooltip[x-placement^=right] .arrow-fix-placement::before {
+    right: 0;
+    left: auto;
+    border-width: .4rem .4rem .4rem 0;
+    border-right-color: #000;
+}
