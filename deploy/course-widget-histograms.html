@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>CheeseFork - תגובות</title>
+    <link rel="shortcut icon" href="favicon.ico">
+    <link rel="stylesheet" href="modules/bootstrap-rtl/css/bootstrap.min.css">
+    <link rel="stylesheet" href="components/histogram-browser/histogram-browser.css">
+</head>
+<body class="bg-light my-3">
+<div class="container-fluid">
+    <div id="content-container">
+        <div class="inline-histograms"></div>
+    </div>
+</div>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-115440973-1"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-115440973-1');
+</script>
+<script src="modules/fullcalendar/lib/jquery.min.js"></script>
+<script src="modules/popper/popper.js"></script>
+<script src="modules/bootstrap-rtl/js/bootstrap.min.js"></script>
+<script src="components/histogram-browser/histogram-browser.js"></script>
+<script>
+    // https://stackoverflow.com/a/901144
+    function getParameterByName(name, url) {
+        if (!url) url = window.location.href;
+        name = name.replace(/[\[\]]/g, "\\$&");
+        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+            results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+
+    var course = getParameterByName('course');
+    if (course && /^[0-9]+$/.test(course)) {
+        var histogramBrowser = new HistogramBrowser($('.inline-histograms'), {
+            selectColumnGrid: 'md'
+        });
+        histogramBrowser.loadHistograms(course);
+    }
+</script>
+</body>
+</html>
