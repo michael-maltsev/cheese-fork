@@ -11,6 +11,11 @@
     transition: filter .5s;
 }
 
+.histogram-container .histogram-content select {
+    font-family: "Courier New", Courier, monospace;
+    font-size: .8rem;
+}
+
 .histogram-overlay-message {
     position: absolute;
     z-index: 1;
@@ -21,7 +26,19 @@
 }
 
 .histogram-overlay-message-button-container {
-    margin-bottom: 6px;
+    display: inline-block;
+    margin: 0 5px 6px;
+}
+
+.histogram-overlay-message-button-container {
+    display: inline-block;
+    margin: 0 5px 6px;
+}
+
+.histogram-image-container-outer {
+    /* image resolution: 800x450 */
+    max-width: 800px;
+    margin: 0 auto;
 }
 
 /* https://stackoverflow.com/a/21992458 */

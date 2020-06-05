@@ -3,8 +3,18 @@
 /* global BootstrapDialog, gtag */
 
 var HistogramBrowser = (function () {
-    function HistogramBrowser(element) {
+    function HistogramBrowser(element, options) {
         this.element = element;
+        this.selectColumnGrid = options.selectColumnGrid;
+    }
+
+    function roundGrade(strGrade) {
+        var grade = parseFloat(strGrade);
+        if (!grade) {
+            return strGrade;
+        }
+
+        return grade.toFixed(1);
     }
 
     function renderHistograms(histogramBrowser, course, data) {
@@ -19,21 +29,22 @@ var HistogramBrowser = (function () {
 
                 var moedA = data[semester].Final_A || data[semester].Exam_A;
                 if (moedA && moedA.average) {
-                    props.push('א\': ' + moedA.average);
+                    props.push('א\' ' + roundGrade(moedA.average));
                 }
 
                 var moedB = data[semester].Final_B || data[semester].Exam_B;
                 if (moedB && moedB.average) {
-                    props.push('ב\': ' + moedB.average);
+                    props.push('ב\' ' + roundGrade(moedB.average));
                 }
 
                 var final = data[semester].Finals;
                 if (final && final.average) {
-                    props.push('סופי: ' + final.average);
+                    props.push('סופי ' + roundGrade(final.average));
                 }
 
                 if (props.length > 0) {
-                    text += ', ' + props.join(', ');
+                    text += '\xA0'.repeat(16 - text.length);
+                    text += props.join('\xA0\xA0');
                 }
 
                 semesterSelect.append($('<option>', {
@@ -44,6 +55,7 @@ var HistogramBrowser = (function () {
             });
 
             var activated = shouldActivateHistorgramView();
+            var selectColumnGrid = histogramBrowser.selectColumnGrid || 'lg';
             var html = '<div class="histogram-container' + (activated ? ' histogram-activated' : '') + '">' +
                     '<div class="histogram-overlay-message">' +
                         '<div class="alert alert-primary" role="alert">' +
@@ -61,8 +73,8 @@ var HistogramBrowser = (function () {
                     '</div>' +
                     '<div class="histogram-content">' +
                         '<div class="form-row">' +
-                            '<div class="form-group col-lg-6 histogram-semesters"></div>' +
-                            '<div class="form-group col-lg-6 histogram-categories"></div>' +
+                            '<div class="form-group col-' + selectColumnGrid + '-6 histogram-semesters"></div>' +
+                            '<div class="form-group col-' + selectColumnGrid + '-6 histogram-categories"></div>' +
                         '</div>' +
                         '<div class="histogram-data table-responsive">' +
                             '<table class="table table-bordered table-sm">' +
@@ -90,7 +102,7 @@ var HistogramBrowser = (function () {
                                 '</tbody>' +
                             '</table>' +
                         '</div>' +
-                        '<div class="histogram-image-container"></div>' +
+                        '<div class="histogram-image-container-outer"><div class="histogram-image-container"></div></div>' +
                         '<div>' +
                             '<a href="share-histograms.html" target="_blank" class="small">שיתוף היסטוגרמות</a>' +
                         '</div>' +
@@ -210,7 +222,7 @@ var HistogramBrowser = (function () {
 
         categories.forEach(function (category, i) {
             var text = categoryFriendlyName(category);
-            text += ': ' + data[category].average;
+            text += ': ' + roundGrade(data[category].average);
 
             categorySelect.append($('<option>', {
                 value: category,

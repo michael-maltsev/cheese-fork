@@ -84,7 +84,7 @@ CourseButtonList.prototype.addCourse = function (course) {
                 '<div id="disqus_thread"></div>'
             ),
             onshow: function (dialog) {
-                var histogramBrowser = new HistogramBrowser(dialog.getModalBody().find('.inline-histograms'));
+                var histogramBrowser = new HistogramBrowser(dialog.getModalBody().find('.inline-histograms'), {});
                 histogramBrowser.loadHistograms(course);
             },
             onshown: function (dialog) {
