@@ -6,6 +6,7 @@ var HistogramBrowser = (function () {
     function HistogramBrowser(element, options) {
         this.element = element;
         this.selectColumnGrid = options.selectColumnGrid;
+        this.shareGuideInNewWindow = options.shareGuideInNewWindow;
     }
 
     function roundGrade(strGrade) {
@@ -133,8 +134,20 @@ var HistogramBrowser = (function () {
         }
     }
 
+    // https://stackoverflow.com/a/32261263
+    function popupWindow(url, title, win, w, h) {
+        var y = win.top.outerHeight / 2 + win.top.screenY - (h / 2);
+        var x = win.top.outerWidth / 2 + win.top.screenX - (w / 2);
+        return win.open(url, title, 'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width=' + w + ', height=' + h + ', top=' + y + ', left=' + x);
+    }
+
     function onButtonShare(histogramBrowser) {
         gtag('event', 'histogram-button-share');
+
+        if (histogramBrowser.shareGuideInNewWindow) {
+            popupWindow('share-histograms.html', 'share-histograms.html', window, 800, 600);
+            return;
+        }
 
         BootstrapDialog.show({
             title: 'שיתוף היסטוגרמות',
