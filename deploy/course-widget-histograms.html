@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>CheeseFork - תגובות</title>
+    <title>CheeseFork - היסטוגרמות</title>
     <link rel="shortcut icon" href="favicon.ico">
     <link rel="stylesheet" href="modules/bootstrap-rtl/css/bootstrap.min.css">
     <link rel="stylesheet" href="components/histogram-browser/histogram-browser.css">
@@ -42,7 +42,8 @@
     var course = getParameterByName('course');
     if (course && /^[0-9]+$/.test(course)) {
         var histogramBrowser = new HistogramBrowser($('.inline-histograms'), {
-            selectColumnGrid: 'md'
+            selectColumnGrid: 'md',
+            shareGuideInNewWindow: true
         });
         histogramBrowser.loadHistograms(course);
     }
