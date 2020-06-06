@@ -136,8 +136,8 @@ var HistogramBrowser = (function () {
 
     // https://stackoverflow.com/a/32261263
     function popupWindow(url, title, win, w, h) {
-        var y = win.top.outerHeight / 2 + win.top.screenY - (h / 2);
-        var x = win.top.outerWidth / 2 + win.top.screenX - (w / 2);
+        var y = win.outerHeight / 2 + win.screenY - (h / 2);
+        var x = win.outerWidth / 2 + win.screenX - (w / 2);
         return win.open(url, title, 'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width=' + w + ', height=' + h + ', top=' + y + ', left=' + x);
     }
 
