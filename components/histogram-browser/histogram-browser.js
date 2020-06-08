@@ -44,6 +44,20 @@ var HistogramBrowser = (function () {
                     props.push('סופי ' + roundGrade(final.average));
                 }
 
+                var staff = data[semester].Staff;
+                if (staff) {
+                    var lecturer = null;
+                    staff.forEach(function (item) {
+                        if (!lecturer && item.title === 'מרצה - אחראי מקצוע') {
+                            lecturer = item.name;
+                        }
+                    });
+
+                    if (lecturer) {
+                        props.push(lecturer);
+                    }
+                }
+
                 if (props.length > 0) {
                     text += '\xA0'.repeat(16 - text.length);
                     text += props.join('\xA0\xA0');
