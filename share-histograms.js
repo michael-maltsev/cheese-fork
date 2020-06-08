@@ -171,7 +171,7 @@ function getCourseHistogramsFromHtml(html) {
     var doc = parser.parseFromString(html, 'text/html');
 
     let histograms = [];
-    for (const node of doc.querySelectorAll('table#cBody_GV_StudentGrade tr')) {
+    for (const node of doc.querySelectorAll('table#cBody_GV_StudentGrade tbody tr')) {
         const category = node.children[4].textContent;
         if (histogramCategories.includes(category)) {
             const histogramLink = node.querySelector('a[data-histogram]');
@@ -187,6 +187,22 @@ function getCourseHistogramsFromHtml(html) {
 
     histograms.sort((a, b) => histogramCategories.indexOf(a.category) - histogramCategories.indexOf(b.category));
     return histograms;
+}
+
+function getStaffFromHtml(html) {
+    var parser = new DOMParser();
+    var doc = parser.parseFromString(html, 'text/html');
+
+    let staff = [];
+    for (const node of doc.querySelectorAll('table#cBody_GridView_Advisors tbody tr')) {
+        staff.push({
+            name: node.children[2].textContent.trim(),
+            email: node.children[3].textContent.trim(),
+            title: node.children[4].textContent.trim()
+        });
+    }
+
+    return staff;
 }
 
 function getCourseHistogramFromHtml(html) {
@@ -329,26 +345,41 @@ async function fetchValidRespose(url, name) {
     throw new Error(`Fetching ${name} returned ` + lastStatus);
 }
 
+async function fetchValidResposeAsText(url, name, encoding) {
+    const repsonse = await fetchValidRespose(url, name);
+    if (!encoding) {
+        return await repsonse.text();
+    }
+
+    const buffer = await repsonse.arrayBuffer();
+    const decoder = new TextDecoder(encoding);
+    return decoder.decode(buffer);
+}
+
 async function submitHistograms() {
-    for (const item of histogramUploadQueue) {
-        uiUpdateItemStatus(item.semester, item.course, item.category, '...');
+    for (const {course, semester, url: courseUrl, histograms} of histogramUploadQueue) {
+        const coursePageHtml = await fetchValidResposeAsText(courseUrl, 'course page', 'windows-1255');
+        const staffArray = getStaffFromHtml(coursePageHtml);
+        const staff = new TextEncoder().encode(JSON.stringify(staffArray, null, 2)).buffer;
+        await submitToGithub(course, semester, 'Staff', '.json', staff);
 
-        await fetchValidRespose(item.courseUrl, 'course page');
+        for (const {category, url: histogramUrl} of histograms) {
+            uiUpdateItemStatus(semester, course, category, '...');
 
-        const html = await (await fetchValidRespose(item.histogramUrl, 'histogram page')).text();
+            const histogramPageHtml = await fetchValidResposeAsText(histogramUrl, 'histogram page', 'windows-1255');
+            const histogram = getCourseHistogramFromHtml(histogramPageHtml);
 
-        const histogram = getCourseHistogramFromHtml(html);
+            const properties = new TextEncoder().encode(JSON.stringify(histogram.properties, null, 2)).buffer;
+            const propertiesResult = await submitToGithub(course, semester, category, '.json', properties);
 
-        const properties = new TextEncoder().encode(JSON.stringify(histogram.properties, null, 2)).buffer;
-        const propertiesResult = await submitToGithub(item.course, item.semester, item.category, '.json', properties);
+            const image = await (await fetchValidRespose(histogram.imgSrc, 'histogram image')).arrayBuffer();
+            const imageResult = await submitToGithub(course, semester, category, '.png', image);
 
-        const image = await (await fetchValidRespose(histogram.imgSrc, 'histogram image')).arrayBuffer();
-        const imageResult = await submitToGithub(item.course, item.semester, item.category, '.png', image);
-
-        if (propertiesResult === 'exists' && imageResult === 'exists') {
-            uiUpdateItemStatus(item.semester, item.course, item.category, '⚌');
-        } else {
-            uiUpdateItemStatus(item.semester, item.course, item.category, '✔');
+            if (propertiesResult === 'exists' && imageResult === 'exists') {
+                uiUpdateItemStatus(semester, course, category, '⚌');
+            } else {
+                uiUpdateItemStatus(semester, course, category, '✔');
+            }
         }
     }
 
@@ -359,23 +390,19 @@ async function run() {
     const courses = getCourses();
     uiCreateTable(courses);
 
-    for (const course of courses) {
-        const html = await (await fetchValidRespose(course.url, 'course page')).text();
-
+    for (const {course, semester, url} of courses) {
+        const html = await fetchValidResposeAsText(url, 'course page', 'windows-1255');
         const histograms = getCourseHistogramsFromHtml(html);
 
-        for (const histogram of histograms) {
-            histogramUploadQueue.push({
-                semester: course.semester,
-                course: course.course,
-                category: histogram.category,
-                courseUrl: course.url,
-                histogramUrl: histogram.url
-            });
-        }
+        histogramUploadQueue.push({
+            course,
+            semester,
+            url,
+            histograms
+        });
 
         const categories = histograms.map(x => x.category);
-        uiAddCourseCategories(course.semester, course.course, categories);
+        uiAddCourseCategories(semester, course, categories);
     }
 
     uiOnFirstLoadingDone();

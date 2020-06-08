@@ -10,12 +10,13 @@ var HistogramBrowser = (function () {
     }
 
     function roundGrade(strGrade) {
-        var grade = parseFloat(strGrade);
+        /*var grade = parseFloat(strGrade);
         if (!grade) {
             return strGrade;
         }
 
-        return grade.toFixed(1);
+        return grade.toFixed(1);*/
+        return strGrade.replace(/\.\d+$/, '');
     }
 
     function renderHistograms(histogramBrowser, course, data) {
