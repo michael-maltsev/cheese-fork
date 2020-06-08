@@ -231,19 +231,30 @@ var HistogramBrowser = (function () {
 
     function onSemesterSelect(histogramBrowser, course, semester, data) {
         var element = histogramBrowser.element;
-        var categories = Object.keys(data);
+        var categories = [
+            'Exam_A',
+            'Final_A',
+            'Exam_B',
+            'Final_B',
+            'Finals'
+        ];
         var categorySelect = $('<select class="form-control">');
 
-        categories.forEach(function (category, i) {
+        categories.forEach(function (category) {
+            if (!data[category]) {
+                return;
+            }
+
             var text = categoryFriendlyName(category);
             text += ': ' + roundGrade(data[category].average);
 
             categorySelect.append($('<option>', {
                 value: category,
-                text: text,
-                selected: i === categories.length - 1
+                text: text
             }));
         });
+
+        categorySelect.find('option:last').attr('selected', 'selected');
 
         element.find('.histogram-categories').html(categorySelect);
 
