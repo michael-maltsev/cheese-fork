@@ -14,6 +14,7 @@
 .histogram-container .histogram-content select {
     font-family: "Courier New", Courier, monospace;
     font-size: .8rem;
+    text-overflow: ellipsis;
 }
 
 .histogram-overlay-message {
