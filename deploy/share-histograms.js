@@ -294,9 +294,10 @@ async function submitToGithub(course, semester, category, suffix, buffer) {
     const url = 'https://api.github.com/repos/michael-maltsev/technion-histograms/contents/' +
         path + '/' + filename;
 
+    const commitMarker = serverSha ? '~' : '+';
     let data = {
-        'message': 'New submission',
-        'content': arrayBufferToBase64(buffer)
+        message: `${commitMarker}${path}/${filename}`,
+        content: arrayBufferToBase64(buffer)
     };
     if (serverSha) {
         data.sha = serverSha;
