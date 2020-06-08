@@ -119,6 +119,20 @@ var HistogramBrowser = (function () {
                             '</table>' +
                         '</div>' +
                         '<div class="histogram-image-container-outer"><div class="histogram-image-container"></div></div>' +
+                        '<div class="histogram-staff-table row mt-3 d-none">' +
+                            '<div class="col-md-6">' +
+                                '<table class="table table-bordered table-sm">' +
+                                    '<thead class="thead-light">' +
+                                        '<tr>' +
+                                            '<th scope="col">איש סגל</th>' +
+                                            '<th scope="col">תפקיד</th>' +
+                                        '</tr>' +
+                                    '</thead>' +
+                                    '<tbody>' +
+                                    '</tbody>' +
+                                '</table>' +
+                            '</div>' +
+                        '</div>' +
                         '<div>' +
                             '<a href="share-histograms.html" target="_blank" class="small">שיתוף היסטוגרמות</a>' +
                         '</div>' +
@@ -275,6 +289,23 @@ var HistogramBrowser = (function () {
         categorySelect.on('change', function () {
             onCategorySelect(histogramBrowser, course, semester, this.value, data[this.value]);
         }).trigger('change');
+
+        var staffTable = element.find('.histogram-staff-table');
+        if (data.Staff) {
+            var staffTableBody = staffTable.find('tbody');
+            staffTableBody.html('');
+
+            data.Staff.forEach(function (staffPerson) {
+                var row = $('<tr>')
+                    .append($('<td>').text(staffPerson.name))
+                    .append($('<td>').text(staffPerson.title));
+                staffTableBody.append(row);
+            });
+
+            staffTable.removeClass('d-none');
+        } else {
+            staffTable.addClass('d-none');
+        }
     }
 
     function onCategorySelect(histogramBrowser, course, semester, category, data) {
