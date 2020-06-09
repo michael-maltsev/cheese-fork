@@ -57,6 +57,7 @@ function uiCreateTable(courses) {
         '<th>סמסטר</th>' +
         '<th>קורס</th>' +
         '<th>שם קורס</th>' +
+        '<th>סגל</th>' +
         '<th>מבחן מועד א\'</th>' +
         '<th>סופי מועד א\'</th>' +
         '<th>מבחן מועד ב\'</th>' +
@@ -72,9 +73,10 @@ function uiCreateTable(courses) {
             '<td>' + escapeHtml(course.course) + '</td>' +
             '<td>' + escapeHtml(course.name) + '</td>';
 
+        html += '<td class="Staff">...</td>';
+
         for (const category of histogramCategories) {
-            let content = '...';
-            html += '<td class="' + category + '">' + content + '</td>';
+            html += '<td class="' + category + '">...</td>';
         }
 
         html += '</tr>';
@@ -96,11 +98,11 @@ function uiUpdateItemStatus(semester, course, category, status) {
 }
 
 function uiAddCourseCategories(semester, course, categories) {
+    let status = '📁';
+    uiUpdateItemStatus(semester, course, 'Staff', status);
+
     for (const category of histogramCategories) {
-        let status;
-        if (categories === null) {
-            status = '⚠';
-        } else if (categories.includes(category)) {
+        if (categories.includes(category)) {
             status = '📁';
         } else {
             status = '➖';
@@ -359,10 +361,18 @@ async function fetchValidResposeAsText(url, name, encoding) {
 
 async function submitHistograms() {
     for (const {course, semester, url: courseUrl, histograms} of histogramUploadQueue) {
+        uiUpdateItemStatus(semester, course, 'Staff', '...');
+
         const coursePageHtml = await fetchValidResposeAsText(courseUrl, 'course page', 'windows-1255');
         const staffArray = getStaffFromHtml(coursePageHtml);
         const staff = new TextEncoder().encode(JSON.stringify(staffArray, null, 2)).buffer;
-        await submitToGithub(course, semester, 'Staff', '.json', staff);
+        const staffResult = await submitToGithub(course, semester, 'Staff', '.json', staff);
+
+        if (staffResult === 'exists') {
+            uiUpdateItemStatus(semester, course, 'Staff', '⚌');
+        } else {
+            uiUpdateItemStatus(semester, course, 'Staff', '✔');
+        }
 
         for (const {category, url: histogramUrl} of histograms) {
             uiUpdateItemStatus(semester, course, category, '...');
