@@ -323,9 +323,24 @@
         }
 
         currentSemester = getParameterByName('semester');
-        if (!availableSemesters.propertyIsEnumerable(currentSemester)) {
-            currentSemester = Object.keys(availableSemesters).sort().pop();
+        if (!currentSemester || !availableSemesters[currentSemester]) {
+            try {
+                currentSemester = localStorage.getItem('lastSelectedSemester');
+            } catch (e) {
+                // localStorage is not available in IE/Edge when running from a local file.
+            }
+
+            if (!currentSemester || !availableSemesters[currentSemester]) {
+                currentSemester = Object.keys(availableSemesters).sort().pop();
+            }
+        } else {
+            try {
+                localStorage.setItem('lastSelectedSemester', currentSemester);
+            } catch (e) {
+                // localStorage is not available in IE/Edge when running from a local file.
+            }
         }
+
         var script = document.createElement('script');
         script.src = 'courses/courses_' + currentSemester + '.min.js';
         document.write(script.outerHTML);
