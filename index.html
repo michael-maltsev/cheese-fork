@@ -333,12 +333,12 @@
             if (!currentSemester || !availableSemesters[currentSemester]) {
                 currentSemester = Object.keys(availableSemesters).sort().pop();
             }
-        } else {
-            try {
-                localStorage.setItem('lastSelectedSemester', currentSemester);
-            } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
-            }
+        }
+
+        try {
+            localStorage.setItem('lastSelectedSemester', currentSemester);
+        } catch (e) {
+            // localStorage is not available in IE/Edge when running from a local file.
         }
 
         var script = document.createElement('script');
