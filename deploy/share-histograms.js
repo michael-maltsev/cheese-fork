@@ -145,7 +145,7 @@ function uiOnSubmitDone() {
 function getCourses() {
     let courses = [];
     for (const node of document.querySelectorAll('a.ga-course')) {
-        const url = node.href;
+        const url = node.href.replace(/\/contentEng\.aspx\b/, '/content.aspx');
         const semesterPretty = node.getAttribute('data-sem');
         const semesterArray = semesterPretty.split('/', 2);
         const semester = semesterArray[1] + semesterArray[0];
