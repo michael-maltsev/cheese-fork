@@ -212,18 +212,21 @@ function getCourseHistogramFromHtml(html) {
     var doc = parser.parseFromString(html, 'text/html');
 
     const imgSrc = doc.querySelector('img#CourseChart').src;
-    const properties = doc.querySelectorAll('table#gvChart tbody td');
+    const propertyNodes = doc.querySelectorAll('table#gvChart tbody td');
+    const n = propertyNodes;
+    const properties = {
+        students: n[5] ? n[5].textContent : '',
+        passFail: n[6] ? n[6].textContent : '',
+        passPercent: n[7] ? n[7].textContent : '',
+        min: n[9] ? n[9].textContent : '',
+        max: n[10] ? n[10].textContent : '',
+        average: n[11] ? n[11].textContent : '',
+        median: n[12] ? n[12].textContent : ''
+    };
+
     return {
         imgSrc,
-        properties: {
-            students: properties[5].textContent,
-            passFail: properties[6].textContent,
-            passPercent: properties[7].textContent,
-            min: properties[9].textContent,
-            max: properties[10].textContent,
-            average: properties[11].textContent,
-            median: properties[12].textContent
-        }
+        properties
     };
 }
 
