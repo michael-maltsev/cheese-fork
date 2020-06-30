@@ -227,7 +227,7 @@ function getCourseHistogramFromHtml(html) {
     };
 }
 
-async function submitToGithub(course, semester, category, suffix, buffer) {
+async function submitToGithub(course, semester, category, suffix, buffer, skipIfExists = false) {
     function calcGitFileSha(content) {
         var shaObj = new jsSHA('SHA-1', 'ARRAYBUFFER');
         shaObj.update(new TextEncoder().encode('blob ' + content.byteLength + '\0').buffer);
@@ -289,7 +289,7 @@ async function submitToGithub(course, semester, category, suffix, buffer) {
     const token = getGithubToken();
 
     const serverSha = await getGitFileSha(path, filename, token);
-    if (serverSha && serverSha === calcGitFileSha(buffer)) {
+    if (serverSha && (skipIfExists || serverSha === calcGitFileSha(buffer))) {
         return 'exists';
     }
 
@@ -366,7 +366,8 @@ async function submitHistograms() {
         const coursePageHtml = await fetchValidResposeAsText(courseUrl, 'course page', 'windows-1255');
         const staffArray = getStaffFromHtml(coursePageHtml);
         const staff = new TextEncoder().encode(JSON.stringify(staffArray, null, 2)).buffer;
-        const staffResult = await submitToGithub(course, semester, 'Staff', '.json', staff);
+        const skipIfExists = staffArray.length === 0;
+        const staffResult = await submitToGithub(course, semester, 'Staff', '.json', staff, skipIfExists);
 
         if (staffResult === 'exists') {
             uiUpdateItemStatus(semester, course, 'Staff', '⚌');
