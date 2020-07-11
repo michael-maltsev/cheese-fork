@@ -10,13 +10,7 @@ var HistogramBrowser = (function () {
     }
 
     function roundGrade(strGrade) {
-        /*var grade = parseFloat(strGrade);
-        if (!grade) {
-            return strGrade;
-        }
-
-        return grade.toFixed(1);*/
-        return strGrade.replace(/\.\d+$/, '');
+        return strGrade.trim().replace(/\.\d+$/, '') || '--';
     }
 
     function renderHistograms(histogramBrowser, course, data) {
@@ -30,17 +24,17 @@ var HistogramBrowser = (function () {
                 var props = [];
 
                 var moedA = data[semester].Final_A || data[semester].Exam_A;
-                if (moedA && moedA.average) {
+                if (moedA) {
                     props.push('א\' ' + roundGrade(moedA.average));
                 }
 
                 var moedB = data[semester].Final_B || data[semester].Exam_B;
-                if (moedB && moedB.average) {
+                if (moedB) {
                     props.push('ב\' ' + roundGrade(moedB.average));
                 }
 
                 var final = data[semester].Finals;
-                if (final && final.average) {
+                if (final) {
                     props.push('סופי ' + roundGrade(final.average));
                 }
 
@@ -312,7 +306,8 @@ var HistogramBrowser = (function () {
         var element = histogramBrowser.element;
 
         Object.keys(data).forEach(function (item) {
-            element.find('.histogram-data .histogram-value-' + item).text(data[item]);
+            var text = data[item].trim() || '-';
+            element.find('.histogram-data .histogram-value-' + item).text(text);
         });
 
         var imageUrl = 'https://michael-maltsev.github.io/technion-histograms/' + course + '/' + semester + '/' + category + '.png';
