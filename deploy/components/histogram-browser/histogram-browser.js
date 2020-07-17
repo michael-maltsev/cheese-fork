@@ -393,7 +393,7 @@ var HistogramBrowser = (function () {
             element.append('.');
         };
 
-        var url = 'https://michael-maltsev.github.io/technion-histograms/' + course + '/index.json';
+        var url = 'https://michael-maltsev.github.io/technion-histograms/' + course + '/index.min.json';
 
         var request = new XMLHttpRequest();
         request.open('GET', url, true);
