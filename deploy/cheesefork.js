@@ -285,7 +285,7 @@
 
         BootstrapDialog.show({
             title: 'הגרף השבועי',
-            message: 'חדש! מעכשיו בכל יום חמישי יפורסם גרף מעניין הקשור למקצועות בטכניון בעמוד הפייסבוק שלנו. תהנו ☺<br>' +
+            message: 'בכל יום חמישי אנחנו מפרסמים בעמוד הפייסבוק שלנו גרף מעניין שקשור למקצועות בטכניון.<br>' +
                 '<br>' +
                 '<div class="form-check">' +
                     '<input class="form-check-input" type="checkbox" id="dont-show-thursday-graph-popup"> ' +
