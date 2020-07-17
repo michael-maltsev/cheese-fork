@@ -37,10 +37,6 @@ CourseButtonList.prototype.addCourse = function (course) {
         '<span class="course-button-list-unread-count-badge d-none"></span>i' +
         '</span>');
     var color = that.colorGenerator(course);
-    //var rgbaColor = 'rgba(' + parseInt(color.slice(-6, -4), 16)
-    //    + ',' + parseInt(color.slice(-4, -2), 16)
-    //    + ',' + parseInt(color.slice(-2), 16)
-    //    + ',0.75)';
     button.css('background-color', color)
         .click(function () {
             if (!that.readonly) {
@@ -48,13 +44,13 @@ CourseButtonList.prototype.addCourse = function (course) {
             }
         })
         .hover(function () {
-                $(this).addClass('course-button-list-item-hovered');
-                that.onHoverIn(course);
-            },
-            function () {
-                $(this).removeClass('course-button-list-item-hovered');
-                that.onHoverOut(course);
-            })
+            $(this).addClass('course-button-list-item-hovered');
+            that.onHoverIn(course);
+        },
+        function () {
+            $(this).removeClass('course-button-list-item-hovered');
+            that.onHoverOut(course);
+        })
         .append(spanAbsolute, spanBoldHidden, badge);
 
     // Add tooltip to badge.
@@ -72,6 +68,17 @@ CourseButtonList.prototype.addCourse = function (course) {
         e.stopPropagation(); // don't execute parent button onclick
 
         gtag('event', 'course-button-list-info-click');
+
+        var firstTimeTooltipBadge = that.element.find('[data-special-tooltip="first-time"]');
+        if (firstTimeTooltipBadge.length > 0) {
+            firstTimeTooltipBadge.tooltip('dispose');
+            addTooltipToBadge(firstTimeTooltipBadge, courseDescriptionHtml, false);
+            try {
+                localStorage.setItem('dontShowHistogramsTip', Date.now().toString());
+            } catch (e) {
+                // localStorage is not available in IE/Edge when running from a local file.
+            }
+        }
 
         that.disqusMarkCourseAsRead(course);
 
@@ -106,15 +113,47 @@ CourseButtonList.prototype.addCourse = function (course) {
                 }
             }
         });
-    }).prop('title', courseDescriptionHtml)
-        .attr('data-toggle', 'tooltip')
-        .tooltip({
-            html: true,
-            placement: 'right',
-            template: '<div class="tooltip" role="tooltip"><div class="arrow arrow-fix-placement"></div><div class="tooltip-inner course-description-tooltip-inner"></div></div>',
-            trigger: 'hover'
-        });
+    });
+
+    var tooltipHtml = courseDescriptionHtml;
+    var showFirstTimeTooltip = false;
+    if (that.element.find('li.list-group-item:first').length === 0) {
+        try {
+            showFirstTimeTooltip = !localStorage.getItem('dontShowHistogramsTip');
+            tooltipHtml = 'לחצו כאן להצגת היסטוגרמות וחוות דעת על הקורס';
+        } catch (e) {
+            // localStorage is not available in IE/Edge when running from a local file.
+        }
+    }
+
+    addTooltipToBadge(badge, tooltipHtml, showFirstTimeTooltip);
+
     that.element.append(button);
+
+    if (showFirstTimeTooltip) {
+        badge.tooltip('show');
+    }
+
+    function addTooltipToBadge(badge, tooltipHtml, firstTimeTooltip) {
+        var trigger = 'hover';
+        var extraClass = '';
+        if (firstTimeTooltip) {
+            trigger = 'manual';
+            badge.attr('data-special-tooltip', 'first-time');
+        } else {
+            extraClass = ' course-description-tooltip-inner';
+            badge.removeAttr('data-special-tooltip');
+        }
+
+        badge.prop('title', tooltipHtml)
+            .attr('data-toggle', 'tooltip')
+            .tooltip({
+                html: true,
+                placement: 'right',
+                template: '<div class="tooltip" role="tooltip"><div class="arrow arrow-fix-placement"></div><div class="tooltip-inner' + extraClass + '"></div></div>',
+                trigger: trigger
+            });
+    }
 
     function onCourseButtonClick(button, course) {
         if (button.hasClass('active')) {
@@ -124,10 +163,6 @@ CourseButtonList.prototype.addCourse = function (course) {
         } else {
             button.addClass('active');
             var color = that.colorGenerator(course);
-            //var rgbaColor = 'rgba(' + parseInt(color.slice(-6, -4), 16)
-            //    + ',' + parseInt(color.slice(-4, -2), 16)
-            //    + ',' + parseInt(color.slice(-2), 16)
-            //    + ',0.75)';
             button.css('background-color', color);
             that.onEnableCourse(course);
         }
@@ -231,5 +266,6 @@ CourseButtonList.prototype.getCourseNumbers = function (onlySelected) {
 };
 
 CourseButtonList.prototype.clear = function () {
+    this.element.find('[data-toggle="tooltip"]').tooltip('hide');
     this.element.empty();
 };
