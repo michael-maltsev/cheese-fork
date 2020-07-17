@@ -137,11 +137,13 @@ CourseButtonList.prototype.addCourse = function (course) {
     function addTooltipToBadge(badge, tooltipHtml, firstTimeTooltip) {
         var trigger = 'hover';
         var extraClass = '';
+        var extraClassInner = '';
         if (firstTimeTooltip) {
             trigger = 'manual';
+            extraClass = ' course-button-list-tooltip-persistent';
             badge.attr('data-special-tooltip', 'first-time');
         } else {
-            extraClass = ' course-description-tooltip-inner';
+            extraClassInner = ' course-description-tooltip-inner';
             badge.removeAttr('data-special-tooltip');
         }
 
@@ -150,7 +152,7 @@ CourseButtonList.prototype.addCourse = function (course) {
             .tooltip({
                 html: true,
                 placement: 'right',
-                template: '<div class="tooltip" role="tooltip"><div class="arrow arrow-fix-placement"></div><div class="tooltip-inner' + extraClass + '"></div></div>',
+                template: '<div class="tooltip' + extraClass + '" role="tooltip"><div class="arrow arrow-fix-placement"></div><div class="tooltip-inner' + extraClassInner + '"></div></div>',
                 trigger: trigger
             });
     }
