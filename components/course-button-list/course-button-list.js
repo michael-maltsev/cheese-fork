@@ -115,15 +115,18 @@ CourseButtonList.prototype.addCourse = function (course) {
         });
     });
 
-    var tooltipHtml = courseDescriptionHtml;
     var showFirstTimeTooltip = false;
     if (that.element.find('li.list-group-item:first').length === 0) {
         try {
             showFirstTimeTooltip = !localStorage.getItem('dontShowHistogramsTip');
-            tooltipHtml = 'לחצו כאן להצגת היסטוגרמות וחוות דעת על הקורס';
         } catch (e) {
             // localStorage is not available in IE/Edge when running from a local file.
         }
+    }
+
+    var tooltipHtml = courseDescriptionHtml;
+    if (showFirstTimeTooltip) {
+        tooltipHtml = 'לחצו כאן להצגת היסטוגרמות וחוות דעת על הקורס';
     }
 
     addTooltipToBadge(badge, tooltipHtml, showFirstTimeTooltip);
