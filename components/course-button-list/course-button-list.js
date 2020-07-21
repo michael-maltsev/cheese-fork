@@ -33,8 +33,9 @@ CourseButtonList.prototype.addCourse = function (course) {
         ' class="list-group-item active course-button-list-item"' +
         ' data-course-number="' + course + '">' +
         '</li>');
-    var badge = $('<span class="badge badge-pill badge-secondary float-right course-button-list-unread-count-badge-container">' +
-        '<span class="course-button-list-unread-count-badge d-none"></span>i' +
+    var badge = $('<span class="badge badge-secondary float-right course-button-list-unread-count-badge-container">' +
+        '<span class="course-button-list-unread-count-badge d-none"></span>' +
+        '<span class="course-button-list-badge-text">i</span>' +
         '</span>');
     var color = that.colorGenerator(course);
     button.css('background-color', color)
