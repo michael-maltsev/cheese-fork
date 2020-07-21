@@ -29,6 +29,8 @@
     -webkit-user-select: none;
     -ms-user-select: none;
     user-select: none;
+    top: 1px;
+    cursor: pointer;
 }
 
 .course-button-list-item-hovered {
@@ -50,6 +52,11 @@
     z-index: 1039;
 }
 
+.course-button-list-badge-text {
+    font-size: 125%;
+    padding: 0 .75em;
+}
+
 /* for unread count badge */
 .course-button-list-unread-count-badge-container {
     position: relative;
@@ -64,7 +71,7 @@
     font-size: .6rem;
     position: absolute;
     top: -5px;
-    left: 10px;
+    left: 20px;
 }
 
 /* Fix tooltip arrow direction */
