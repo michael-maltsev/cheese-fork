@@ -327,7 +327,7 @@ var CourseSelect = (function () {
             filters.coursesTaken = coursesTaken.filter(function (num) {
                 return parseInt(num, 10) <= 999999;
             }).map(function (num) {
-                return ('000000' + num).slice(-6);
+                return ('00000' + num).slice(-6);
             });
         }
 
@@ -366,7 +366,7 @@ var CourseSelect = (function () {
             filters.coursesLimit = coursesLimit.filter(function (num) {
                 return parseInt(num, 10) <= 999999;
             }).map(function (num) {
-                return ('000000' + num).slice(-6);
+                return ('00000' + num).slice(-6);
             });
         }
 
@@ -375,7 +375,7 @@ var CourseSelect = (function () {
             filters.coursesExclude = coursesExclude.filter(function (num) {
                 return parseInt(num, 10) <= 999999;
             }).map(function (num) {
-                return ('000000' + num).slice(-6);
+                return ('00000' + num).slice(-6);
             });
         }
 
