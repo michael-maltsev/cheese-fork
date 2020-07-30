@@ -395,7 +395,7 @@ async function submitHistograms() {
             const properties = new TextEncoder().encode(JSON.stringify(histogram.properties, null, 2)).buffer;
             const propertiesResult = await submitToGithub(course, semester, category, '.json', properties, { skipIfExists });
 
-            // Don't upload test images (stop testing on production!)
+            // Don't upload test images (stop testing in production!)
             // Example:
             // https://github.com/michael-maltsev/technion-histograms/blob/b019fc77f269415b54095545a6406ce15b9b35dd/114071/201901/Finals.png
             const skipIfSha = 'd99615c00efa8cb2bcfaf00457c08eb0b2d95621';
