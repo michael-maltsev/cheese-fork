@@ -58,6 +58,7 @@
 
     var course = getParameterByName('course');
     if (course && /^[0-9]+$/.test(course)) {
+        course = ('00000' + course).slice(-6);
         var histogramBrowser = new HistogramBrowser($('.inline-histograms'), {
             selectColumnGrid: 'md',
             shareGuideInNewWindow: true

@@ -56,6 +56,7 @@
 
     var course = getParameterByName('course');
     if (course && /^[0-9]+$/.test(course)) {
+        course = ('00000' + course).slice(-6);
         var disqusConfig = function () {
             this.page.url = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '') + location.pathname + '#!' + 'course_comments_' + course;
             this.page.identifier = 'course_comments_' + course;
