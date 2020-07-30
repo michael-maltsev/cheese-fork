@@ -230,7 +230,7 @@ function getCourseHistogramFromHtml(html) {
     };
 }
 
-async function submitToGithub(course, semester, category, suffix, buffer, skipIfExists = false) {
+async function submitToGithub(course, semester, category, suffix, buffer, options = {}) {
     function calcGitFileSha(content) {
         var shaObj = new jsSHA('SHA-1', 'ARRAYBUFFER');
         shaObj.update(new TextEncoder().encode('blob ' + content.byteLength + '\0').buffer);
@@ -287,12 +287,17 @@ async function submitToGithub(course, semester, category, suffix, buffer, skipIf
         return window.btoa(binary);
     }
 
+    const fileSha = calcGitFileSha(buffer);
+    if (fileSha === options.skipIfSha) {
+        return 'skipped';
+    }
+
     const filename = category + suffix;
     const path = course + '/' + semester;
     const token = getGithubToken();
 
     const serverSha = await getGitFileSha(path, filename, token);
-    if (serverSha && (skipIfExists || serverSha === calcGitFileSha(buffer))) {
+    if (serverSha && (options.skipIfExists || serverSha === fileSha)) {
         return 'exists';
     }
 
@@ -370,7 +375,7 @@ async function submitHistograms() {
         const staffArray = getStaffFromHtml(coursePageHtml);
         const staff = new TextEncoder().encode(JSON.stringify(staffArray, null, 2)).buffer;
         const skipIfExists = staffArray.length === 0;
-        const staffResult = await submitToGithub(course, semester, 'Staff', '.json', staff, skipIfExists);
+        const staffResult = await submitToGithub(course, semester, 'Staff', '.json', staff, { skipIfExists });
 
         if (staffResult === 'exists') {
             uiUpdateItemStatus(semester, course, 'Staff', '⚌');
@@ -384,13 +389,23 @@ async function submitHistograms() {
             const histogramPageHtml = await fetchValidResposeAsText(histogramUrl, 'histogram page', 'windows-1255');
             const histogram = getCourseHistogramFromHtml(histogramPageHtml);
 
+            // Don't override with empty data (might happen sometimes because of an error or tests)
+            const skipIfExists = Object.values(histogram.properties).every(x => !x);
+
             const properties = new TextEncoder().encode(JSON.stringify(histogram.properties, null, 2)).buffer;
-            const propertiesResult = await submitToGithub(course, semester, category, '.json', properties);
+            const propertiesResult = await submitToGithub(course, semester, category, '.json', properties, { skipIfExists });
+
+            // Don't upload test images (stop testing on production!)
+            // Example:
+            // https://github.com/michael-maltsev/technion-histograms/blob/b019fc77f269415b54095545a6406ce15b9b35dd/114071/201901/Finals.png
+            const skipIfSha = 'd99615c00efa8cb2bcfaf00457c08eb0b2d95621';
 
             const image = await (await fetchValidRespose(histogram.imgSrc, 'histogram image')).arrayBuffer();
-            const imageResult = await submitToGithub(course, semester, category, '.png', image);
+            const imageResult = await submitToGithub(course, semester, category, '.png', image, { skipIfSha });
 
-            if (propertiesResult === 'exists' && imageResult === 'exists') {
+            if (propertiesResult === 'skipped' || imageResult === 'skipped') {
+                uiUpdateItemStatus(semester, course, category, '⚠');
+            } else if (propertiesResult === 'exists' && imageResult === 'exists') {
                 uiUpdateItemStatus(semester, course, category, '⚌');
             } else {
                 uiUpdateItemStatus(semester, course, category, '✔');
