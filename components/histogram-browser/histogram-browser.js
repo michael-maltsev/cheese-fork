@@ -91,7 +91,8 @@ var HistogramBrowser = (function () {
                                 '<thead class="thead-light">' +
                                     '<tr>' +
                                         '<th scope="col">סטודנטים</th>' +
-                                        '<th scope="col">עברו/נכשלו</th>' +
+                                        '<th scope="col">עברו</th>' +
+                                        '<th scope="col">נכשלו</th>' +
                                         '<th scope="col">אחוז עוברים</th>' +
                                         '<th scope="col">ציון מינימלי</th>' +
                                         '<th scope="col">ציון מקסימלי</th>' +
@@ -102,7 +103,8 @@ var HistogramBrowser = (function () {
                                 '<tbody>' +
                                     '<tr>' +
                                         '<td class="histogram-value-students"></td>' +
-                                        '<td class="histogram-value-passFail"></td>' +
+                                        '<td class="histogram-value-pass"></td>' +
+                                        '<td class="histogram-value-fail"></td>' +
                                         '<td class="histogram-value-passPercent"></td>' +
                                         '<td class="histogram-value-min"></td>' +
                                         '<td class="histogram-value-max"></td>' +
@@ -305,8 +307,14 @@ var HistogramBrowser = (function () {
     function onCategorySelect(histogramBrowser, course, semester, category, data) {
         var element = histogramBrowser.element;
 
-        Object.keys(data).forEach(function (item) {
-            var text = data[item].trim() || '-';
+        var newData = jQuery.extend({}, data);
+        var passFail = newData.passFail.split('/', 2);
+        delete newData.passFail;
+        newData.pass = passFail[0];
+        newData.fail = passFail[1] || '';
+
+        Object.keys(newData).forEach(function (item) {
+            var text = newData[item].trim() || '-';
             element.find('.histogram-data .histogram-value-' + item).text(text);
         });
 
