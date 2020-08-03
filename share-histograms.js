@@ -187,6 +187,24 @@ function getCourseHistogramsFromHtml(html) {
         }
     }
 
+    // Sometimes the Finals histogram exists only in the lower statistics table.
+    if (histograms.every(x => x.category !== 'Finals')) {
+        for (const node of doc.querySelectorAll('#cBody_PanelCourseStatistic tbody tr')) {
+            const taskName = node.children[3].textContent;
+            const category = node.children[4].textContent;
+            if (taskName === 'ציון סופי במחשב המרכזי' && category === 'Finals') {
+                const histogramLink = node.querySelector('a[data-histogram]');
+                if (histogramLink) {
+                    const url = histogramLink.href.replace(/&lang=[a-z]+$/, '');
+                    histograms.push({
+                        category,
+                        url
+                    });
+                }
+            }
+        }
+    }
+
     histograms.sort((a, b) => histogramCategories.indexOf(a.category) - histogramCategories.indexOf(b.category));
     return histograms;
 }
