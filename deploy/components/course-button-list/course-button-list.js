@@ -1,6 +1,6 @@
 'use strict';
 
-/* global HistogramBrowser, BootstrapDialog, gtag, DISQUS */
+/* global HistogramBrowser, CourseFeedback, BootstrapDialog, gtag */
 
 function CourseButtonList(element, options) {
     this.element = element;
@@ -11,13 +11,6 @@ function CourseButtonList(element, options) {
     this.onHoverOut = options.onHoverOut;
     this.onEnableCourse = options.onEnableCourse;
     this.onDisableCourse = options.onDisableCourse;
-
-    try {
-        this.disqusReadCounters = JSON.parse(localStorage.getItem('disqusReadCounters') || '{}');
-    } catch (e) {
-        // localStorage is not available in IE/Edge when running from a local file.
-        this.disqusReadCounters = {};
-    }
 }
 
 CourseButtonList.prototype.addCourse = function (course) {
@@ -33,8 +26,7 @@ CourseButtonList.prototype.addCourse = function (course) {
         ' class="list-group-item active course-button-list-item"' +
         ' data-course-number="' + course + '">' +
         '</li>');
-    var badge = $('<span class="badge badge-secondary float-right course-button-list-unread-count-badge-container">' +
-        '<span class="course-button-list-unread-count-badge d-none"></span>' +
+    var badge = $('<span class="badge badge-secondary float-right">' +
         '<span class="course-button-list-badge-text">i</span>' +
         '</span>');
     var color = that.colorGenerator(course);
@@ -81,37 +73,20 @@ CourseButtonList.prototype.addCourse = function (course) {
             }
         }
 
-        that.disqusMarkCourseAsRead(course);
-
         $(this).tooltip('hide');
         BootstrapDialog.show({
             title: courseTitle,
             size: BootstrapDialog.SIZE_WIDE,
             message: $('<div>').html(courseDescriptionHtmlWithLinks + '<br><br>' +
-                '<p class="text-center font-weight-bold h6">היסטוגרמות</p><div class="inline-histograms"></div><br>' +
-                '<div id="disqus_thread"></div>'
+                '<div class="course-feedback"></div>' +
+                '<h3 class="text-center">היסטוגרמות</h3><div class="inline-histograms"></div>'
             ),
             onshow: function (dialog) {
+                var courseFeedback = new CourseFeedback(dialog.getModalBody().find('.course-feedback'), {});
+                courseFeedback.loadFeedback(course);
+
                 var histogramBrowser = new HistogramBrowser(dialog.getModalBody().find('.inline-histograms'), {});
                 histogramBrowser.loadHistograms(course);
-            },
-            onshown: function (dialog) {
-                var disqusConfig = function () {
-                    this.page.url = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '') + location.pathname + '#!' + 'course_comments_' + course;
-                    this.page.identifier = 'course_comments_' + course;
-                };
-                if (typeof DISQUS === 'undefined') {
-                    window.disqus_config = disqusConfig;
-                    var d = document, s = d.createElement('script');
-                    s.src = 'https://cheesefork.disqus.com/embed.js';
-                    s.setAttribute('data-timestamp', +new Date());
-                    (d.head || d.body).appendChild(s);
-                } else {
-                    DISQUS.reset({
-                        reload: true,
-                        config: disqusConfig
-                    });
-                }
             }
         });
     });
@@ -173,60 +148,6 @@ CourseButtonList.prototype.addCourse = function (course) {
             that.onEnableCourse(course);
         }
     }
-};
-
-CourseButtonList.prototype.updateDisqusUnreadCounters = function () {
-    var that = this;
-
-    var courseNumbers = that.getCourseNumbers(false);
-    if (courseNumbers.length === 0) {
-        return;
-    }
-
-    var disqusScriptUrlParams = courseNumbers.map(function (course) {
-        return '1=course_comments_' + course;
-    });
-    var disqusScriptUrl = 'https://cheesefork.disqus.com/count-data.js?' + disqusScriptUrlParams.join('&');
-
-    window.DISQUSWIDGETS = {
-        displayCount: function (data) {
-            var counts = (data && data.counts) || [];
-            counts.forEach(function (countItem) {
-                var match = /^course_comments_(\d+)$/.exec(countItem.id);
-                if (!match) {
-                    return;
-                }
-
-                var course = match[1];
-
-                var count = countItem.comments - (that.disqusReadCounters[course] || 0);
-                if (count <= 0) {
-                    return;
-                }
-
-                var selector = 'li.list-group-item[data-course-number="' + course + '"] .course-button-list-unread-count-badge';
-                that.element.find(selector).text(count).removeClass('d-none');
-            });
-        }
-    };
-
-    $.getScript(disqusScriptUrl);
-};
-
-CourseButtonList.prototype.disqusMarkCourseAsRead = function (course) {
-    var that = this;
-
-    var selector = 'li.list-group-item[data-course-number="' + course + '"] .course-button-list-unread-count-badge';
-    var countBadge = that.element.find(selector);
-    if (countBadge.hasClass('d-none')) {
-        return;
-    }
-
-    countBadge.addClass('d-none');
-    var count = parseInt(countBadge.text(), 10);
-
-    this.disqusReadCounters[course] = (this.disqusReadCounters[course] || 0) + count;
-    localStorage.setItem('disqusReadCounters', JSON.stringify(this.disqusReadCounters));
 };
 
 CourseButtonList.prototype.setHovered = function (course) {

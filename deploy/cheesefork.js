@@ -45,7 +45,6 @@
                 onItemAdd: function (course) {
                     if (!courseButtonList.isCourseInList(course)) {
                         courseButtonList.addCourse(course);
-                        courseButtonList.updateDisqusUnreadCounters();
                         courseCalendar.addCourse(course);
                         selectedCourseSave(course);
                         updateGeneralInfoLine();
@@ -1307,8 +1306,6 @@
                 schedule[course] = lessons;
             }
         });
-
-        courseButtonList.updateDisqusUnreadCounters();
 
         var semesterCustomEventsKey = currentSemester + '_custom_events';
         var customEvents = session[semesterCustomEventsKey] || {};

@@ -17,7 +17,7 @@ var HistogramBrowser = (function () {
         var element = histogramBrowser.element;
         var semesters = Object.keys(data);
         if (semesters.length > 0) {
-            var semesterSelect = $('<select class="form-control">');
+            var semesterSelect = $('<select class="form-control"></select>');
 
             semesters.forEach(function (semester, i) {
                 var text = semesterFriendlyName(semester);
@@ -262,7 +262,7 @@ var HistogramBrowser = (function () {
             'Final_B',
             'Finals'
         ];
-        var categorySelect = $('<select class="form-control">');
+        var categorySelect = $('<select class="form-control"></select>');
 
         categories.forEach(function (category) {
             if (!data[category]) {
@@ -327,17 +327,17 @@ var HistogramBrowser = (function () {
         var semesterCode = semester.slice(4);
 
         switch (semesterCode) {
-            case '01':
-                return 'חורף ' + year + '-' + (year + 1);
+        case '01':
+            return 'חורף ' + year + '-' + (year + 1);
 
-            case '02':
-                return 'אביב ' + (year + 1);
+        case '02':
+            return 'אביב ' + (year + 1);
 
-            case '03':
-                return 'קיץ ' + (year + 1);
+        case '03':
+            return 'קיץ ' + (year + 1);
 
-            default:
-                return semester;
+        default:
+            return semester;
         }
     }
 

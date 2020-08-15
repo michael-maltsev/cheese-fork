@@ -1,0 +1,111 @@
+#course-feedback {
+    margin-bottom: 30px;
+}
+
+#course-feedback-summary {
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+#course-feedback-summary .course-rank-title {
+    font-size: 1.25rem;
+    font-weight: 500;
+}
+
+#course-feedback-summary .course-ranks {
+    margin-bottom: 10px;
+}
+
+#course-feedback-summary .course-rank {
+    border-radius: 15px;
+    border: 3px dashed #ddd;
+    margin: 5px 25px;
+    padding: 10px;
+}
+
+#course-feedback-carousel {
+    margin-bottom: 25px;
+}
+
+#course-feedback-carousel .course-rank-title {
+    font-weight: bold;
+}
+
+#course-feedback-carousel .course-rank {
+    margin: 5px 0;
+}
+
+#course-feedback-carousel .carousel-item-contents {
+    margin: 0 15%;
+}
+
+#course-feedback-carousel .carousel-control-next,
+#course-feedback-carousel .carousel-control-prev {
+    /* Black arrows - https://stackoverflow.com/a/53359424 */
+    filter: invert(100%);
+}
+
+#course-feedback-carousel .carousel-indicators {
+    bottom: -25px;
+}
+
+#course-feedback-carousel .carousel-indicators li {
+    filter: invert(100%);
+    cursor: pointer;
+}
+
+/* Comment box, based on https://codepen.io/jo_Geek/pen/NLoGZZ */
+
+#course-feedback-carousel .timeline-box {
+    background-color: #ccc;
+    border-radius: 15px;
+    border-top-right-radius: 0px;
+    border-bottom-left-radius :0px;
+    border: 1px solid #ddd;
+    overflow: hidden;
+}
+
+#course-feedback-carousel .box-title {
+    padding: 5px 15px;
+}
+
+#course-feedback-carousel .box-content {
+    padding: 5px 15px;
+    background-color: #f9f9f9;
+}
+
+#course-feedback-carousel .box-footer {
+    padding: 5px 15px;
+    background-color: #ccc;
+    text-align: left;
+    font-style: italic;
+}
+
+#course-feedback .course-rank {
+    text-align: center;
+}
+
+#course-feedback .course-rank-icons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    direction: ltr;
+}
+
+#course-feedback .course-rank-icons i {
+    padding: 0 3px;
+}
+
+/* An adjustment to align the width of all icons - fa-dumbbell is wider than the rest */
+
+#course-feedback .course-rank-icons i:last-child {
+    margin: 0 3.5px;
+}
+
+#course-feedback .course-rank-icons i:first-child {
+    margin: 0 3.5px;
+}
+
+#course-feedback .course-rank-icons i.fa-dumbbell {
+    margin: 0;
+}
