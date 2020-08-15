@@ -3,9 +3,12 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>CheeseFork - תגובות</title>
+    <title>CheeseFork - חוות דעת</title>
     <link rel="shortcut icon" href="favicon.ico">
     <link rel="stylesheet" href="modules/bootstrap-rtl/css/bootstrap.min.css">
+    <link rel="stylesheet" href="modules/bootstrap4-dialog/css/bootstrap-dialog.min.css">
+    <link rel="stylesheet" href="modules/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="components/course-feedback/course-feedback.css">
     <style>
         .footer-promo {
             position: fixed;
@@ -16,12 +19,26 @@
             border-radius: 8px;
             padding: 10px;
         }
+
+        /* bootstrap4-dialog RTL fix */
+        .bootstrap-dialog .bootstrap-dialog-header {
+            flex-grow: 1;
+        }
+
+        .bootstrap-dialog .bootstrap-dialog-close-button {
+            float: left;
+        }
+
+        /* bootstrap4-dialog - add spacing between buttons */
+        .bootstrap-dialog .bootstrap-dialog-footer-buttons .btn {
+            margin-right: .5rem;
+        }
     </style>
 </head>
 <body class="bg-light my-3">
 <div class="container-fluid">
     <div id="content-container">
-        <div id="disqus_thread"></div>
+        <div class="course-feedback"></div>
         <div class="bg-light footer-promo">
             <a target="_blank" href=".">
                 <img src="logo.png" alt="logo" height="30">
@@ -42,6 +59,10 @@
 <script src="modules/fullcalendar/lib/jquery.min.js"></script>
 <script src="modules/popper/popper.js"></script>
 <script src="modules/bootstrap-rtl/js/bootstrap.min.js"></script>
+<script src="modules/bootstrap4-dialog/js/bootstrap-dialog.min.js"></script>
+<script src="components/course-feedback/course-feedback.js"></script>
+<script src="https://www.gstatic.com/firebasejs/5.3.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/5.3.1/firebase-firestore.js"></script>
 <script>
     // https://stackoverflow.com/a/901144
     function getParameterByName(name, url) {
@@ -54,18 +75,29 @@
         return decodeURIComponent(results[2].replace(/\+/g, " "));
     }
 
+    function firebaseInit() {
+        var config = {
+            apiKey: 'AIzaSyAfKPyTM83mkLgdQTdx9YS9UXywiswwIYI',
+            authDomain: 'cheesefork-de9af.firebaseapp.com',
+            databaseURL: 'https://cheesefork-de9af.firebaseio.com',
+            projectId: 'cheesefork-de9af',
+            storageBucket: 'cheesefork-de9af.appspot.com',
+            messagingSenderId: '916559682433'
+        };
+        firebase.initializeApp(config);
+
+        firebase.firestore().settings({timestampsInSnapshots: true}); // silence a warning
+    }
+
+    firebaseInit();
+
     var course = getParameterByName('course');
     if (course && /^[0-9]+$/.test(course)) {
         course = ('00000' + course).slice(-6);
-        var disqusConfig = function () {
-            this.page.url = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '') + location.pathname + '#!' + 'course_comments_' + course;
-            this.page.identifier = 'course_comments_' + course;
-        };
-        window.disqus_config = disqusConfig;
-        var d = document, s = d.createElement('script');
-        s.src = 'https://cheesefork.disqus.com/embed.js';
-        s.setAttribute('data-timestamp', +new Date());
-        (d.head || d.body).appendChild(s);
+        var courseFeedback = new CourseFeedback($('.course-feedback'), {
+            columnGrid: 'md'
+        });
+        courseFeedback.loadFeedback(course);
     }
 </script>
 </body>

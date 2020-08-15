@@ -57,23 +57,6 @@
     padding: 0 .75em;
 }
 
-/* for unread count badge */
-.course-button-list-unread-count-badge-container {
-    position: relative;
-}
-
-/* https://stackoverflow.com/a/5748155/2604492 */
-.course-button-list-unread-count-badge {
-    background-color: #fa3e3e;
-    border-radius: 0.2rem;
-    color: white;
-    padding: 1px 3px;
-    font-size: .6rem;
-    position: absolute;
-    top: -5px;
-    left: 20px;
-}
-
 /* Fix tooltip arrow direction */
 .tooltip[x-placement^=left] .arrow-fix-placement {
     right: 0;
