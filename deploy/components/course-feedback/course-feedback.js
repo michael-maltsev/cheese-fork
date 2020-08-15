@@ -52,11 +52,11 @@ var CourseFeedback = (function () {
                         '<label for="feedback-form-difficulty">עומס הקורס</label>' +
                         '<select class="form-control" id="feedback-form-difficulty" required>' +
                             '<option value="">לחצו לבחירה...</option>' +
-                            '<option value="5">לא עמוס כלל</option>' +
-                            '<option value="4">טיפה עמוס</option>' +
+                            '<option value="5">עמוס מאוד</option>' +
+                            '<option value="4">עמוס</option>' +
                             '<option value="3">בינוני</option>' +
-                            '<option value="2">עמוס</option>' +
-                            '<option value="1">עמוס מאוד</option>' +
+                            '<option value="2">טיפה עמוס</option>' +
+                            '<option value="1">לא עמוס כלל</option>' +
                         '</select>' +
                         '<div class="invalid-feedback">' +
                             'יש לבחור אפשרות מתאימה' +
@@ -187,9 +187,9 @@ var CourseFeedback = (function () {
                 '<div class="col-' + columnGrid + ' course-rank">' +
                     '<div class="course-rank-title">עומס</div>' +
                     '<div class="course-rank-icons">' +
-                        '<i class="fas fa-2x fa-dumbbell"></i>' +
-                        makeStars(difficultyRank) +
                         '<i class="fas fa-2x fa-feather-alt"></i>' +
+                        makeStars(difficultyRank) +
+                        '<i class="fas fa-2x fa-dumbbell"></i>' +
                     '</div>' +
                 '</div>' +
             '</div>';
