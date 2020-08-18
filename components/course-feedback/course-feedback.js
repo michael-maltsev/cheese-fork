@@ -146,6 +146,7 @@ var CourseFeedback = (function () {
                 var body = dialog.getModalBody();
 
                 var selectSemester = body.find('#feedback-form-semester');
+                var selectValue = '';
                 // Show next year's semesters when we're past October.
                 var nineMonthsAgo = new Date();
                 nineMonthsAgo.setMonth(nineMonthsAgo.getMonth() - 9);
@@ -156,9 +157,12 @@ var CourseFeedback = (function () {
                             value: semester,
                             text: semesterFriendlyName(semester)
                         }));
+                        if (typeof currentSemester !== 'undefined' && currentSemester === semester) {
+                            selectValue = semester;
+                        }
                     }
                 }
-                selectSemester.prepend($('<option value="">לחצו לבחירת סמסטר...</option>')).val(typeof currentSemester !== 'undefined' ? currentSemester : '');
+                selectSemester.prepend($('<option value="">לחצו לבחירת סמסטר...</option>')).val(selectValue);
 
                 try {
                     var displayName = firebase.auth().currentUser.displayName;
