@@ -45,6 +45,9 @@ var CourseFeedback = (function () {
                         '<textarea class="form-control" id="feedback-form-text" rows="12" required>' +
                             defaultText +
                         '</textarea>' +
+                        '<div class="invalid-feedback">' +
+                            'יש להשלים חוות דעת' +
+                        '</div>' +
                     '</div>' +
                 '</div>' +
                 '<div class="form-row">' +
@@ -165,6 +168,31 @@ var CourseFeedback = (function () {
                 } catch (e) {
                     // Can fail if no auth module is loaded, or if not authenticated.
                 }
+
+                var validateFeedbackText = function () {
+                    var templateParts = [
+                        'שם המרצה:',
+                        'חוות דעת - הרצאות:',
+                        'שם המתרגל/ת:',
+                        'חוות דעת - תרגולים:',
+                        'שעורי הבית:',
+                        'המבחן:',
+                        'השורה התחתונה:'
+                    ];
+
+                    var value = this.value;
+                    templateParts.forEach(function (templatePart) {
+                        value = value.replace(templatePart, '');
+                    });
+
+                    if (value.trim() === '') {
+                        this.setCustomValidity('יש להשלים חוות דעת');
+                    } else {
+                        this.setCustomValidity('');
+                    }
+                };
+
+                body.find('#feedback-form-text').on('input', validateFeedbackText).trigger('input');
             },
             onhide: options.onHide || function () {}
         });
