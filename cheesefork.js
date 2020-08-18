@@ -387,6 +387,10 @@
         }
 
         var courseNumbers = courseButtonList.getCourseNumbers(true);
+        if (courseNumbers.length === 0) {
+            return false;
+        }
+
         var courses = courseNumbers.map(function (course) {
             return {
                 course: course,
