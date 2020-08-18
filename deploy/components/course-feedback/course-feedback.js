@@ -25,7 +25,7 @@ var CourseFeedback = (function () {
                 '<div class="form-row">' +
                     '<div class="form-group col-md-6">' +
                         '<label for="feedback-form-author">שם או כינוי</label>' +
-                        '<input type="text" class="form-control" id="feedback-form-author" required>' +
+                        '<input type="text" class="form-control" id="feedback-form-author" required pattern=".*\\S.*">' +
                         '<div class="invalid-feedback">' +
                             'יש להכניס שם או כינוי' +
                         '</div>' +
