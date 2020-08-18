@@ -229,7 +229,7 @@
     }
 
     function showExtraContentOnLoad() {
-        return showIntro() || showThursdayGraphPopup() || showTechnionScansPopup();
+        return showIntro() || showCourseFeedbackPopup() || showThursdayGraphPopup() || showTechnionScansPopup();
     }
 
     function showIntro() {
@@ -243,6 +243,11 @@
         }
 
         if (courseButtonList.getCourseNumbers(true).length > 0) {
+            try {
+                localStorage.setItem('dontShowIntro', Date.now().toString());
+            } catch (e) {
+                // localStorage is not available in IE/Edge when running from a local file.
+            }
             return false;
         }
 
@@ -263,6 +268,173 @@
                 // localStorage is not available in IE/Edge when running from a local file.
             }
         }).start();
+
+        return true;
+    }
+
+    function showCourseFeedbackPopup() {
+        var now = Date.now();
+
+        var fromDate = new Date(availableSemesters[currentSemester].start);
+        fromDate.setDate(fromDate.getDate() - 7);
+
+        var toDate = new Date(availableSemesters[currentSemester].start);
+        toDate.setDate(toDate.getDate() + 7);
+
+        // If the semester is starting, suggest to give feedback on previous semesters.
+        if (now > fromDate && now < toDate) {
+            return showCourseFeedbackPopupPrevSemesters();
+        }
+
+        // Temporary: promo period {
+        if (currentSemester === '201903' && now < new Date('2020-09-23T00:00:00')) {
+            return showCourseFeedbackPopupPrevSemesters();
+        }
+
+        if (currentSemester === '202001' && now < new Date('2020-10-21T00:00:00')) {
+            return showCourseFeedbackPopupPrevSemesters();
+        }
+        // }
+
+        fromDate = new Date(availableSemesters[currentSemester].end);
+        // Add several days to end date for a late notification (allow to do some exams).
+        fromDate.setDate(fromDate.getDate() + 7);
+
+        // If the semester ended, suggest to leave feedback.
+        if (now > fromDate) {
+            return showCourseFeedbackPopupThisSemester();
+        }
+
+        return false;
+    }
+
+    function showCourseFeedbackPopupPrevSemesters() {
+        try {
+            var dontShowDate = localStorage.getItem('dontShowPrevCourseFeedbackPopup_' + currentSemester);
+            if (dontShowDate) {
+                return false;
+            }
+        } catch (e) {
+            // localStorage is not available in IE/Edge when running from a local file.
+        }
+
+        var prevSemesters = Object.keys(availableSemesters).sort().reverse();
+        prevSemesters = prevSemesters.slice(prevSemesters.indexOf(currentSemester) + 1);
+        prevSemesters = prevSemesters.slice(0, 3);
+
+        var prevSemesterLinks = $('<div>');
+        prevSemesters.forEach(function (semester) {
+            var link = $('<a>', {
+                href: '?semester=' + encodeURIComponent(semester),
+                text: semesterFriendlyName(semester)
+            });
+            prevSemesterLinks.append(link, '<br>');
+        });
+
+        prevSemesterLinks = prevSemesterLinks.html();
+
+        BootstrapDialog.show({
+            title: 'פרסום חוות דעת עבור סמסטרים קודמים',
+            message: '<div>' +
+                    'זוכרים את הפעם האחרונה שבה הרכבתם מערכת? את התחושה שהמידע היבש על הקורסים לא מספיק? את החיפושים אחרי מידע נוסף והשאלות בפייסבוק?<br>' +
+                    '<br>' +
+                    'עכשיו תורכם לתרום מניסיונכם לדורות הבאים, והפעם אפשר לעשות את זה ממש פה! עברו לסמסטרים הקודמים והשאירו חוות דעת על קורסים שעשיתם:' +
+                    '<br>' +
+                    prevSemesterLinks +
+                    '<div class="row text-center my-4">' +
+                        '<div class="col-3"><i class="fas fa-3x fa-thumbs-up"></i></div>' +
+                        '<div class="col-3"><i class="fas fa-3x fa-thumbs-down"></i></div>' +
+                        '<div class="col-3"><i class="fas fa-3x fa-feather-alt"></i></div>' +
+                        '<div class="col-3"><i class="fas fa-3x fa-dumbbell"></i></div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="form-check">' +
+                    '<input class="form-check-input" type="checkbox" id="dont-show-course-feedback-popup"> ' +
+                    '<label class="form-check-label" for="dont-show-course-feedback-popup">' +
+                    'אל תציג את ההודעה שוב' +
+                    '</label>' +
+                '</div>',
+            buttons: [{
+                label: 'סגור',
+                action: function (dialog) {
+                    dialog.close();
+                }
+            }],
+            onhide: function (dialog) {
+                if (document.getElementById('dont-show-course-feedback-popup').checked) {
+                    gtag('event', 'course-feedback-prev-dont-show');
+
+                    try {
+                        localStorage.setItem('dontShowPrevCourseFeedbackPopup_' + currentSemester, Date.now().toString());
+                    } catch (e) {
+                        // localStorage is not available in IE/Edge when running from a local file.
+                    }
+                }
+            }
+        });
+
+        return true;
+    }
+
+    function showCourseFeedbackPopupThisSemester() {
+        try {
+            var dontShowDate = localStorage.getItem('dontShowThisCourseFeedbackPopup_' + currentSemester);
+            if (dontShowDate) {
+                return false;
+            }
+        } catch (e) {
+            // localStorage is not available in IE/Edge when running from a local file.
+        }
+
+        var courseNumbers = courseButtonList.getCourseNumbers(true);
+        var courses = courseNumbers.map(function (course) {
+            return {
+                course: course,
+                title: courseManager.getTitle(course)
+            };
+        });
+
+        var courseFeedback = new CourseFeedback(null, {});
+        courseFeedback.endOfSemesterFeedbackDialog(courses, {
+            dialogHtml: '<div>' +
+                    'זוכרים את הפעם האחרונה שבה הרכבתם מערכת? את התחושה שהמידע היבש על הקורסים לא מספיק? את החיפושים אחרי מידע נוסף והשאלות בפייסבוק?<br>' +
+                    '<br>' +
+                    'עכשיו תורכם לתרום מניסיונכם לדורות הבאים, והפעם אפשר לעשות את זה ממש פה!' +
+                '</div>' +
+                '<div class="form-check my-3">' +
+                    '<input class="form-check-input" type="checkbox" id="dont-show-course-feedback-popup"> ' +
+                    '<label class="form-check-label" for="dont-show-course-feedback-popup">' +
+                    'אל תציג את ההודעה שוב' +
+                    '</label>' +
+                '</div>',
+            postHtml: null,
+            onHide: function (dialog) {
+                if (document.getElementById('dont-show-course-feedback-popup').checked) {
+                    gtag('event', 'course-feedback-this-dont-show');
+
+                    try {
+                        localStorage.setItem('dontShowThisCourseFeedbackPopup_' + currentSemester, Date.now().toString());
+                    } catch (e) {
+                        // localStorage is not available in IE/Edge when running from a local file.
+                    }
+                } else {
+                    try {
+                        localStorage.removeItem('dontShowThisCourseFeedbackPopup_' + currentSemester);
+                    } catch (e) {
+                        // localStorage is not available in IE/Edge when running from a local file.
+                    }
+                }
+            },
+            onSharingDone: function () {
+                gtag('event', 'course-feedback-this-shared');
+
+                try {
+                    localStorage.setItem('dontShowThisCourseFeedbackPopup_' + currentSemester, Date.now().toString());
+                } catch (e) {
+                    // localStorage is not available in IE/Edge when running from a local file.
+                }
+            }
+        });
 
         return true;
     }
