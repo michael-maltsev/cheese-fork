@@ -8,18 +8,18 @@ var CourseFeedback = (function () {
         this.columnGrid = options.columnGrid;
     }
 
-    function newFeedbackDialog(courseFeedback, course) {
-        var defaultText = 'שם המרצה:\n' +
-            'חוות דעת - הרצאות:\n' +
+    function newFeedbackDialog(course, options) {
+        var defaultText = 'שם המרצה: \n' +
+            'חוות דעת - הרצאות: \n' +
             '\n' +
-            'שם המתרגל/ת:\n' +
-            'חוות דעת - תרגולים:\n' +
+            'שם המתרגל/ת: \n' +
+            'חוות דעת - תרגולים: \n' +
             '\n' +
-            'שעורי הבית:\n' +
+            'שעורי הבית: \n' +
             '\n' +
-            'המבחן:\n' +
+            'המבחן: \n' +
             '\n' +
-            'השורה התחתונה:';
+            'השורה התחתונה: ';
 
         var formHtml = '<form>' +
                 '<div class="form-row">' +
@@ -79,52 +79,66 @@ var CourseFeedback = (function () {
                 '</div>' +
             '</form>';
 
+        var messageElement = $('<div>').append(options.preHtml, formHtml, options.postHtml);
+
+        var buttons = [{
+            label: 'פרסם',
+            cssClass: 'btn-primary',
+            action: function (dialog) {
+                var body = dialog.getModalBody();
+
+                var form = body.find('form').get(0);
+                if (form.checkValidity() === false) {
+                    form.classList.add('was-validated');
+                    return;
+                }
+                form.classList.remove('was-validated');
+
+                var data = {
+                    timestamp: Date.now(),
+                    author: body.find('#feedback-form-author').val().trim(),
+                    semester: body.find('#feedback-form-semester').val(),
+                    text: body.find('#feedback-form-text').val().trim(),
+                    difficultyRank: parseInt(body.find('#feedback-form-difficulty').val(), 10),
+                    generalRank: parseInt(body.find('#feedback-form-general').val(), 10)
+                };
+
+                var update = {
+                    posts: firebase.firestore.FieldValue.arrayUnion(data)
+                };
+
+                firebase.firestore().collection('courseFeedback').doc(course)
+                    .set(update, {merge: true})
+                    .then(function () {
+                        options.onSubmit();
+                    })
+                    .catch(function (error) {
+                        alert('Error writing document: ' + error);
+                    });
+
+                dialog.close();
+            }
+        }, {
+            label: 'סגור',
+            action: function (dialog) {
+                dialog.close();
+            }
+        }];
+
+        if (options.skipButton) {
+            buttons.splice(1, 0, {
+                label: 'דלג על הקורס',
+                action: function (dialog) {
+                    dialog.close();
+                    options.onSubmit();
+                }
+            });
+        }
+
         BootstrapDialog.show({
             title: 'פרסום חוות דעת',
-            message: $(formHtml),
-            buttons: [{
-                label: 'פרסם',
-                cssClass: 'btn-primary',
-                action: function (dialog) {
-                    var body = dialog.getModalBody();
-
-                    var form = body.find('form').get(0);
-                    if (form.checkValidity() === false) {
-                        form.classList.add('was-validated');
-                        return;
-                    }
-                    form.classList.remove('was-validated');
-
-                    var data = {
-                        timestamp: Date.now(),
-                        author: body.find('#feedback-form-author').val().trim(),
-                        semester: body.find('#feedback-form-semester').val(),
-                        text: body.find('#feedback-form-text').val().trim(),
-                        difficultyRank: parseInt(body.find('#feedback-form-difficulty').val(), 10),
-                        generalRank: parseInt(body.find('#feedback-form-general').val(), 10)
-                    };
-
-                    var update = {
-                        posts: firebase.firestore.FieldValue.arrayUnion(data)
-                    };
-
-                    firebase.firestore().collection('courseFeedback').doc(course)
-                        .set(update, {merge: true})
-                        .then(function () {
-                            courseFeedback.loadFeedback(course, false);
-                        })
-                        .catch(function (error) {
-                            alert('Error writing document: ' + error);
-                        });
-
-                    dialog.close();
-                }
-            }, {
-                label: 'סגור',
-                action: function (dialog) {
-                    dialog.close();
-                }
-            }],
+            message: messageElement,
+            buttons: buttons,
             onshow: function (dialog) {
                 var body = dialog.getModalBody();
 
@@ -151,7 +165,8 @@ var CourseFeedback = (function () {
                 } catch (e) {
                     // Can fail if no auth module is loaded, or if not authenticated.
                 }
-            }
+            },
+            onhide: options.onHide || function () {}
         });
     }
 
@@ -174,6 +189,8 @@ var CourseFeedback = (function () {
 
             return html;
         };
+
+        columnGrid = columnGrid || 'lg';
 
         return '<div class="row course-ranks">' +
                 '<div class="col-' + columnGrid + ' course-rank">' +
@@ -238,7 +255,7 @@ var CourseFeedback = (function () {
 
         content.append($('<div>', {
             class: 'box-title',
-            text: semesterFriendlyName(post.semester)
+            text: 'סמסטר ' + semesterFriendlyName(post.semester)
         }));
 
         var postContent = $('<div>', {
@@ -258,10 +275,18 @@ var CourseFeedback = (function () {
             day: 'numeric'
         });
 
-        content.append($('<div>', {
-            class: 'box-footer',
-            text: '- ' + post.author + ', ' + prettyDate
+        var footerBox = $('<div>', {
+            class: 'box-footer'
+        }).append($('<span>', {
+            text: '- '
+        }), $('<span>', {
+            style: 'unicode-bidi: embed;', // prevent RTL mixing: https://stackoverflow.com/a/28257435
+            text: post.author
+        }), $('<span>', {
+            text: ', ' + prettyDate
         }));
+
+        content.append(footerBox);
 
         return content;
     }
@@ -304,7 +329,7 @@ var CourseFeedback = (function () {
     function renderFeedback(courseFeedback, course, posts) {
         var element = courseFeedback.element;
 
-        var columnGrid = courseFeedback.columnGrid || 'lg';
+        var columnGrid = courseFeedback.columnGrid;
 
         var content = $('<div id="course-feedback"></div>')
             .append(makeFeedbackSummaryHtml(posts, columnGrid));
@@ -320,7 +345,11 @@ var CourseFeedback = (function () {
 
         var newFeedbackButton = $('<button type="button" class="btn btn-primary">פרסום חוות דעת</button>')
             .click(function (event) {
-                newFeedbackDialog(courseFeedback, course);
+                newFeedbackDialog(course, {
+                    onSubmit: function () {
+                        courseFeedback.loadFeedback(course, false);
+                    }
+                });
             });
 
         content.append($('<div class="text-center"></div>').append(newFeedbackButton));
@@ -376,6 +405,34 @@ var CourseFeedback = (function () {
         } else {
             onError();
         }
+    };
+
+    CourseFeedback.prototype.endOfSemesterFeedbackDialog = function (courses, options) {
+        var i = 0;
+
+        var nextDialog = function () {
+            if (i < courses.length) {
+                var course = courses[i].course;
+                var courseTitle = courses[i].title;
+                i++;
+
+                var perHtml = $('<div>').append(options.dialogHtml, $('<h3>', {
+                    text: courseTitle
+                }));
+
+                newFeedbackDialog(course, {
+                    onSubmit: nextDialog,
+                    onHide: options.onHide,
+                    preHtml: perHtml,
+                    postHtml: options.postHtml,
+                    skipButton: true
+                });
+            } else if (options.onSharingDone) {
+                options.onSharingDone();
+            }
+        };
+
+        nextDialog();
     };
 
     return CourseFeedback;
