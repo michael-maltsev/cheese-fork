@@ -235,10 +235,10 @@ var CourseFeedback = (function () {
                 '<path fill="currentColor" d="M510.28 445.86l-73.03-292.13c-3.8-15.19-16.44-25.72-30.87-25.72h-72.41c6.2-12.05 10.04-25.51 10.04-40 0-48.6-39.4-88-88-88s-88 39.4-88 88c0 14.49 3.83 27.95 10.04 40h-72.41c-14.43 0-27.08 10.54-30.87 25.72L1.72 445.86C-6.61 479.17 16.38 512 48.03 512h415.95c31.64 0 54.63-32.83 46.3-66.14zM216 88c0-22.06 17.94-40 40-40s40 17.94 40 40c0 22.05-17.94 40-40 40s-40-17.95-40-40zm246.72 376H49.28c-.7-.96-1.81-3.23-1-6.5L118.66 176h274.68l70.38 281.5c.81 3.27-.3 5.54-1 6.5z">' +
                 '</path></svg></i>';
 
-            var half = '<i class="fas fa-weight-hanging" style="width: calc(.5em + 3px); overflow: hidden;"></i>' +
-                '<i style="line-height: 0; display:inline-block; width: calc(.5em + 3px); overflow: hidden;">' +
-                '<svg style="width: 1em; left: calc(-.5em - 3px); position: relative;" aria-hidden="true" focusable="false" data-prefix="far" data-icon="weight-hanging" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="svg-inline--fa fa-weight-hanging fa-1x">' +
-                '<path fill="currentColor" d="M510.28 445.86l-73.03-292.13c-3.8-15.19-16.44-25.72-30.87-25.72h-72.41c6.2-12.05 10.04-25.51 10.04-40 0-48.6-39.4-88-88-88s-88 39.4-88 88c0 14.49 3.83 27.95 10.04 40h-72.41c-14.43 0-27.08 10.54-30.87 25.72L1.72 445.86C-6.61 479.17 16.38 512 48.03 512h415.95c31.64 0 54.63-32.83 46.3-66.14zM216 88c0-22.06 17.94-40 40-40s40 17.94 40 40c0 22.05-17.94 40-40 40s-40-17.95-40-40zm246.72 376H49.28c-.7-.96-1.81-3.23-1-6.5L118.66 176h274.68l70.38 281.5c.81 3.27-.3 5.54-1 6.5z">' +
+            // Edited empty with https://editor.method.ac/
+            var half = '<i style="line-height: 0; display:inline-block;">' +
+                '<svg style="width: 1em;" aria-hidden="true" focusable="false" data-prefix="far" data-icon="weight-hanging" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="svg-inline--fa fa-weight-hanging fa-1x">' +
+                '<path fill="currentColor" d="m510.28,445.86l-73.03,-292.13c-3.8,-15.19 -16.44,-25.72 -30.87,-25.72l-72.41,0c6.2,-12.05 10.04,-25.51 10.04,-40c0,-48.6 -39.4,-88 -88,-88s-88,39.4 -88,88c0,14.49 3.83,27.95 10.04,40l-72.41,0c-14.43,0 -27.08,10.54 -30.87,25.72l-73.05,292.13c-8.33,33.31 14.66,66.14 46.31,66.14l415.95,0c31.64,0 54.63,-32.83 46.3,-66.14zm-294.28,-357.86c0,-22.06 17.94,-40 40,-40s40,17.94 40,40c0,22.05 -17.94,40 -40,40s-40,-17.95 -40,-40zm246.72,376c-137.64664,0 -69.07336,0 -206.72,0l0,-288l137.34,0l70.38,281.5c0.81,3.27 -0.3,5.54 -1,6.5z">' +
                 '</path></svg></i>';
 
             return makeRanks(rank, full, half, empty);
