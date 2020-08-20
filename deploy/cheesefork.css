@@ -144,3 +144,10 @@
 html.os-html>.os-host>.os-scrollbar {
     z-index: 999;
 }
+
+/* Remove Firefox invalid form glow, Bootstrap has its own */
+/* Also, Firefox's appears right after value was edited */
+/* https://stackoverflow.com/a/21198397 */
+:-moz-ui-invalid {
+    box-shadow: none;
+}
