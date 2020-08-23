@@ -1228,9 +1228,13 @@
                 var session = savedSessionFromFirestoreData(result.exists ? result.data() : {});
                 setScheduleFromSavedSession(session, !firstDataLoaded);
 
-                var metadata = savedMetadataFromFirestoreData(result.exists ? result.data() : {});
-                metadataDiff = metadata ? computeMetadataDiff(metadata) : null;
-                onMetadataDiffChange();
+                if (shouldEnableMetadataDiff()) {
+                    var metadata = savedMetadataFromFirestoreData(result.exists ? result.data() : {});
+                    metadataDiff = metadata ? computeMetadataDiff(metadata) : null;
+                    onMetadataDiffChange();
+                } else {
+                    metadataDiff = null;
+                }
 
                 currentSavedSession = session;
 
@@ -1253,9 +1257,13 @@
                     var session = savedSessionFromLocalStorage();
                     setScheduleFromSavedSession(session, true);
 
-                    var metadata = savedMetadataFromLocalStorage();
-                    metadataDiff = metadata ? computeMetadataDiff(metadata) : null;
-                    onMetadataDiffChange();
+                    if (shouldEnableMetadataDiff()) {
+                        var metadata = savedMetadataFromLocalStorage();
+                        metadataDiff = metadata ? computeMetadataDiff(metadata) : null;
+                        onMetadataDiffChange();
+                    } else {
+                        metadataDiff = null;
+                    }
 
                     currentSavedSession = session;
                     onSavedSessionChange();
@@ -1271,9 +1279,13 @@
             var session = savedSessionFromLocalStorage();
             setScheduleFromSavedSession(session, false);
 
-            var metadata = savedMetadataFromLocalStorage();
-            metadataDiff = metadata ? computeMetadataDiff(metadata) : null;
-            onMetadataDiffChange();
+            if (shouldEnableMetadataDiff()) {
+                var metadata = savedMetadataFromLocalStorage();
+                metadataDiff = metadata ? computeMetadataDiff(metadata) : null;
+                onMetadataDiffChange();
+            } else {
+                metadataDiff = null;
+            }
 
             currentSavedSession = session;
             onSavedSessionReset();
@@ -1558,6 +1570,13 @@
         }
 
         return doc;
+    }
+
+    function shouldEnableMetadataDiff() {
+        // Only enable the feature for last four semesters.
+        // Only the last three are updated, and extra semester to give time to see the most recent changes.
+        var lastFourSemesters = Object.keys(availableSemesters).sort().reverse().slice(0, 4);
+        return lastFourSemesters.indexOf(currentSemester) !== -1;
     }
 
     function computeMetadataDiff(metadata) {
