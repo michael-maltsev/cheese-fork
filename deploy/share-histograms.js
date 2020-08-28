@@ -1,4 +1,4 @@
-var cheeseforkShareHisograms = function () {
+let cheeseforkShareHisograms = function () {
     'use strict';
 
     const histogramCategories = [
@@ -148,8 +148,8 @@ var cheeseforkShareHisograms = function () {
     }
 
     function getCourseHistogramsFromHtml(html) {
-        var parser = new DOMParser();
-        var doc = parser.parseFromString(html, 'text/html');
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
 
         let histograms = [];
         for (const node of doc.querySelectorAll('table#cBody_GV_StudentGrade tbody tr')) {
@@ -189,8 +189,8 @@ var cheeseforkShareHisograms = function () {
     }
 
     function getStaffFromHtml(html) {
-        var parser = new DOMParser();
-        var doc = parser.parseFromString(html, 'text/html');
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
 
         let staff = [];
         for (const node of doc.querySelectorAll('table#cBody_GridView_Advisors tbody tr')) {
@@ -205,8 +205,8 @@ var cheeseforkShareHisograms = function () {
     }
 
     function getCourseHistogramFromHtml(html) {
-        var parser = new DOMParser();
-        var doc = parser.parseFromString(html, 'text/html');
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
 
         // Example:
         // בקורס - מבוא להסתברות ח' במשימה : ציון סופי במחשב המרכזי
@@ -235,7 +235,7 @@ var cheeseforkShareHisograms = function () {
 
     async function submitToGithub(course, semester, category, suffix, buffer, options = {}) {
         function calcGitFileSha(content) {
-            var shaObj = new jsSHA('SHA-1', 'ARRAYBUFFER');
+            let shaObj = new jsSHA('SHA-1', 'ARRAYBUFFER');
             shaObj.update(new TextEncoder().encode('blob ' + content.byteLength + '\0').buffer);
             shaObj.update(content);
             return shaObj.getHash('HEX');
