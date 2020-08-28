@@ -63,3 +63,7 @@
 .histogram-modal-guide-content li {
     margin-bottom: 1rem;
 }
+
+.histogram-modal-guide-content h3 {
+    margin-top: 2rem;
+}
