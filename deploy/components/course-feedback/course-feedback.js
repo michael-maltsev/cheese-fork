@@ -304,6 +304,32 @@ var CourseFeedback = (function () {
         return content;
     }
 
+    function preprocessPostText(text) {
+        // Remove non-filled template parts.
+        var templateParts = [
+            'שם המרצה:',
+            'חוות דעת - הרצאות:',
+            'שם המתרגל/ת:',
+            'חוות דעת - תרגולים:',
+            'שעורי הבית:',
+            'המבחן:',
+            'השורה התחתונה:'
+        ];
+
+        for (var i = 0; i + 1 < templateParts.length; i++) {
+            var t1 = templateParts[i];
+            var t2 = templateParts[i + 1];
+            var regex = new RegExp(t1 + '\\s*' + t2);
+            text = text.replace(regex, t2);
+        }
+
+        var t1 = templateParts[templateParts.length - 1];
+        var regex = new RegExp(t1 + '\\s*$');
+        text = text.replace(regex, '');
+
+        return text.trim();
+    }
+
     function makeFeedbackSinglePostHtml(post, columnGrid) {
         var content = $('<div class="timeline-box"></div>');
 
@@ -312,9 +338,11 @@ var CourseFeedback = (function () {
             text: 'סמסטר ' + semesterFriendlyName(post.semester)
         }));
 
+        var postText = preprocessPostText(post.text);
+
         var postContent = $('<div>', {
             class: 'box-content',
-            html: $('<div>').text(post.text).html().replace(/\n/g, '<br>')
+            html: $('<div>').text(postText).html().replace(/\n/g, '<br>')
         });
 
         if (post.generalRank && post.difficultyRank) {
