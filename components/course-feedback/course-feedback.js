@@ -205,11 +205,11 @@ var CourseFeedback = (function () {
     function makeRanksHtml(generalRank, difficultyRank, columnGrid) {
         var makeRanks = function (rank, full, half, empty) {
             var html = '';
-            var rantTimesTwo = Math.round(rank * 2);
+            var rankTimesTwo = Math.round(rank * 2);
             for (var i = 0; i < 5; i++) {
-                if (i * 2 >= rantTimesTwo) {
+                if (i * 2 >= rankTimesTwo) {
                     html += empty;
-                } else if (i * 2 + 1 >= rantTimesTwo) {
+                } else if (i * 2 + 1 >= rankTimesTwo) {
                     html += half;
                 } else {
                     html += full;
@@ -458,11 +458,11 @@ var CourseFeedback = (function () {
         }
     }
 
-    CourseFeedback.prototype.loadFeedback = function (course, loadingMessage = true) {
+    CourseFeedback.prototype.loadFeedback = function (course, loadingMessage) {
         var element = this.element;
         var that = this;
 
-        if (loadingMessage) {
+        if (loadingMessage === undefined || loadingMessage) {
             element.text('טוען נתונים...');
         }
 
