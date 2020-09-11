@@ -339,17 +339,23 @@
             }
         }
 
-        try {
-            localStorage.setItem('lastSelectedSemester', currentSemester);
-        } catch (e) {
-            // localStorage is not available in IE/Edge when running from a local file.
+        scheduleSharingUserId = getParameterByName('uid');
+
+        if (scheduleSharingUserId === null &&
+            getParameterByName('course') === null &&
+            getParameterByName('staff') === null &&
+            getParameterByName('room') === null
+        ) {
+            try {
+                localStorage.setItem('lastSelectedSemester', currentSemester);
+            } catch (e) {
+                // localStorage is not available in IE/Edge when running from a local file.
+            }
         }
 
         var script = document.createElement('script');
         script.src = 'courses/courses_' + currentSemester + '.min.js';
         document.write(script.outerHTML);
-
-        scheduleSharingUserId = getParameterByName('uid');
     })();
 </script>
 <script src="components/course-select/course-select.js"></script>
