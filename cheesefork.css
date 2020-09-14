@@ -30,7 +30,7 @@
     position: relative;
 }
 
-/* https://stackoverflow.com/a/5748155/2604492 */
+/* https://stackoverflow.com/a/5748155 */
 .unread-count-badge {
     background-color: #fa3e3e;
     border-radius: 0.2rem;
