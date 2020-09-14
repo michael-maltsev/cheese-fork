@@ -37,9 +37,17 @@
 }
 
 .histogram-image-container-outer {
+    /* Center child: https://stackoverflow.com/a/37126250 */
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+}
+
+.histogram-image-container-middle {
+    width: 106%;
     /* image resolution: 800x450 */
     max-width: 800px;
-    margin: 0 auto;
+    flex-shrink: 0;
 }
 
 /* https://stackoverflow.com/a/21992458 */
