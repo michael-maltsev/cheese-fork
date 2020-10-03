@@ -210,8 +210,10 @@ let cheeseforkShareHisograms = function () {
 
         // Example:
         // בקורס - מבוא להסתברות ח' במשימה : ציון סופי במחשב המרכזי
-        const match = /^בקורס - (.*?) במשימה : /.exec(doc.title.trim());
+        const match = /^בקורס - (.*?) במשימה : (.*)$/.exec(doc.title.trim());
         const courseName = match ? match[1] : null;
+        const categoryRaw = match ? match[2] : null;
+        const category = categoryRaw === 'ציון סופי במחשב המרכזי' ? 'Finals' : categoryRaw;
 
         const imgSrc = doc.querySelector('img#CourseChart').src;
         const propertyNodes = doc.querySelectorAll('table#gvChart tbody td');
@@ -228,6 +230,7 @@ let cheeseforkShareHisograms = function () {
 
         return {
             courseName,
+            category,
             imgSrc,
             properties
         };
@@ -402,7 +405,7 @@ let cheeseforkShareHisograms = function () {
                 // The image URL is unique for that histogram page, so there's no such problem with it, and the check that we do is enough.
                 // We allow an empty course name just in case it can happen (perhaps we don't detect all possible formats).
 
-                if (!histogram.courseName || histogram.courseName === courseName) {
+                if ((!histogram.courseName || histogram.courseName === courseName) && (!histogram.category || histogram.category === category)) {
                     // Don't override with empty data (might happen sometimes because of an error or tests)
                     const skipIfExists = Object.values(histogram.properties).every(x => !x);
 
