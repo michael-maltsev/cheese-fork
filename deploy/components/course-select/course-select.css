@@ -7,10 +7,17 @@
     padding: 0.5rem 0.75rem;
 }
 
+/* Fixups for the filter button - move arrow */
 .selectize-control.rtl.single.course-select .selectize-input:after {
     left: calc(0.75rem + 40px);
 }
 
+/* Fixups for the filter button - shrink input box */
+.selectize-control.course-select .selectize-input > input {
+    padding-left: 60px !important;
+}
+
+/* Filter button style */
 .selectize-control.course-select .selectize-input .course-select-filter-button {
     position: absolute;
     top: 0;
@@ -20,10 +27,12 @@
     border-radius: 0.2rem 0 0 0.2rem;
 }
 
+/* Filter button active color */
 .selectize-control.course-select .selectize-input .course-select-filter-button.course-select-filter-on {
     color: rgb(0,123,255,.75);
 }
 
+/* Filter button inside focus */
 .selectize-control.course-select .selectize-input .course-select-filter-button.focus,
 .selectize-control.course-select .selectize-input .course-select-filter-button:focus {
     box-shadow: inset 0 0 0 0.2rem rgba(0,123,255,.25);
