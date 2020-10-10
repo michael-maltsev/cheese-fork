@@ -68,14 +68,10 @@ var CourseSelect = (function () {
                 }
             },
             onInitialize: function () {
-                addFilterButton(this, function () {
-                    that.filterOpen();
-                });
+                addFilterButton(that, this);
             },
             onClear: function () {
-                addFilterButton(this, function () {
-                    that.filterOpen();
-                });
+                addFilterButton(that, this);
             },
             onItemAdd: function (course) {
                 if (course === 'filter') {
@@ -112,22 +108,44 @@ var CourseSelect = (function () {
         filterInit(that.courseManager);
     }
 
-    function addFilterButton(selectize, onButtonClick) {
+    function addFilterButton(courseSelect, selectize) {
+        var title = 'לחצו כאן לסינון מתקדם של הקורסים המוצגים';
+        var extraClass = '';
+        if (courseSelect.filteredCoursesCount < courseSelect.allCoursesCount) {
+            title += ' (' + courseSelect.filteredCoursesCount + '/' + courseSelect.allCoursesCount + ')';
+            extraClass += ' course-select-filter-on';
+        }
+
         selectize.$control.append($('<button>', {
             type: 'button',
-            class: 'btn course-select-filter-button',
+            class: 'btn course-select-filter-button' + extraClass,
             html: '<i class="fas fa-sliders-h"></i>',
-            title: 'לחצו כאן לסינון מתקדם של הקורסים המוצגים',
+            title: title,
             'data-toggle': 'tooltip',
             'data-placement': 'bottom'
         }).tooltip().click(function (e) {
             e.stopPropagation();
-            onButtonClick();
+            $(this).tooltip('hide');
+            courseSelect.filterOpen();
         }).mousedown(function (e) {
             e.stopPropagation();
         }).mouseup(function (e) {
             e.stopPropagation();
         }));
+    }
+
+    function updateFilterButton(courseSelect, selectize) {
+        var button = selectize.$control.find('button.course-select-filter-button');
+
+        var title = 'לחצו כאן לסינון מתקדם של הקורסים המוצגים';
+        if (courseSelect.filteredCoursesCount < courseSelect.allCoursesCount) {
+            title += ' (' + courseSelect.filteredCoursesCount + '/' + courseSelect.allCoursesCount + ')';
+            button.addClass('course-select-filter-on');
+        } else {
+            button.removeClass('course-select-filter-on');
+        }
+
+        button.attr('data-original-title', title);
     }
 
     function makeCourseSelectOptions(courses, courseManager) {
@@ -422,6 +440,8 @@ var CourseSelect = (function () {
             var messageElement = that.filterDialog.getModalFooter().find('#filter-result');
             messageElement.text('מציג ' + that.filteredCoursesCount + ' מתוך ' + that.allCoursesCount + ' קורסים');
         }
+
+        updateFilterButton(that, that.courseSelect);
     };
 
     CourseSelect.prototype.filterReset = function () {
@@ -440,6 +460,8 @@ var CourseSelect = (function () {
             var messageElement = that.filterDialog.getModalFooter().find('#filter-result');
             messageElement.text('');
         }
+
+        updateFilterButton(that, that.courseSelect);
     };
 
     return CourseSelect;
