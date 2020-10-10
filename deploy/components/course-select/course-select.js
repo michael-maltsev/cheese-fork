@@ -22,29 +22,10 @@ var CourseSelect = (function () {
         that.courseSelect = element.addClass('course-select').selectize({
             //searchConjunction: 'or',
             options: makeCourseSelectOptions(courses.sort(), that.courseManager),
-            maxOptions: 202,
+            maxOptions: 201,
             render: {
                 option: function (item) {
-                    if (item.value === 'filter') {
-                        var filterCoursesText = 'סינון קורסים';
-                        var filterCoursesHint = 'לחצו כאן לסינון מתקדם של הקורסים המוצגים';
-
-                        var filterCoursesElement = $('<abbr>').text(filterCoursesText)
-                            .prop('title', filterCoursesHint)
-                            .attr({
-                                'data-toggle': 'tooltip',
-                                'data-placement': 'right',
-                                'data-boundary': 'viewport'
-                            });
-
-                        var filteredStateText = '';
-                        if (that.filteredCoursesCount < that.allCoursesCount) {
-                            filteredStateText = ' (' + that.filteredCoursesCount + '/' + that.allCoursesCount + ')';
-                        }
-
-                        return $('<div>').addClass('option font-weight-bold').append(filterCoursesElement)
-                            .append(document.createTextNode(filteredStateText)).get(0);
-                    } else if (item.value === 'partial') {
+                    if (item.value === 'partial') {
                         return $('<div>').addClass('option font-italic').text('מציג 200 קורסים ראשונים').get(0);
                     }
 
@@ -74,9 +55,7 @@ var CourseSelect = (function () {
                 addFilterButton(that, this);
             },
             onItemAdd: function (course) {
-                if (course === 'filter') {
-                    that.filterOpen();
-                } else if (course === 'partial') {
+                if (course === 'partial') {
                     // Do nothing
                 } else {
                     that.onItemAdd(course);
@@ -84,14 +63,14 @@ var CourseSelect = (function () {
                 this.clear();
             },
             onDropdownItemActivate: function (course) {
-                if (course === 'filter' || course === 'partial') {
+                if (course === 'partial') {
                     return;
                 }
 
                 that.onDropdownItemActivate(course);
             },
             onDropdownItemDeactivate: function (course) {
-                if (course === 'filter' || course === 'partial') {
+                if (course === 'partial') {
                     return;
                 }
 
@@ -149,19 +128,16 @@ var CourseSelect = (function () {
     }
 
     function makeCourseSelectOptions(courses, courseManager) {
-        var items = [{
-            value: 'filter',
-            text: ''
-        }].concat(courses.map(function (course) {
+        var items = courses.map(function (course) {
             var general = courseManager.getGeneralInfo(course);
             return {
                 value: course,
                 text: course + ' - ' + general['שם מקצוע']
             };
-        }));
+        });
 
-        if (items.length > 202) {
-            items.splice(201, 0, {
+        if (items.length > 201) {
+            items.splice(200, 0, {
                 value: 'partial',
                 text: ''
             });
