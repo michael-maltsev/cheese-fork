@@ -22,29 +22,10 @@ var CourseSelect = (function () {
         that.courseSelect = element.addClass('course-select').selectize({
             //searchConjunction: 'or',
             options: makeCourseSelectOptions(courses.sort(), that.courseManager),
-            maxOptions: 202,
+            maxOptions: 201,
             render: {
                 option: function (item) {
-                    if (item.value === 'filter') {
-                        var filterCoursesText = 'סינון קורסים';
-                        var filterCoursesHint = 'לחצו כאן לסינון מתקדם של הקורסים המוצגים';
-
-                        var filterCoursesElement = $('<abbr>').text(filterCoursesText)
-                            .prop('title', filterCoursesHint)
-                            .attr({
-                                'data-toggle': 'tooltip',
-                                'data-placement': 'right',
-                                'data-boundary': 'viewport'
-                            });
-
-                        var filteredStateText = '';
-                        if (that.filteredCoursesCount < that.allCoursesCount) {
-                            filteredStateText = ' (' + that.filteredCoursesCount + '/' + that.allCoursesCount + ')';
-                        }
-
-                        return $('<div>').addClass('option font-weight-bold').append(filterCoursesElement)
-                            .append(document.createTextNode(filteredStateText)).get(0);
-                    } else if (item.value === 'partial') {
+                    if (item.value === 'partial') {
                         return $('<div>').addClass('option font-italic').text('מציג 200 קורסים ראשונים').get(0);
                     }
 
@@ -68,19 +49,13 @@ var CourseSelect = (function () {
                 }
             },
             onInitialize: function () {
-                addFilterButton(this, function () {
-                    that.filterOpen();
-                });
+                addFilterButton(that, this);
             },
             onClear: function () {
-                addFilterButton(this, function () {
-                    that.filterOpen();
-                });
+                addFilterButton(that, this);
             },
             onItemAdd: function (course) {
-                if (course === 'filter') {
-                    that.filterOpen();
-                } else if (course === 'partial') {
+                if (course === 'partial') {
                     // Do nothing
                 } else {
                     that.onItemAdd(course);
@@ -88,14 +63,14 @@ var CourseSelect = (function () {
                 this.clear();
             },
             onDropdownItemActivate: function (course) {
-                if (course === 'filter' || course === 'partial') {
+                if (course === 'partial') {
                     return;
                 }
 
                 that.onDropdownItemActivate(course);
             },
             onDropdownItemDeactivate: function (course) {
-                if (course === 'filter' || course === 'partial') {
+                if (course === 'partial') {
                     return;
                 }
 
@@ -112,17 +87,25 @@ var CourseSelect = (function () {
         filterInit(that.courseManager);
     }
 
-    function addFilterButton(selectize, onButtonClick) {
+    function addFilterButton(courseSelect, selectize) {
+        var title = 'לחצו כאן לסינון מתקדם של הקורסים המוצגים';
+        var extraClass = '';
+        if (courseSelect.filteredCoursesCount < courseSelect.allCoursesCount) {
+            title += ' (' + courseSelect.filteredCoursesCount + '/' + courseSelect.allCoursesCount + ')';
+            extraClass += ' course-select-filter-on';
+        }
+
         selectize.$control.append($('<button>', {
             type: 'button',
-            class: 'btn course-select-filter-button',
+            class: 'btn course-select-filter-button' + extraClass,
             html: '<i class="fas fa-sliders-h"></i>',
-            title: 'לחצו כאן לסינון מתקדם של הקורסים המוצגים',
+            title: title,
             'data-toggle': 'tooltip',
             'data-placement': 'bottom'
         }).tooltip().click(function (e) {
             e.stopPropagation();
-            onButtonClick();
+            $(this).tooltip('hide');
+            courseSelect.filterOpen();
         }).mousedown(function (e) {
             e.stopPropagation();
         }).mouseup(function (e) {
@@ -130,20 +113,31 @@ var CourseSelect = (function () {
         }));
     }
 
+    function updateFilterButton(courseSelect, selectize) {
+        var button = selectize.$control.find('button.course-select-filter-button');
+
+        var title = 'לחצו כאן לסינון מתקדם של הקורסים המוצגים';
+        if (courseSelect.filteredCoursesCount < courseSelect.allCoursesCount) {
+            title += ' (' + courseSelect.filteredCoursesCount + '/' + courseSelect.allCoursesCount + ')';
+            button.addClass('course-select-filter-on');
+        } else {
+            button.removeClass('course-select-filter-on');
+        }
+
+        button.attr('data-original-title', title);
+    }
+
     function makeCourseSelectOptions(courses, courseManager) {
-        var items = [{
-            value: 'filter',
-            text: ''
-        }].concat(courses.map(function (course) {
+        var items = courses.map(function (course) {
             var general = courseManager.getGeneralInfo(course);
             return {
                 value: course,
                 text: course + ' - ' + general['שם מקצוע']
             };
-        }));
+        });
 
-        if (items.length > 202) {
-            items.splice(201, 0, {
+        if (items.length > 201) {
+            items.splice(200, 0, {
                 value: 'partial',
                 text: ''
             });
@@ -422,6 +416,8 @@ var CourseSelect = (function () {
             var messageElement = that.filterDialog.getModalFooter().find('#filter-result');
             messageElement.text('מציג ' + that.filteredCoursesCount + ' מתוך ' + that.allCoursesCount + ' קורסים');
         }
+
+        updateFilterButton(that, that.courseSelect);
     };
 
     CourseSelect.prototype.filterReset = function () {
@@ -440,6 +436,8 @@ var CourseSelect = (function () {
             var messageElement = that.filterDialog.getModalFooter().find('#filter-result');
             messageElement.text('');
         }
+
+        updateFilterButton(that, that.courseSelect);
     };
 
     return CourseSelect;
