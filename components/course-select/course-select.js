@@ -67,6 +67,16 @@ var CourseSelect = (function () {
                         .append(document.createTextNode(' - ' + general['שם מקצוע'])).get(0);
                 }
             },
+            onInitialize: function () {
+                addFilterButton(this, function () {
+                    that.filterOpen();
+                });
+            },
+            onClear: function () {
+                addFilterButton(this, function () {
+                    that.filterOpen();
+                });
+            },
             onItemAdd: function (course) {
                 if (course === 'filter') {
                     that.filterOpen();
@@ -100,6 +110,24 @@ var CourseSelect = (function () {
             });
 
         filterInit(that.courseManager);
+    }
+
+    function addFilterButton(selectize, onButtonClick) {
+        selectize.$control.append($('<button>', {
+            type: 'button',
+            class: 'btn course-select-filter-button',
+            html: '<i class="fas fa-sliders-h"></i>',
+            title: 'לחצו כאן לסינון מתקדם של הקורסים המוצגים',
+            'data-toggle': 'tooltip',
+            'data-placement': 'bottom'
+        }).tooltip().click(function (e) {
+            e.stopPropagation();
+            onButtonClick();
+        }).mousedown(function (e) {
+            e.stopPropagation();
+        }).mouseup(function (e) {
+            e.stopPropagation();
+        }));
     }
 
     function makeCourseSelectOptions(courses, courseManager) {
