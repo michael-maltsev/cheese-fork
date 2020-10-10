@@ -17,8 +17,7 @@
     left: 0;
     bottom: 0;
     z-index: 1;
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
+    border-radius: 0.2rem 0 0 0.2rem;
 }
 
 .selectize-control.course-select .selectize-input .course-select-filter-button.course-select-filter-on {
