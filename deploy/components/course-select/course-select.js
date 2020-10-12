@@ -275,15 +275,17 @@ var CourseSelect = (function () {
     CourseSelect.prototype.filterOpen = function () {
         var that = this;
 
-        gtag('event', 'course-select-filter-open');
-
         if (that.filterDialog) {
-            that.filterDialog.open();
             return;
         }
 
+        gtag('event', 'course-select-filter-open');
+
         var filterForm = $('#filter-form');
-        that.filterDialog = BootstrapDialog.show({
+        var filterFormParent = filterForm.parent();
+        var filterFormOnSubmit;
+
+        BootstrapDialog.show({
             cssClass: 'course-filter-dialog',
             title: 'סינון קורסים',
             message: filterForm,
@@ -308,17 +310,31 @@ var CourseSelect = (function () {
                     dialog.close();
                 }
             }],
-            autodestroy: false
-        });
+            onshow: function (dialog) {
+                $('<span>', {
+                    id: 'filter-result',
+                    class: 'bootstrap-dialog-message',
+                    css: {
+                        'margin-bottom': '.25rem',
+                        'margin-left': 'auto'
+                    }
+                }).prependTo(dialog.getModalFooter());
 
-        var footer = that.filterDialog.getModalFooter();
-        footer.css('flex-wrap', 'wrap');
-        $('<span id="filter-result"></span>').addClass('bootstrap-dialog-message')
-            .css({'margin-bottom': '.25rem'}).prependTo(footer);
+                filterFormOnSubmit = function (event) {
+                    event.preventDefault();
+                    dialog.getModalFooter().find('button.btn-primary').click();
+                };
+                filterForm.submit(filterFormOnSubmit);
 
-        filterForm.submit(function (event) {
-            event.preventDefault();
-            that.filterDialog.getModalFooter().find('button.btn-primary').click();
+                that.filterDialog = dialog;
+            },
+            onhidden: function (dialog) {
+                // Put it back for reuse.
+                filterForm.off('submit', null, filterFormOnSubmit);
+                filterFormParent.html(filterForm);
+
+                that.filterDialog = null;
+            }
         });
     };
 
