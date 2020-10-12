@@ -60,15 +60,6 @@
     background-color: #cdffd8;
 }
 
-/* make the filter footer text align to the right */
-.course-filter-dialog .modal-footer {
-    justify-content: space-between;
-}
-
-.course-filter-dialog .modal-footer .bootstrap-dialog-footer {
-    margin-right: auto;
-}
-
 #shared-schedule-title {
     font-weight: 300;
     line-height: 1.2;
@@ -117,20 +108,6 @@
 /* https://github.com/nakupanda/bootstrap3-dialog/issues/70 */
 .modal {
     overflow: auto !important;
-}
-
-/* bootstrap4-dialog RTL fix */
-.bootstrap-dialog .bootstrap-dialog-header {
-    flex-grow: 1;
-}
-
-.bootstrap-dialog .bootstrap-dialog-close-button {
-    float: left;
-}
-
-/* bootstrap4-dialog - add spacing between buttons */
-.bootstrap-dialog .bootstrap-dialog-footer-buttons .btn {
-    margin-right: .5rem;
 }
 
 /* intro.js - [done,prev,next] buttons order change to [prev,next,done]: https://stackoverflow.com/questions/42263288 */
