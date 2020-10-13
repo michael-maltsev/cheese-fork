@@ -1,6 +1,6 @@
 'use strict';
 
-/* global HistogramBrowser, CourseFeedback, BootstrapDialog, gtag */
+/* global HistogramBrowser, CourseFeedback, BootstrapDialog, showBootstrapDialogWithModelessButton, gtag */
 
 function CourseButtonList(element, options) {
     this.element = element;
@@ -74,7 +74,7 @@ CourseButtonList.prototype.addCourse = function (course) {
         }
 
         $(this).tooltip('hide');
-        BootstrapDialog.show({
+        showBootstrapDialogWithModelessButton({
             title: courseTitle,
             size: BootstrapDialog.SIZE_WIDE,
             message: $('<div>').html(courseDescriptionHtmlWithLinks + '<br><br>' +
