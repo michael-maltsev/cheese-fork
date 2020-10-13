@@ -64,6 +64,7 @@
                     }
                     courseExamInfo.setHighlighted(course);
                     courseCalendar.previewCourse(course);
+                    courseButtonList.setFloatingCourseInfo(course);
                 },
                 onDropdownItemDeactivate: function (course) {
                     if (!courseButtonList.isCourseInList(course)) {
@@ -2278,7 +2279,7 @@
     }
 })();
 
-function showBootstrapDialogWithModelessButton(options) {
+function showBootstrapDialogWithModelessButton(dialogName, options) {
     var newOptions = $.extend({}, options, {
         onshow: function (dialog) {
             var restoreButton = $('<div class="bootstrap-dialog-close-button" style="margin-right: auto;">' +
@@ -2290,6 +2291,8 @@ function showBootstrapDialogWithModelessButton(options) {
             dialog.getModalHeader().find('.bootstrap-dialog-close-button').before(restoreButton);
 
             restoreButton.click(function () {
+                gtag('event', 'bootstrap-dialog-restore-' + dialogName);
+
                 restoreButton.hide();
 
                 $('body').removeClass('modal-open').css({

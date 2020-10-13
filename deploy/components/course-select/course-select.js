@@ -286,7 +286,7 @@ var CourseSelect = (function () {
         var filterFormParent = filterForm.parent();
         var filterFormOnSubmit;
 
-        showBootstrapDialogWithModelessButton({
+        showBootstrapDialogWithModelessButton('course-filter', {
             cssClass: 'course-filter-dialog',
             title: 'סינון קורסים',
             message: filterForm,
