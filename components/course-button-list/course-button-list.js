@@ -221,6 +221,10 @@ var CourseButtonList = (function () {
         var dialog = that.infoDialogs[that.infoDialogs.length - 1];
 
         var courseTitle = that.courseManager.getTitle(course);
+        if (dialog.getTitle() === courseTitle) {
+            return; // already showing this course
+        }
+
         dialog.setTitle(courseTitle);
 
         setInfoDialogContent(dialog, course, that.courseManager);
