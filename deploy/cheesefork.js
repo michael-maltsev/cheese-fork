@@ -2027,7 +2027,7 @@
         content.append($('<a>').text('לרשימת הקורסים').prop('href', url));
         content.append('<br><br>');
 
-        var description = courseManager.getDescription(course, {html: true, links: true});
+        var description = courseManager.getDescription(course, {html: true, relatedCourseInfo: true, links: true});
         content.append($('<div>').html(description));
 
         var lessonsAdded = {};
