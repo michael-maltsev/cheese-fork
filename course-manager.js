@@ -135,6 +135,29 @@ CourseManager.prototype.getDescription = function (course, options) {
         content += '\n\n' + general['סילבוס'];
     }
 
+    if (options.relatedCourseInfo) {
+        var relatedCourseKeys = [
+            'מקצועות קדם',
+            'מקצועות צמודים',
+            'מקצועות זהים',
+            'מקצועות ללא זיכוי נוסף (מוכלים)',
+            'מקצועות ללא זיכוי נוסף (מכילים)',
+            'מקצועות ללא זיכוי נוסף'
+        ];
+        relatedCourseKeys.forEach(function (key) {
+            if (general[key]) {
+                var value = general[key];
+                value = value
+                    .replace(/(ו-)\s+/g, '$1')
+                    .replace(/(\()\s+/g, '$1')
+                    .replace(/\s+(\))/g, '$1')
+                    .replace(/\s+/g, ' ') // replaces &nbsp; and multiple spaces with a single space
+                    .trim();
+                content += '\n\n' + key + ': ' + value;
+            }
+        });
+    }
+
     if (general['אחראים']) {
         content += '\n\nאחראים: ' + general['אחראים'];
     }

@@ -60,15 +60,6 @@
     background-color: #cdffd8;
 }
 
-/* make the filter footer text align to the right */
-.course-filter-dialog .modal-footer {
-    justify-content: space-between;
-}
-
-.course-filter-dialog .modal-footer .bootstrap-dialog-footer {
-    margin-right: auto;
-}
-
 #shared-schedule-title {
     font-weight: 300;
     line-height: 1.2;
@@ -119,20 +110,6 @@
     overflow: auto !important;
 }
 
-/* bootstrap4-dialog RTL fix */
-.bootstrap-dialog .bootstrap-dialog-header {
-    flex-grow: 1;
-}
-
-.bootstrap-dialog .bootstrap-dialog-close-button {
-    float: left;
-}
-
-/* bootstrap4-dialog - add spacing between buttons */
-.bootstrap-dialog .bootstrap-dialog-footer-buttons .btn {
-    margin-right: .5rem;
-}
-
 /* intro.js - [done,prev,next] buttons order change to [prev,next,done]: https://stackoverflow.com/questions/42263288 */
 /* Also, change "done" button color from light gray to dark gray */
 .introjs-donebutton {
@@ -150,4 +127,29 @@ html.os-html>.os-host>.os-scrollbar {
 /* https://stackoverflow.com/a/21198397 */
 :-moz-ui-invalid {
     box-shadow: none;
+}
+
+/* Modeless dialog - see addBootstrapDialogModelessButton function */
+.bootstrap-dialog.cheesefork-modeless-dialog {
+    visibility: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding-right: 0;
+}
+
+.bootstrap-dialog.cheesefork-modeless-dialog .modal-dialog {
+    visibility: visible;
+    filter: drop-shadow(0 0 0.75rem #000);
+}
+
+.bootstrap-dialog.cheesefork-modeless-dialog .modal-header {
+    cursor: move;
+}
+
+.bootstrap-dialog.cheesefork-modeless-dialog .modal-body {
+    /* https://stackoverflow.com/a/28852473 */
+    max-height: calc(100vh - 225px);
+    overflow: auto;
 }
