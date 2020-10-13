@@ -1,6 +1,6 @@
 'use strict';
 
-/* global moment, BootstrapDialog, gtag */
+/* global moment, BootstrapDialog, showBootstrapDialogWithModelessButton, gtag */
 
 var CourseSelect = (function () {
     function CourseSelect(element, options) {
@@ -276,6 +276,7 @@ var CourseSelect = (function () {
         var that = this;
 
         if (that.filterDialog) {
+            that.filterDialog.getModalHeader().trigger('click');
             return;
         }
 
@@ -285,7 +286,7 @@ var CourseSelect = (function () {
         var filterFormParent = filterForm.parent();
         var filterFormOnSubmit;
 
-        BootstrapDialog.show({
+        showBootstrapDialogWithModelessButton({
             cssClass: 'course-filter-dialog',
             title: 'סינון קורסים',
             message: filterForm,

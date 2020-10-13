@@ -128,3 +128,28 @@ html.os-html>.os-host>.os-scrollbar {
 :-moz-ui-invalid {
     box-shadow: none;
 }
+
+/* Modeless dialog - see addBootstrapDialogModelessButton function */
+.bootstrap-dialog.cheesefork-modeless-dialog {
+    visibility: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding-right: 0;
+}
+
+.bootstrap-dialog.cheesefork-modeless-dialog .modal-dialog {
+    visibility: visible;
+    filter: drop-shadow(0 0 0.75rem #000);
+}
+
+.bootstrap-dialog.cheesefork-modeless-dialog .modal-header {
+    cursor: move;
+}
+
+.bootstrap-dialog.cheesefork-modeless-dialog .modal-body {
+    /* https://stackoverflow.com/a/28852473 */
+    max-height: calc(100vh - 225px);
+    overflow: auto;
+}

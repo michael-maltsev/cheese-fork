@@ -2277,3 +2277,72 @@
         return 100 - widthWithScroll;
     }
 })();
+
+function showBootstrapDialogWithModelessButton(options) {
+    var newOptions = $.extend({}, options, {
+        onshow: function (dialog) {
+            var restoreButton = $('<div class="bootstrap-dialog-close-button" style="margin-right: auto;">' +
+                '<button class="close">' +
+                '<i class="far fa-window-restore" style="font-size: 18px;"></i>' +
+                '</button>' +
+                '</div>');
+
+            dialog.getModalHeader().find('.bootstrap-dialog-close-button').before(restoreButton);
+
+            restoreButton.click(function () {
+                restoreButton.hide();
+
+                $('body').removeClass('modal-open').css({
+                    'padding-right': ''
+                }).find('> .modal-backdrop').hide();
+
+                var numOfmodelessDialogs = $('body > .bootstrap-dialog.cheesefork-modeless-dialog').length;
+
+                var thatDialogModal = dialog.getModal();
+                thatDialogModal.removeClass('modal')
+                    .addClass('cheesefork-modeless-dialog')
+                    .css('z-index', 1000 + numOfmodelessDialogs)
+                    .click(function () {
+                        var modelessDialogs = $('body > .bootstrap-dialog.cheesefork-modeless-dialog');
+                        var prevZindex = thatDialogModal.css('z-index');
+                        if (prevZindex < 1000 + modelessDialogs.length - 1) {
+                            modelessDialogs.each(function () {
+                                var iter = $(this);
+                                if (iter.css('z-index') > prevZindex) {
+                                    iter.css('z-index', iter.css('z-index') - 1);
+                                }
+                            });
+
+                            thatDialogModal.css('z-index', 1000 + modelessDialogs.length - 1);
+                        }
+                    });
+
+                dialog.options.draggable = true;
+                dialog.makeModalDraggable();
+            });
+
+            if (options.onshow) {
+                options.onshow(dialog);
+            }
+        },
+        onhidden: function (dialog) {
+            var thatDialogModal = dialog.getModal();
+            var modelessDialogs = $('body > .bootstrap-dialog.cheesefork-modeless-dialog');
+            var prevZindex = thatDialogModal.css('z-index');
+            if (prevZindex < 1000 + modelessDialogs.length - 1) {
+                modelessDialogs.each(function () {
+                    var iter = $(this);
+                    if (iter.css('z-index') > prevZindex) {
+                        iter.css('z-index', iter.css('z-index') - 1);
+                    }
+                });
+            }
+
+            if (options.onhidden) {
+                options.onhidden(dialog);
+            }
+        }
+    });
+
+    return BootstrapDialog.show(newOptions);
+}
