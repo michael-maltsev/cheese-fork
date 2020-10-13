@@ -11,6 +11,10 @@ function CourseButtonList(element, options) {
     this.onHoverOut = options.onHoverOut;
     this.onEnableCourse = options.onEnableCourse;
     this.onDisableCourse = options.onDisableCourse;
+
+    var that = this;
+
+    that.infoDialogs = [];
 }
 
 CourseButtonList.prototype.addCourse = function (course) {
@@ -74,19 +78,30 @@ CourseButtonList.prototype.addCourse = function (course) {
         }
 
         $(this).tooltip('hide');
-        showBootstrapDialogWithModelessButton({
+        showBootstrapDialogWithModelessButton('course-info', {
             title: courseTitle,
             size: BootstrapDialog.SIZE_WIDE,
-            message: $('<div>').html(courseDescriptionHtmlWithLinks + '<br><br>' +
+            message: '<div class="course-information"></div><br><br>' +
                 '<div class="course-feedback"></div>' +
-                '<h3 class="text-center">היסטוגרמות</h3><div class="inline-histograms"></div>'
-            ),
+                '<h3 class="text-center">היסטוגרמות</h3><div class="inline-histograms"></div>',
             onshow: function (dialog) {
-                var courseFeedback = new CourseFeedback(dialog.getModalBody().find('.course-feedback'), {});
+                that.infoDialogs.push(dialog);
+
+                var modalBody = dialog.getModalBody();
+
+                modalBody.find('.course-information').html(courseDescriptionHtmlWithLinks);
+
+                var courseFeedback = new CourseFeedback(modalBody.find('.course-feedback'), {});
                 courseFeedback.loadFeedback(course);
 
-                var histogramBrowser = new HistogramBrowser(dialog.getModalBody().find('.inline-histograms'), {});
+                var histogramBrowser = new HistogramBrowser(modalBody.find('.inline-histograms'), {});
                 histogramBrowser.loadHistograms(course);
+            },
+            onhidden: function (dialog) {
+                var index = that.infoDialogs.indexOf(dialog);
+                if (index !== -1) {
+                    that.infoDialogs.splice(index, 1);
+                }
             }
         });
     });
@@ -148,6 +163,31 @@ CourseButtonList.prototype.addCourse = function (course) {
             that.onEnableCourse(course);
         }
     }
+};
+
+CourseButtonList.prototype.setFloatingCourseInfo = function (course) {
+    var that = this;
+
+    if (that.infoDialogs.length === 0) {
+        return;
+    }
+
+    var courseTitle = that.courseManager.getTitle(course);
+    var courseDescriptionHtmlWithLinks = that.courseManager.getDescription(course, {html: true, links: true, logging: true});
+
+    var dialog = that.infoDialogs[that.infoDialogs.length - 1];
+
+    dialog.setTitle(courseTitle);
+
+    var modalBody = dialog.getModalBody();
+
+    modalBody.find('.course-information').html(courseDescriptionHtmlWithLinks);
+
+    var courseFeedback = new CourseFeedback(modalBody.find('.course-feedback'), {});
+    courseFeedback.loadFeedback(course);
+
+    var histogramBrowser = new HistogramBrowser(modalBody.find('.inline-histograms'), {});
+    histogramBrowser.loadHistograms(course);
 };
 
 CourseButtonList.prototype.setHovered = function (course) {
