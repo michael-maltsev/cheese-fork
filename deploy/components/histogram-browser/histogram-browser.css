@@ -75,3 +75,17 @@
 .histogram-modal-guide-content h3 {
     margin-top: 2rem;
 }
+
+.selectize-control.single .selectize-input:after {
+    left: calc(0.75rem + 5px);
+    right: inherit;
+}
+
+.selectize-dropdown .optgroup {
+    padding: 5px;
+}
+
+.selectize-dropdown .optgroup:before {
+    margin-left: 0px;
+    margin-right: 0px;
+}

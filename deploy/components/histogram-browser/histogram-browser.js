@@ -13,55 +13,71 @@ var HistogramBrowser = (function () {
         return strGrade.trim().replace(/\.\d+$/, '') || '--';
     }
 
+    function lecturerName(semester, data) {
+
+        var staff = data[semester].Staff;
+        var lecturer = null;
+
+        if (staff) {
+
+            staff.forEach(function (item) {
+                if (!lecturer && item.title === 'מרצה - אחראי מקצוע') {
+                    lecturer = item.name;
+                }
+            });
+        }
+
+        return lecturer;
+    }
+
+    // generates the data of a single Semester Grade option
+    function semesterGradeOption(semester, heSemester, category, heCategory, lecturer, data) {
+
+        var opt = data[semester][category];
+
+        return opt ? {
+            id: semester+"-"+category,
+            semester: semester,
+            heSemester: heSemester,
+            category: category,
+            heCategory: heCategory,
+            lecturer: lecturer,
+            grade: roundGrade(opt.average)
+        } : null;
+    }
+
     function renderHistograms(histogramBrowser, course, data) {
+
         var element = histogramBrowser.element;
         var semesters = Object.keys(data);
+        var options = [];
+        var optgroups = [];
+
         if (semesters.length > 0) {
+
             var semesterSelect = $('<select class="form-control"></select>');
 
             semesters.forEach(function (semester, i) {
-                var text = semesterFriendlyName(semester);
-                var props = [];
+                
+                var semesterName = semesterFriendlyName(semester);
+                var lecturer = lecturerName(semester, data);
 
-                var moedA = data[semester].Final_A || data[semester].Exam_A;
-                if (moedA) {
-                    props.push('א\' ' + roundGrade(moedA.average));
-                }
+                var semesterOptions = [ semesterGradeOption(semester, semesterName, "Final_A", "מועד א'", lecturer, data),
+                                        semesterGradeOption(semester, semesterName, "Exam_A", "מועד א'", lecturer, data),
+                                        semesterGradeOption(semester, semesterName, "Final_B", "מועד ב'", lecturer, data),
+                                        semesterGradeOption(semester, semesterName, "Exam_B", "מועד ב'", lecturer, data),
+                                        semesterGradeOption(semester, semesterName, "Finals", "סופי", lecturer, data)
+                                        ];
 
-                var moedB = data[semester].Final_B || data[semester].Exam_B;
-                if (moedB) {
-                    props.push('ב\' ' + roundGrade(moedB.average));
-                }
+                for(var j=0; j<semesterOptions.length; ++j)
+                    if(semesterOptions[j])
+                        options.push(semesterOptions[j]);
 
-                var final = data[semester].Finals;
-                if (final) {
-                    props.push('סופי ' + roundGrade(final.average));
-                }
-
-                var staff = data[semester].Staff;
-                if (staff) {
-                    var lecturer = null;
-                    staff.forEach(function (item) {
-                        if (!lecturer && item.title === 'מרצה - אחראי מקצוע') {
-                            lecturer = item.name;
-                        }
-                    });
-
-                    if (lecturer) {
-                        props.push(lecturer);
-                    }
-                }
-
-                if (props.length > 0) {
-                    text += '\xA0'.repeat(16 - text.length);
-                    text += props.join('\xA0\xA0');
-                }
-
-                semesterSelect.append($('<option>', {
+                optgroups.push({
                     value: semester,
-                    text: text,
-                    selected: i === semesters.length - 1
-                }));
+                    label: semesterName,
+                    lecturer: lecturer
+                });
             });
 
             var activated = shouldActivateHistorgramView();
@@ -83,8 +99,7 @@ var HistogramBrowser = (function () {
                     '</div>' +
                     '<div class="histogram-content">' +
                         '<div class="form-row">' +
-                            '<div class="form-group col-' + selectColumnGrid + '-6 histogram-semesters"></div>' +
-                            '<div class="form-group col-' + selectColumnGrid + '-6 histogram-categories"></div>' +
+                            '<div class="form-group col-' + selectColumnGrid + '-12 histogram-semesters"></div>' +
                         '</div>' +
                         '<div class="histogram-data table-responsive">' +
                             '<table class="table table-bordered table-sm">' +
@@ -137,6 +152,51 @@ var HistogramBrowser = (function () {
 
             element.html(html).find('.histogram-semesters').html(semesterSelect);
 
+            // configure the selectize object
+            element.find('.histogram-semesters select').selectize({
+                options: options,
+                items: [options[options.length-1].id],
+                optgroups: optgroups,
+                valueField: 'id',
+                labelField: 'id',
+                optgroupField: 'semester',
+                sortField: {
+                    field: 'semester',
+                    direction: 'desc'
+                },
+                render: {
+                    item: function(item, escape) {
+                        return '<div>' + 
+                                    '<b>' + escape(item.heSemester) + '</b> - ' +
+                                    escape(item.heCategory) +
+                                    ' ' + escape(item.grade) +
+                                    (item.lecturer ? ' - ' + escape(item.lecturer) : '') +
+                                '</div>';
+                    },
+                    option: function(item, escape) {
+                        return '<div>' + escape(item.heCategory) + ' ' + escape(item.grade) + '</div>';
+                    },
+                    optgroup_header: function(item, escape) {
+                        return '<div style="cursor:default;"><b>'+escape(item.label)+'</b>' + 
+                        (item.lecturer ? ' - ' + escape(item.lecturer) : '') +'</div>';
+                    }
+                },
+                onInitialize: function() {
+                    var option = options[options.length-1];
+                    var semester = option.semester;
+                    var category = option.category;
+
+                    onSemesterSelect(histogramBrowser, course, semester, data[semester], category);
+                },
+                onChange: function(value) {
+                    var splittedValue = value.split("-");
+                    var semester = splittedValue[0];
+                    var category = splittedValue[1];
+
+                    onSemesterSelect(histogramBrowser, course, semester, data[semester], category);
+                }
+            });
+
             element.find('.histogram-button-share').click(function () {
                 onButtonShare(histogramBrowser);
             });
@@ -147,9 +207,6 @@ var HistogramBrowser = (function () {
                 onButtonSnooze(histogramBrowser);
             });
 
-            semesterSelect.on('change', function () {
-                onSemesterSelect(histogramBrowser, course, this.value, data[this.value]);
-            }).trigger('change');
         } else {
             var html = '<div>לא קיימות היסטוגרמות לקורס זה.</div>' +
                 '<div>' +
@@ -253,38 +310,11 @@ var HistogramBrowser = (function () {
         element.find('.histogram-container').addClass('histogram-activated');
     }
 
-    function onSemesterSelect(histogramBrowser, course, semester, data) {
+    function onSemesterSelect(histogramBrowser, course, semester, data, category) {
+
         var element = histogramBrowser.element;
-        var categories = [
-            'Exam_A',
-            'Final_A',
-            'Exam_B',
-            'Final_B',
-            'Finals'
-        ];
-        var categorySelect = $('<select class="form-control"></select>');
 
-        categories.forEach(function (category) {
-            if (!data[category]) {
-                return;
-            }
-
-            var text = categoryFriendlyName(category);
-            text += ': ' + roundGrade(data[category].average);
-
-            categorySelect.append($('<option>', {
-                value: category,
-                text: text
-            }));
-        });
-
-        categorySelect.find('option:last').attr('selected', 'selected');
-
-        element.find('.histogram-categories').html(categorySelect);
-
-        categorySelect.on('change', function () {
-            onCategorySelect(histogramBrowser, course, semester, this.value, data[this.value]);
-        }).trigger('change');
+        loadHistogram(histogramBrowser, course, semester, category, data[category]);
 
         var staffTable = element.find('.histogram-staff-table');
         if (data.Staff) {
@@ -304,7 +334,7 @@ var HistogramBrowser = (function () {
         }
     }
 
-    function onCategorySelect(histogramBrowser, course, semester, category, data) {
+    function loadHistogram(histogramBrowser, course, semester, category, data) {
         var element = histogramBrowser.element;
 
         var newData = jQuery.extend({}, data);
