@@ -718,7 +718,8 @@
             });
         }
 
-        $('#top-navbar-export').click(function (event) {
+        $('#top-navbar-export-icalendar').click(function (event) {
+
             event.preventDefault();
 
             gtag('event', 'navbar-export');
@@ -839,11 +840,20 @@
             }).then(function (snapshot) {
                 var urlElement = $('<a target="_blank" rel="noopener">לחצו כאן להורדה</a>').prop('href', calendarUrl);
                 exportCalendarDialog.getModalBody().find('#calendar-link-placeholder').html(urlElement);
-
                 exportCalendarDialog.getButton('copy-link').enable();
             }, function (error) {
                 alert('Error saving calendar to server: ' + error.message);
             });
+        });
+
+        $('#top-navbar-export-pdf').click(function (event) {
+            event.preventDefault();
+
+            $(this).find('[data-toggle="tooltip"]').tooltip('hide');
+
+            var pdfFilename = semesterFriendlyNameForFileName(currentSemester)+".pdf";
+
+            courseCalendar.saveAsPDF(semesterFriendlyName(currentSemester), $("#general-info").text(), pdfFilename);
         });
     }
 
@@ -985,6 +995,7 @@
     }
 
     function updateGeneralInfoLine() {
+
         var courses = 0;
         var points = 0;
 
@@ -1971,7 +1982,7 @@
 
         $('#top-navbar-home').removeClass('d-none');
         $('#top-navbar-share').addClass('d-none');
-        $('#top-navbar-export').addClass('d-none');
+        $('#top-navbar-export-icalendar').addClass('d-none');
         $('#top-navbar-semester').addClass('d-none');
         $('#course-select').hide();
 

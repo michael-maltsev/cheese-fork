@@ -78,16 +78,26 @@
                     </a>
                 </li>
                 <li id="top-navbar-share" class="nav-item">
-                    <a class="nav-link disabled" href="#" data-toggle="tooltip" data-placement="bottom" data-trigger="hover" title="יש לבצע כניסה על מנת לשתף את המערכת">
+                    <a class="nav-link" href="#" data-toggle="tooltip" data-placement="bottom" data-trigger="hover" title="">
                         <i class="fas fa-share-alt"></i>
                         שיתוף מערכת
                     </a>
                 </li>
-                <li id="top-navbar-export" class="nav-item">
-                    <a class="nav-link" href="#" data-toggle="tooltip" data-placement="bottom" data-trigger="hover" title="מאפשר לייבא את המערכת לכלי שתומך בקבצי iCalendar כגון Google Calendar">
-                        <i class="fas fa-file-download"></i>
-                        ייצוא לקובץ iCalendar
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-cloud-download-alt"></i>
+                        ייצוא
                     </a>
+                    <div class="dropdown-menu">
+                        <a id="top-navbar-export-icalendar" class="dropdown-item" href="#" data-toggle="tooltip" data-placement="bottom" data-trigger="hover" title="מאפשר לייבא את המערכת לכלי שתומך בקבצי iCalendar כגון Google Calendar">
+                            <i class="fas fa-file-download"></i>
+                            ייצוא לקובץ iCalendar
+                        </a>    
+                        <a id="top-navbar-export-pdf" class="dropdown-item" href="#" data-toggle="tooltip" data-placement="bottom" data-trigger="hover" title="הורדת המערכת כקובץ PDF">
+                            <i class="fas fa-file-pdf"></i>
+                            ייצוא לקובץ PDF
+                        </a>
+                    </div>
                 </li>
                 <li id="top-navbar-undo" class="nav-item d-none">
                     <a class="nav-link" href="#">
@@ -292,6 +302,10 @@
 <script src="modules/intro.js/intro.min.js"></script>
 <script src="modules/reparse.js"></script>
 <script src="modules/boolean-expression.js"></script>
+<script src="modules/jsPDF/jspdf.umd.min.js"></script>
+<script src="modules/jsPDF/jspdf-autotable.min.js"></script>
+<script src="modules/jsPDF/Rubik-normal.js"></script>
+<script src="modules/jsPDF/Rubik-bold.js"></script>
 <script src="https://www.gstatic.com/firebasejs/5.3.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/5.3.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/5.3.1/firebase-storage.js"></script>
