@@ -743,7 +743,9 @@
                 'END:VTIMEZONE'
             ];
 
-            var icsCal = ics('cheesefork.cf', 'CheeseFork', extraCalendarHeaders);
+            // Generate a unique UID every time to avoid overriding old events.
+            // https://github.com/michael-maltsev/cheese-fork/issues/19
+            var icsCal = ics('cheesefork.cf-' + Date.now(), 'CheeseFork', extraCalendarHeaders);
 
             // Schedule.
             var dateFrom = availableSemesters[currentSemester].start;
