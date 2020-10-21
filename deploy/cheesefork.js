@@ -226,6 +226,10 @@
         if (str === '114246') {
             str = 'a' + str;
         }
+        // Similar fixup: pink 124503 and 134019.
+        if (str === '134019') {
+            str = 'a' + str;
+        }
         return colorHash.hex(str);
     }
 
