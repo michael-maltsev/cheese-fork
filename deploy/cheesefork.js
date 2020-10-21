@@ -287,16 +287,6 @@
             return showCourseFeedbackPopupPrevSemesters();
         }
 
-        // Temporary: promo period {
-        if (currentSemester === '201903' && now < new Date('2020-09-23T00:00:00')) {
-            return showCourseFeedbackPopupPrevSemesters();
-        }
-
-        if (currentSemester === '202001' && now < new Date('2020-10-21T00:00:00')) {
-            return showCourseFeedbackPopupPrevSemesters();
-        }
-        // }
-
         fromDate = new Date(availableSemesters[currentSemester].end);
         // Add several days to end date for a late notification (allow to do some exams).
         fromDate.setDate(fromDate.getDate() + 7);
