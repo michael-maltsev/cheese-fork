@@ -226,6 +226,10 @@
         if (str === '114246') {
             str = 'a' + str;
         }
+        // Similar fixup: pink 124503 and 134019.
+        if (str === '134019') {
+            str = 'a' + str;
+        }
         return colorHash.hex(str);
     }
 
@@ -926,7 +930,7 @@
         function handleSignedInUser(user) {
             $('#top-navbar-login').addClass('d-none');
             $('#top-navbar-logout').removeClass('d-none')
-                .find('a').attr('data-original-title', 'מחובר בתור: ' + user.displayName);
+                .find('a').attr('data-original-title', 'מחובר בתור: ' + firestoreDisplayNameDecode(user.displayName));
             $('#top-navbar-share').find('a').removeClass('disabled').tooltip('disable');
         }
 
@@ -1181,7 +1185,7 @@
             setScheduleFromSavedSession(session, !firstDataLoaded);
 
             if (result.exists && result.data().displayName) {
-                var displayName = result.data().displayName;
+                var displayName = firestoreDisplayNameDecode(result.data().displayName);
                 $('#sharing-user-name').text(displayName);
                 $('#sharing-user-known').removeClass('d-none');
                 $('#sharing-user-unknown').addClass('d-none');
@@ -1563,6 +1567,11 @@
         }
 
         return doc;
+    }
+
+    function firestoreDisplayNameDecode(displayName) {
+        // For some reason, the ' symbol is encoded as &#39;.
+        return displayName.replace('&#39;', '\'');
     }
 
     function shouldEnableMetadataDiff() {
