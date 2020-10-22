@@ -48,6 +48,13 @@ CourseManager.prototype.getSchedule = function (course) {
         if (general['הערות']) {
             // Extract sadnaot from course comments.
             var comment = general['הערות'];
+
+            // Fix common typos.
+            // Examples:
+            // Semester 201702, course 044198: מתרגלת הסנא
+            // Semester 202001, course 044137: סדאות רשות
+            comment = comment.replace(/(^|[^א-ת])(ה?ס)(דנ|ד|נ)(א|ה|אות)($|[^א-ת])/g, '$1$2דנ$4$5');
+
             var commentLines = comment.split('\n');
             for (var i = 0; i < commentLines.length; i++) {
                 var line = commentLines[i];
