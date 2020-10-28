@@ -223,9 +223,14 @@
         var str = course;
         // Fixup: both 114036 and 114246 get a green color, and both are taken at the same semester.
         // So here we cause the color of 114246 to be different.
-        // Similar fixup: pink 124503 and 134019.
-        if (str === '114246' || str === '134019') {
-            str = 'a' + str;
+        // Similar fixup: pink 124503, 124708 and 134019.
+        var coursePrefixForHashCalc = {
+            '114246': 'a',
+            '124708': 'c',
+            '134019': 'a',
+        };
+        if (coursePrefixForHashCalc[str]) {
+            str = coursePrefixForHashCalc[str] + str;
         }
         return colorHash.hex(str);
     }
