@@ -1,6 +1,6 @@
 'use strict';
 
-/* global moment, BootstrapDialog, showBootstrapDialogWithModelessButton, gtag */
+/* global moment, BootstrapDialog, showBootstrapDialogWithModelessButton, currentSemester, gtag */
 
 var CourseSelect = (function () {
     function CourseSelect(element, options) {
@@ -149,10 +149,12 @@ var CourseSelect = (function () {
     function filterInit(courseManager) {
         var faculties = {};
         var points = {};
-        var moedAMin = null;
-        var moedAMax = null;
-        var moedBMin = null;
-        var moedBMax = null;
+        var examDates = {
+            'מועד א': {},
+            'מועד ב': {}
+        };
+
+        var currentExamsYear = parseInt(currentSemester.slice(0, 4), 10) + 1;
 
         courseManager.getAllCourses().forEach(function (course) {
             var general = courseManager.getGeneralInfo(course);
@@ -165,31 +167,26 @@ var CourseSelect = (function () {
                 points[general['נקודות']] = true;
             }
 
-            if (general['מועד א']) {
-                var dateTimeA = courseManager.parseExamDateTime(general['מועד א']);
-                if (dateTimeA) {
-                    var moedA = moment.utc(dateTimeA.start).set({hour: 0, minute: 0, second: 0});
-                    if (moedAMin === null || moedA.isBefore(moedAMin)) {
-                        moedAMin = moedA;
-                    }
-                    if (moedAMax === null || moedA.isAfter(moedAMax)) {
-                        moedAMax = moedA;
-                    }
-                }
-            }
-
-            if (general['מועד ב']) {
-                var dateTimeB = courseManager.parseExamDateTime(general['מועד ב']);
-                if (dateTimeB) {
-                    var moedB = moment.utc(dateTimeB.start).set({hour: 0, minute: 0, second: 0});
-                    if (moedBMin === null || moedB.isBefore(moedBMin)) {
-                        moedBMin = moedB;
-                    }
-                    if (moedBMax === null || moedB.isAfter(moedBMax)) {
-                        moedBMax = moedB;
+            ['מועד א', 'מועד ב'].forEach(function (exam) {
+                if (general[exam]) {
+                    var dateTime = courseManager.parseExamDateTime(general[exam]);
+                    if (dateTime) {
+                        var day = moment.utc(dateTime.start).set({hour: 0, minute: 0, second: 0});
+                        var year = day.year();
+                        if (year === currentExamsYear) {
+                            if (!examDates[exam].minDay || day.isBefore(examDates[exam].minDay)) {
+                                examDates[exam].minDay = day;
+                            }
+                            if (!examDates[exam].maxDay || day.isAfter(examDates[exam].maxDay)) {
+                                examDates[exam].maxDay = day;
+                            }
+                        } else {
+                            examDates[exam].anomalyYears = examDates[exam].anomalyYears || {};
+                            examDates[exam].anomalyYears[year] = true;
+                        }
                     }
                 }
-            }
+            });
         });
 
         faculties = Object.keys(faculties).sort();
@@ -225,51 +222,62 @@ var CourseSelect = (function () {
             }));
         });
 
-        var date, dateStrFull, dateStrShort;
+        [['מועד א', 'moed-a'], ['מועד ב', 'moed-b']].forEach(function (examData) {
+            var exam = examData[0];
+            var examId = examData[1];
+            var anomalyYears = Object.keys(examDates[exam].anomalyYears || {}).sort(function (a, b) {
+                return a - b;
+            });
+            var minDay = examDates[exam].minDay;
+            var maxDay = examDates[exam].maxDay;
 
-        if (moedAMin && moedAMax) {
-            var selectMoedAMin = $('#filter-moed-a-min');
-            var selectMoedAMax = $('#filter-moed-a-max');
+            var selectMoedMin = $('#filter-' + examId + '-min');
+            var selectMoedMax = $('#filter-' + examId + '-max');
+            var addDate = function (date) {
+                var dateStrFull = date.format();
+                var dateStrShort = date.format('DD/MM');
+                selectMoedMin.append($('<option>', {
+                    value: dateStrFull,
+                    text: dateStrShort
+                }));
+                selectMoedMax.append($('<option>', {
+                    value: dateStrFull,
+                    text: dateStrShort
+                }));
+            };
+            var addYear = function (year) {
+                var yearStart = moment.utc([year]).startOf('year');
+                var yearEnd = moment.utc([year]).endOf('year');
+                selectMoedMin.append($('<option>', {
+                    value: yearStart.format(),
+                    text: year.toString()
+                }));
+                selectMoedMax.append($('<option>', {
+                    value: yearEnd.format(),
+                    text: year.toString()
+                }));
+            };
 
-            for (date = moedAMin.clone(); !date.isAfter(moedAMax); date.add(1, 'days')) {
-                dateStrFull = date.format();
-                dateStrShort = date.format('DD/MM');
-                selectMoedAMin.append($('<option>', {
-                    value: dateStrFull,
-                    text: dateStrShort,
-                    selected: date.isSame(moedAMin)
-                }));
-                selectMoedAMax.append($('<option>', {
-                    value: dateStrFull,
-                    text: dateStrShort,
-                    selected: date.isSame(moedAMax)
-                }));
+            anomalyYears.filter(function (year) {
+                return year < currentExamsYear;
+            }).forEach(function (year) {
+                addYear(year);
+            });
+
+            if (minDay && maxDay) {
+                for (var date = minDay.clone(); !date.isAfter(maxDay); date.add(1, 'days')) {
+                    addDate(date);
+                }
             }
 
-            selectMoedAMax.val(dateStrFull);
-        }
+            anomalyYears.filter(function (year) {
+                return year > currentExamsYear;
+            }).forEach(function (year) {
+                addYear(year);
+            });
 
-        if (moedBMin && moedBMax) {
-            var selectMoedBMin = $('#filter-moed-b-min');
-            var selectMoedBMax = $('#filter-moed-b-max');
-
-            for (date = moedBMin.clone(); !date.isAfter(moedBMax); date.add(1, 'days')) {
-                dateStrFull = date.format();
-                dateStrShort = date.format('DD/MM');
-                selectMoedBMin.append($('<option>', {
-                    value: dateStrFull,
-                    text: dateStrShort,
-                    selected: date.isSame(moedBMin)
-                }));
-                selectMoedBMax.append($('<option>', {
-                    value: dateStrFull,
-                    text: dateStrShort,
-                    selected: date.isSame(moedBMax)
-                }));
-            }
-
-            selectMoedBMax.val(dateStrFull);
-        }
+            selectMoedMax.find('option:last').attr('selected', 'selected');
+        });
     }
 
     CourseSelect.prototype.filterOpen = function () {
