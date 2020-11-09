@@ -1,7 +1,7 @@
 /* global saveAs, Blob, BlobBuilder, console */
 /* exported ics */
 
-var ics = function(uidDomain, prodId, extraHeaders) {
+var ics = function(uidDomain, prodId, extraHeaders, eventTimezoneId) {
   'use strict';
 
   if (navigator.userAgent.indexOf('MSIE') > -1 && navigator.userAgent.indexOf('MSIE 10') == -1) {
@@ -12,7 +12,7 @@ var ics = function(uidDomain, prodId, extraHeaders) {
   if (typeof uidDomain === 'undefined') { uidDomain = 'default'; }
   if (typeof prodId === 'undefined') { prodId = 'Calendar'; }
 
-  var SEPARATOR = (navigator.appVersion.indexOf('Win') !== -1) ? '\r\n' : '\n';
+  var SEPARATOR = '\r\n';
   var calendarEvents = [];
   var calendarStart = [
     'BEGIN:VCALENDAR',
@@ -125,12 +125,12 @@ var ics = function(uidDomain, prodId, extraHeaders) {
       var end_minutes = ("00" + (end_date.getMinutes().toString())).slice(-2);
       var end_seconds = ("00" + (end_date.getSeconds().toString())).slice(-2);
 
-      var now_year = ("0000" + (now_date.getFullYear().toString())).slice(-4);
-      var now_month = ("00" + ((now_date.getMonth() + 1).toString())).slice(-2);
-      var now_day = ("00" + ((now_date.getDate()).toString())).slice(-2);
-      var now_hours = ("00" + (now_date.getHours().toString())).slice(-2);
-      var now_minutes = ("00" + (now_date.getMinutes().toString())).slice(-2);
-      var now_seconds = ("00" + (now_date.getSeconds().toString())).slice(-2);
+      var now_year = ("0000" + (now_date.getUTCFullYear().toString())).slice(-4);
+      var now_month = ("00" + ((now_date.getUTCMonth() + 1).toString())).slice(-2);
+      var now_day = ("00" + ((now_date.getUTCDate()).toString())).slice(-2);
+      var now_hours = ("00" + (now_date.getUTCHours().toString())).slice(-2);
+      var now_minutes = ("00" + (now_date.getUTCMinutes().toString())).slice(-2);
+      var now_seconds = ("00" + (now_date.getUTCSeconds().toString())).slice(-2);
 
       // Since some calendars don't add 0 second events, we need to remove time if there is none...
       var start_time = '';
@@ -145,7 +145,7 @@ var ics = function(uidDomain, prodId, extraHeaders) {
 
       var start = start_year + start_month + start_day + start_time;
       var end = end_year + end_month + end_day + end_time;
-      var now = now_year + now_month + now_day + now_time;
+      var now = now_year + now_month + now_day + now_time + 'Z';
 
       var calendarEvent = [
         'BEGIN:VEVENT',
@@ -183,10 +183,14 @@ var ics = function(uidDomain, prodId, extraHeaders) {
         calendarEvent.push(rruleString);
       }
 
-      calendarEvent.push('DTSTAMP;VALUE=DATE-TIME:' + now);
+      calendarEvent.push('DTSTAMP:' + now);
 
       if (start_time !== '') {
-        calendarEvent.push('DTSTART;VALUE=DATE-TIME:' + start);
+        if (eventTimezoneId) {
+          calendarEvent.push('DTSTART;TZID=' + eventTimezoneId + ':' + start);
+        } else {
+          calendarEvent.push('DTSTART:' + start);
+        }
       } else {
         calendarEvent.push('DTSTART;VALUE=DATE:' + start);
       }
@@ -195,7 +199,11 @@ var ics = function(uidDomain, prodId, extraHeaders) {
       // it's a one day event, and no DTEND is needed.
       // https://stackoverflow.com/a/30249034
       if (end_time !== '') {
-        calendarEvent.push('DTEND;VALUE=DATE-TIME:' + end);
+        if (eventTimezoneId) {
+          calendarEvent.push('DTEND;TZID=' + eventTimezoneId + ':' + end);
+        } else {
+          calendarEvent.push('DTEND:' + end);
+        }
       } else if (end !== start) {
         calendarEvent.push('DTEND;VALUE=DATE:' + end);
       }
