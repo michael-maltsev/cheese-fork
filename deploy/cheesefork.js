@@ -236,7 +236,7 @@
     }
 
     function showExtraContentOnLoad() {
-        return showIntro() || showCourseFeedbackPopup() || showThursdayGraphPopup() || showTechnionScansPopup();
+        return showIntro() || showCTFPopup() || showCourseFeedbackPopup() || showThursdayGraphPopup() || showTechnionScansPopup();
     }
 
     function showIntro() {
@@ -275,6 +275,71 @@
                 // localStorage is not available in IE/Edge when running from a local file.
             }
         }).start();
+
+        return true;
+    }
+
+    function showCTFPopup() {
+        try {
+            var dontShowDate = localStorage.getItem('dontShowCSTechnionCTF2020Popup');
+            if (dontShowDate) {
+                /*var days = (Date.now() - parseInt(dontShowDate, 10)) / (24 * 3600 * 1000);
+                if (days <= 30) {
+                    return false;
+                }*/
+                return false;
+            }
+        } catch (e) {
+            // localStorage is not available in IE/Edge when running from a local file.
+        }
+
+        BootstrapDialog.show({
+            title: 'תחרות ה־CTF הפקולטית של מדמ"ח',
+            message: '<a href="http://ctf.cs.technion.ac.il/" target="_blank" rel="noopener" onclick="gtag(\'event\', \'cs-technion-ctf-2020-click-logo\')">' +
+                    '<img src="https://i.imgur.com/pnqQRx8.png" width="100%" class="mx-auto d-block">' +
+                '</a><br>' +
+                'אוהבים להרגיש קצת האקרים? אולי לכתוב אלגוריתמים ולפתור חידות?<br>' +
+                'זו ההזדמנות שלכם לככב!<br>' +
+                'במהלך התחרות תפתרו אתגרים שונים בתכנות 💻, אבטחת מידע 🕵🏽‍♂️, אלגוריתמיקה 🤓, בינה מלאכותית 💡 ועוד מלא תחומים מגניבים, כשהמטרה היא להשיג את ה"דגל" 🚩.<br>' +
+                'פרסים כספיים שווים יחולקו בין המקומות הראשונים.<br>' +
+                'מוזמנים <a href="http://ctf.cs.technion.ac.il/" target="_blank" rel="noopener" onclick="gtag(\'event\', \'cs-technion-ctf-2020-click-link\')">לבוא ולהירשם</a> לפני שיהיה מאוחר מדי!<br>' +
+                'התחרות פתוחה לכלל הטכניון: סטודנטים, בוגרים, ואנשי סגל.<br>' +
+                '<br>' +
+                '<div class="form-check">' +
+                    '<input class="form-check-input" type="checkbox" id="dont-show-cs-technion-ctf-2020-popup"> ' +
+                    '<label class="form-check-label" for="dont-show-cs-technion-ctf-2020-popup">' +
+                    'אל תציג את ההודעה שוב' +
+                    '</label>' +
+                '</div>',
+            buttons: [{
+                label: 'מעבר לאתר התחרות',
+                cssClass: 'btn-primary',
+                action: function (dialog) {
+                    gtag('event', 'cs-technion-ctf-2020-click-button');
+
+                    var win = window.open('http://ctf.cs.technion.ac.il/', '_blank', 'noopener');
+                    if (win) {
+                        win.focus();
+                    }
+                }
+            }, {
+                label: 'סגור',
+                action: function (dialog) {
+                    dialog.close();
+                }
+            }],
+            onhide: function (dialog) {
+                if (document.getElementById('dont-show-cs-technion-ctf-2020-popup').checked) {
+                    gtag('event', 'cs-technion-ctf-2020-dont-show');
+
+                    try {
+                        localStorage.setItem('dontShowCSTechnionCTF2020Popup', Date.now().toString());
+                    } catch (e) {
+                        // localStorage is not available in IE/Edge when running from a local file.
+                    }
+                }
+            }
+        });
 
         return true;
     }
