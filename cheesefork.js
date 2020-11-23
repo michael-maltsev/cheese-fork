@@ -296,7 +296,7 @@
         BootstrapDialog.show({
             title: 'תחרות ה־CTF הפקולטית של מדמ"ח',
             message: '<a href="http://ctf.cs.technion.ac.il/" target="_blank" rel="noopener" onclick="gtag(\'event\', \'cs-technion-ctf-2020-click-logo\')">' +
-                    '<img src="https://i.imgur.com/pnqQRx8.png" width="100%" class="mx-auto d-block">' +
+                    '<img src="https://i.imgur.com/whW0pXY.jpg" width="100%" class="mx-auto d-block">' +
                 '</a><br>' +
                 'אוהבים להרגיש קצת האקרים? אולי לכתוב אלגוריתמים ולפתור חידות?<br>' +
                 'זו ההזדמנות שלכם לככב!<br>' +
