@@ -210,7 +210,7 @@ let cheeseforkShareHisograms = function () {
 
         // Example:
         // בקורס - מבוא להסתברות ח' במשימה : ציון סופי במחשב המרכזי
-        const match = /^בקורס - (.*?) במשימה : (.*)$/.exec(doc.title.trim());
+        const match = /^בקורס - (.*?) במשימה : (.*)$/.exec(doc.querySelector('title').textContent.trim());
         const courseName = match ? match[1] : null;
         const categoryRaw = match ? match[2] : null;
         const category = categoryRaw === 'ציון סופי במחשב המרכזי' ? 'Finals' : categoryRaw;
