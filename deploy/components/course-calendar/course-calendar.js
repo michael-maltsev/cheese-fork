@@ -261,12 +261,16 @@ var CourseCalendar = (function () {
         return conflicted;
     }
 
-    function updateCalendarMaxDayAndTime(calendar) {
+    function getCalendarTimeBoundaries(calendar, onlySelectedEvents = false) {
         var minTime = calendar.fullCalendar('getCalendar').moment('2017-01-01T08:30:00');
         var maxTime = calendar.fullCalendar('getCalendar').moment('2017-01-01T18:30:00');
         var maxDay = 4;
 
         calendar.fullCalendar('clientEvents', function (event) {
+
+            if(onlySelectedEvents && !event.selected)
+                return false;
+
             // Subtract one minute to treat 24:00 as the previous day.
             var endDay = event.end.clone().add(-1, 'minute').day();
             if (maxDay < endDay) {
@@ -292,8 +296,24 @@ var CourseCalendar = (function () {
             return false;
         });
 
+        return {
+            minTime: minTime,
+            maxTime: maxTime,
+            maxDay: maxDay,
+        };
+    }
+
+    function updateCalendarMaxDayAndTime(calendar) {
+
+        var timeBoundaries = getCalendarTimeBoundaries(calendar);
+
+        var maxDay = timeBoundaries.maxDay;
+        var maxTime = timeBoundaries.maxTime;
+        var minTime = timeBoundaries.minTime;
+
         minTime = minTime.format('HH:mm:ss');
         maxTime = maxTime.format('kk:mm:ss');
+        
         var hiddenDays = [];
         for (var i = maxDay + 1; i < 7; i++) {
             hiddenDays.push(i);
@@ -979,6 +999,330 @@ var CourseCalendar = (function () {
 
         return count;
     };
+
+    /**
+     * Draws a dotted line on a jsPDF doc between two points.
+     * Note that the segment length is adjusted a little so
+     * that we end the line with a drawn segment and don't
+     * overflow.
+     */
+    function dottedLine(doc, xFrom, yFrom, xTo, yTo, segmentLength)
+    {
+        // Calculate line length (c)
+        var a = Math.abs(xTo - xFrom);
+        var b = Math.abs(yTo - yFrom);
+        var c = Math.sqrt(Math.pow(a,2) + Math.pow(b,2));
+
+        // Make sure we have an odd number of line segments (drawn or blank)
+        // to fit it nicely
+        var fractions = c / segmentLength;
+        var adjustedSegmentLength = (Math.floor(fractions) % 2 === 0) ? (c / Math.ceil(fractions)) : (c / Math.floor(fractions));
+
+        // Calculate x, y deltas per segment
+        var deltaX = adjustedSegmentLength * (a / c);
+        var deltaY = adjustedSegmentLength * (b / c);
+
+        var curX = xFrom, curY = yFrom;
+        while (curX <= xTo && curY <= yTo)
+        {
+            doc.line(curX, curY, curX + deltaX, curY + deltaY);
+            curX += 2*deltaX;
+            curY += 2*deltaY;
+        }
+    }
+
+    /**
+     * Exports the calendar to a direct PDF download
+     * @param {string} title 
+     * @param {string} subtitle 
+     * @param {string} pdfFilename 
+     */
+    CourseCalendar.prototype.saveAsPDF = function(title, subtitle, pdfFilename) {
+
+        // calendar object
+        var calendar = this.element;
+
+        // number of rows the calendar will use for a single hour
+        var rowsPerHour = 4;
+
+        // smallest hour fraction
+        var hourFrac = 1 / rowsPerHour;
+
+        // calculate calendar time boundaries
+        var timeBoundaries = getCalendarTimeBoundaries(calendar, true);
+        var maxDay = timeBoundaries.maxDay;
+        var minTime = timeBoundaries.minTime.hour() + timeBoundaries.minTime.minute() / 60;
+        var maxTime = timeBoundaries.maxTime.hour() + timeBoundaries.maxTime.minute() / 60;
+
+        // always start from an half-hour
+        minTime = (timeBoundaries.minTime.minute() < 30 ? Math.trunc(minTime)-1 : Math.trunc(minTime)) + 0.5;
+
+        // always end at a full-hour
+        maxTime = (timeBoundaries.maxTime.minute() < 30 ? Math.trunc(maxTime) : Math.trunc(maxTime) + 1) + 0.5;
+
+        // the index of the last table-body row
+        var lastRowIndex = (maxTime - minTime) * rowsPerHour - 1;
+
+        // will contain all calendar events
+        var events = {};
+
+        // table headers
+        var tableHeaders = [
+            "",
+            "ראשון",
+            "שני",
+            "שלישי",
+            "רביעי",
+            "חמישי",
+            "שישי",
+            "שבת"
+        ].map(function(day) {
+            return {
+                content: day,
+                styles: {
+                    textColor: "#212529",
+                    fillColor: "white",
+                    fontSize: 8
+                }
+            }
+        });
+
+        // remove the last days of the week if they are not in the calendar
+        tableHeaders = tableHeaders.slice(0, 2 + maxDay);
+
+        // table rows
+        var tableRows = [];
+        
+        // extract the required event information from the current calendar
+        calendar.fullCalendar('clientEvents', function (event) {
+
+            // consider only selected events
+            if (event.start.week() === 1 && event.selected) {
+
+                var day = event.start.day();
+                var start = event.start.hour() + event.start.minute() / 60;
+                var end = event.end.hour() + event.end.minute() / 60;
+                var title = event.title;
+                var bgcolor = event.backgroundColor;
+
+                // each event will have a unique key in a <day>-<hour> format
+                var eventKey = String(day)+"-"+String(start);
+
+                events[eventKey] = {
+                    title: title,
+                    bgcolor: bgcolor,
+                    day: day,
+                    start: start,
+                    end: end
+                };
+            }
+            return false;
+        });
+
+        // a list of days
+        // each day is a dictinary that has a key for a "used" hour
+        // for example { 9.5: true } means in 9.5 there is an event
+        var hoursUsed = [{}, {}, {}, {}, {}, {}, {}]; // an entry for each day
+
+        // for each row
+        for(var hour = minTime; hour < maxTime; hour += hourFrac) {
+
+            // a new empty row
+            var row = [];
+
+            // minutes of the event
+            var minutesFraction = hour - Math.trunc(hour)
+
+            var isHalfHour = minutesFraction == 0.5;
+            var isFullHour = minutesFraction == 0;
+
+            // first column creation
+            // *:30
+            if(isHalfHour) {
+
+                // an hour cell (like 8:30) which has a rowSpan of 2
+                row.push({
+                    content: (String(Math.trunc(hour))+":30").split("").reverse().join(""), // string reverse because of RTL problems
+                    rowSpan: rowsPerHour/2
+                });
+            }
+            // *:00
+            else if(isFullHour) {
+
+                // the second part of an hour cell which has a rowSpan of 2 and no content
+                row.push({
+                    content: "",
+                    rowSpan: rowsPerHour/2
+                });
+            }
+
+            // for each day (other columns creation)
+            for(var day = 0; day <= maxDay; ++day) {
+
+                // if the hour is already filled with an event, do not create the cell
+                // because it is already created with a rowSpan > 1
+                if(hour in hoursUsed[day])
+                    continue;
+
+                // initialize an empty cell
+                var cell = {
+                    content: "",
+                    styles: {}
+                }
+
+                var eventKey = String(day) + "-" + String(hour);
+
+                // if there is an event at this hour
+                if(eventKey in events) {
+
+                    // to set a text with autotable plugin we should use "content" instead of "text"
+                    // we use text so it won't render it but only save this property for our custom render later
+                    cell["text"] = events[eventKey].title;
+
+                    // this is also a custom property which will be used later in our custom render function 
+                    cell["bgColor"] = events[eventKey].bgcolor;
+
+                    // row-span of the event
+                    cell["rowSpan"] = (events[eventKey].end-events[eventKey].start) * rowsPerHour;
+
+                    // fill the hours of the event in our dictionary to prevent the addition of extra cells 
+                    for(var i=events[eventKey].start; i<events[eventKey].end; i += 0.25)
+                        hoursUsed[day][i] = true;
+                }
+
+                row.push(cell);
+            }
+
+            tableRows.push(row);
+        }
+
+        // here we start the PDF generation
+
+        // jsPDF object with a landscape orientation
+        var pdf = new jsPDF({
+            orientation: "landscape"
+        })
+
+        // support for Hebrew font and RTL
+        pdf.setR2L(true);
+        pdf.addFileToVFS('Rubik-normal.ttf', fontNormal);
+        pdf.addFont('Rubik-normal.ttf', 'Rubik', 'normal');
+        pdf.addFileToVFS('Rubik-bold.ttf', fontBold);
+        pdf.addFont('Rubik-bold.ttf', 'Rubik', 'bold');
+        pdf.setFont('Rubik');
+
+        // logo
+        var logo = new Image();
+        logo.src = "logo.png";
+        pdf.setR2L(false);
+        pdf.setFontSize(8);
+        pdf.text("CheeseFork", 5, 8);
+        pdf.setR2L(true);
+        pdf.addImage(logo, 'PNG', 21, 5, 15, 6);
+
+        // title
+        pdf.setFontSize(25);
+        pdf.myText(title, 100, 15, {
+            align: "center"
+        });
+
+        // subtitle
+        pdf.setFontSize(12);
+        pdf.myText(subtitle, 100, 25, {
+            align: "center"
+        });
+
+        var columnStyles = {};
+        columnStyles[maxDay+1] = {
+            cellWidth: 10
+        };
+
+        // calendar table
+        pdf.autoTable({
+            head: [tableHeaders.reverse()], // reverse because of RTL
+            body: tableRows.map(function(row) {return row.reverse()}), // reverse because of RTL
+            theme: 'grid',
+            startY: 30,
+            styles: { // basic table styles
+                font: "Rubik",
+                halign: "center",
+                fontSize: 6,
+                lineWidth: 0,
+                valign: "top",
+                textColor: "black",
+                fillColor: "white"
+            },
+            headStyles: { // basic table header styles
+                lineWidth: 0.1,
+                textColor: "black",
+                fillColor: "white"
+            },
+            columnStyles: columnStyles,
+            // this method is being called after each cell renderning
+            didDrawCell: function(hookData) {
+
+                var cell = hookData.cell;
+                var row = hookData.row;
+                var col = hookData.column;
+                var doc = hookData.doc;
+                
+                doc.setLineWidth(0.1);
+
+                // if we are in the table-body
+                if(hookData.section == "body") {
+
+                    row.height = 2.5; // a number that works well
+                    cell.height = 2.5 * cell.rowSpan;
+
+                    // an event cell
+                    if("bgColor" in cell.raw) {
+
+                        // render the background
+                        doc.setFillColor(cell.raw.bgColor);
+                        doc.rect(cell.x+0.2, cell.y+0.2, cell.width-0.4, cell.height-0.4, 'F');
+                        doc.setFillColor("white");
+
+                        // render the text
+                        var halfLineHeight = doc.getLineHeight() * (1/1.25)/2; // magic numbers from https://github.com/MrRio/jsPDF/issues/1573
+                        var nLines = cell.raw.text.split("\n").length;
+
+                        doc.setTextColor("white");
+                        doc.text(cell.raw.text,
+                            cell.x+cell.width/2,
+                            cell.y+cell.height/2 - (nLines>1)*halfLineHeight + (nLines==1)*0.75, {
+                                align: "center",
+                            });
+                        doc.setTextColor("black");
+                    }
+
+                    // right cell border
+                    doc.line(cell.x+cell.width, cell.y, cell.x+cell.width, cell.y+cell.height);
+
+                    // left cell border
+                    doc.line(cell.x, cell.y, cell.x, cell.y+cell.height);
+
+                    // if time is *:30
+                    if(row.index % 4 == 0) {
+                        // top cell border
+                        doc.line(cell.x, cell.y, cell.x+cell.width, cell.y);
+                    }
+                    // if time is *:00
+                    else if(row.index % 4 == 2) {
+                        // top border
+                        dottedLine(doc, cell.x, cell.y, cell.x+cell.width-0.2, cell.y, 0.2);
+                    }
+
+                    // if it is the last row
+                    if(row.index == lastRowIndex || row.index == lastRowIndex-1 && col.index == maxDay+1) {
+                        // bottom border
+                        doc.line(cell.x, cell.y+cell.height, cell.x+cell.width, cell.y+cell.height);
+                    }
+                }
+            }
+        });
+
+        pdf.save(pdfFilename);
+    }
 
     CourseCalendar.prototype.removeAll = function () {
         var that = this;
