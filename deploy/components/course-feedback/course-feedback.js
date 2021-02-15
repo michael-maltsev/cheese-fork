@@ -46,7 +46,7 @@ var CourseFeedback = (function () {
                             defaultText +
                         '</textarea>' +
                         '<div class="invalid-feedback">' +
-                            'יש להשלים חוות דעת' +
+                            'איכות חוות הדעת חשובה לנו, אנא הוסיפו פרטים על הקורס שיכולים לעזור לסטודנטים אחרים' +
                         '</div>' +
                     '</div>' +
                 '</div>' +
@@ -189,8 +189,10 @@ var CourseFeedback = (function () {
                         value = value.replace(templatePart, '');
                     });
 
-                    if (value.trim() === '') {
-                        this.setCustomValidity('יש להשלים חוות דעת');
+                    var words = value.trim().split(/\s+/);
+
+                    if (words.length <= 3) {
+                        this.setCustomValidity('איכות חוות הדעת חשובה לנו, אנא הוסיפו פרטים על הקורס שיכולים לעזור לסטודנטים אחרים');
                     } else {
                         this.setCustomValidity('');
                     }
