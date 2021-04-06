@@ -468,7 +468,7 @@
                     '</label>' +
                 '</div>' +
                 '<br>' +
-                '<div id="facebook-iframe-container"></div>',
+                '<div class="facebook-iframe-container"></div>',
             onshown: function (dialog) {
                 var modalBody = dialog.getModalBody();
                 var width = Math.floor(modalBody.width());
@@ -477,7 +477,7 @@
                     '&width=' + width + '&height=' + height + '&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=true&appId=863730240682785';
                 var frameElem = $('<iframe style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowTransparency="true" allow="encrypted-media"></iframe>')
                     .attr('src', frameSrc).width(width).height(height);
-                modalBody.find('#facebook-iframe-container').html(frameElem);
+                modalBody.find('.facebook-iframe-container').html(frameElem);
             },
             buttons: [{
                 label: 'סגור',
@@ -805,7 +805,7 @@
                     'הקישור קבוע פר משתמש וסמסטר, כך שניתן לייבא את הקישור עצמו לכלי שתומך בכך. ' +
                     'עבור כל עדכון נוסף מספיק לפתוח את החלון פעם נוספת, במקום הורדה וייבוא בכל פעם של הקובץ.<br>' +
                     '<br>' +
-                    'הקישור לקובץ iCalendar: <span id="calendar-link-placeholder">מעדכן את הקובץ בשרת...</span>.',
+                    'הקישור לקובץ iCalendar: <span class="calendar-link-placeholder">מעדכן את הקובץ בשרת...</span>.',
                 onshow: function (dialog) {
                     dialog.getButton('copy-link').disable();
                 },
@@ -838,7 +838,7 @@
                 cacheControl: 'public, max-age=0'
             }).then(function (snapshot) {
                 var urlElement = $('<a target="_blank" rel="noopener">לחצו כאן להורדה</a>').prop('href', calendarUrl);
-                exportCalendarDialog.getModalBody().find('#calendar-link-placeholder').html(urlElement);
+                exportCalendarDialog.getModalBody().find('.calendar-link-placeholder').html(urlElement);
 
                 exportCalendarDialog.getButton('copy-link').enable();
             }, function (error) {
