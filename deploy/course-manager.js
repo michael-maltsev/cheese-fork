@@ -183,40 +183,42 @@ CourseManager.prototype.getDescription = function (course, options) {
         content += '\n\nהערות: ' + general['הערות'];
     }
 
-    if (options.html) {
-        var headerHtml = $('<div>').text(header).html().replace(/\n/g, '<br>');
-        var contentHtml = $('<div>').text(content).html().replace(/\n/g, '<br>');
-
-        var html;
-        if (options.links) {
-            var loggingProps = options.logging ? ' onclick="gtag(\'event\', \'info-click-link-rishum\')"' : '';
-            var linksHtml = '<br><br><a href="https://ug3.technion.ac.il/rishum/course/' + course + '/" target="_blank" rel="noopener"' + loggingProps + '>' +
-                '<img src="assets/icon_rishum.png" alt="icon"> אתר הרישום</a>';
-
-            if (/^23\d\d\d\d$/.test(course)) {
-                // Only for computer science courses.
-                loggingProps = options.logging ? ' onclick="gtag(\'event\', \'info-click-link-webcourse\')"' : '';
-                linksHtml += '<br><a href="https://webcourse.cs.technion.ac.il/' + course + '/" target="_blank" rel="noopener"' + loggingProps + '>' +
-                    '<img src="assets/icon_webcourse.png" alt="icon"> אתר ה-WebCourse</a>';
-            }
-
-            loggingProps = options.logging ? ' onclick="gtag(\'event\', \'info-click-link-facebook\')"' : '';
-            linksHtml += '<br><a href="https://www.facebook.com/search/groups/?q=' + course + '" target="_blank" rel="noopener"' + loggingProps + '>' +
-                '<img src="assets/icon_facebook.png" alt="icon"> חיפוש קבוצה בפייסבוק</a>';
-
-            loggingProps = options.logging ? ' onclick="gtag(\'event\', \'info-click-link-tscans\')"' : '';
-            linksHtml += '<br><a href="https://tscans.cf/?course=' + course + '" target="_blank" rel="noopener"' + loggingProps + '>' +
-                '<img src="assets/icon_scans.png" alt="icon"> סריקות</a>';
-
-            html = headerHtml + linksHtml + contentHtml;
-        } else {
-            html = headerHtml + contentHtml;
-        }
-
-        return html;
-    } else {
+    if (!options.html) {
         return header + content;
     }
+
+    var headerHtml = $('<div>').text(header).html().replace(/\n/g, '<br>');
+    var linksHtml = '';
+    var contentHtml = $('<div>').text(content).html().replace(/\n/g, '<br>');
+
+    if (options.links) {
+        var loggingProps = options.logging ? ' onclick="gtag(\'event\', \'info-click-link-rishum\')"' : '';
+        linksHtml += '<br><br><a href="https://ug3.technion.ac.il/rishum/course/' + course + '/" target="_blank" rel="noopener"' + loggingProps + '>' +
+            '<img src="assets/icon_rishum.png" alt="icon"> אתר הרישום</a>';
+
+        if (/^23\d\d\d\d$/.test(course)) {
+            // Only for computer science courses.
+            loggingProps = options.logging ? ' onclick="gtag(\'event\', \'info-click-link-webcourse\')"' : '';
+            linksHtml += '<br><a href="https://webcourse.cs.technion.ac.il/' + course + '/" target="_blank" rel="noopener"' + loggingProps + '>' +
+                '<img src="assets/icon_webcourse.png" alt="icon"> אתר ה-WebCourse</a>';
+        }
+
+        loggingProps = options.logging ? ' onclick="gtag(\'event\', \'info-click-link-facebook\')"' : '';
+        linksHtml += '<br><a href="https://www.facebook.com/search/groups/?q=' + course + '" target="_blank" rel="noopener"' + loggingProps + '>' +
+            '<img src="assets/icon_facebook.png" alt="icon"> חיפוש קבוצה בפייסבוק</a>';
+
+        loggingProps = options.logging ? ' onclick="gtag(\'event\', \'info-click-link-tscans\')"' : '';
+        linksHtml += '<br><a href="https://tscans.cf/?course=' + course + '" target="_blank" rel="noopener"' + loggingProps + '>' +
+            '<img src="assets/icon_scans.png" alt="icon"> סריקות</a>';
+
+        if (options.whatsappGroupLink) {
+            loggingProps = options.logging ? ' onclick="gtag(\'event\', \'info-click-link-whatsapp\')"' : '';
+            linksHtml += '<br><a href="#" class="whatsapp-group-link"' + loggingProps + '>' +
+                '<img src="assets/icon_whatsapp.png" alt="icon"> קבוצת וואטסאפ</a>';
+        }
+    }
+
+    return headerHtml + linksHtml + contentHtml;
 };
 
 CourseManager.prototype.getLessonTypeAndNumber = function (lesson) {
