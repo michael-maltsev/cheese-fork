@@ -227,7 +227,11 @@ var CourseButtonList = (function () {
         that.element.append(button);
 
         if (showFirstTimeTooltip) {
-            badge.tooltip('show');
+            // Without setTimeout, if the list is hidden, the tooltip won't
+            // scroll with the list once the list is shown.
+            setTimeout(function () {
+                badge.tooltip('show');
+            }, 0);
         }
 
         function addTooltipToBadge(badge, tooltipHtml, firstTimeTooltip) {
