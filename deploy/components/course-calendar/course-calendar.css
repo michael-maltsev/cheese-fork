@@ -8,6 +8,11 @@
     font-size: calc(-0.3em + 3.1vh);
 }
 
+/* Disable vertical scrollbar which is sometimes visible inside the calendar */
+.course-calendar .fc-time-grid-container.fc-scroller {
+    overflow: hidden !important;
+}
+
 /* Dynamic event text size, RTL direction, default cursor for IE/Edge */
 .course-calendar .fc-event {
     font-size: calc(0.1em + 1.3vh);
