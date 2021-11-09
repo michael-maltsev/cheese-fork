@@ -148,6 +148,7 @@ var CourseSelect = (function () {
 
     function filterInit(courseManager) {
         var faculties = {};
+        var frameworks = {};
         var points = {};
         var examDates = {
             'מועד א': {},
@@ -161,6 +162,10 @@ var CourseSelect = (function () {
 
             if (general['פקולטה']) {
                 faculties[general['פקולטה']] = true;
+            }
+
+            if (general['מסגרת לימודים']) {
+                frameworks[general['מסגרת לימודים']] = true;
             }
 
             if (general['נקודות']) {
@@ -201,6 +206,19 @@ var CourseSelect = (function () {
         });
 
         selectFaculties.selectize();
+
+        frameworks = Object.keys(frameworks).sort();
+
+        var selectFrameworks = $('#filter-framework');
+
+        frameworks.forEach(function (framework) {
+            selectFrameworks.append($('<option>', {
+                value: framework,
+                text: framework
+            }));
+        });
+
+        selectFrameworks.selectize();
 
         var selectPointsMin = $('#filter-points-min');
         var selectPointsMax = $('#filter-points-max');
@@ -357,6 +375,11 @@ var CourseSelect = (function () {
             filters.faculties = faculties;
         }
 
+        var frameworks = $('#filter-framework').data('selectize').items;
+        if (frameworks.length > 0) {
+            filters.frameworks = frameworks;
+        }
+
         var selectPointsMin = $('#filter-points-min');
         // If not first which is already the minimum.
         if (selectPointsMin.prop('selectedIndex') > 0) {
@@ -450,6 +473,7 @@ var CourseSelect = (function () {
 
         $('#filter-form').trigger('reset');
         $('#filter-faculty').data('selectize').clear(); // selectize doesn't work with reset
+        $('#filter-framework').data('selectize').clear(); // selectize doesn't work with reset
 
         if (that.filteredCoursesCount < that.allCoursesCount) {
             that.courseSelect.clearOptions();
