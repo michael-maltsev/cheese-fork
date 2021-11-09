@@ -333,8 +333,23 @@ var CourseCalendar = (function () {
     }
 
     function makeLessonEvent(courseCalendar, course, lesson) {
+        var dayMapping = {
+            'ראשון': 1,
+            'שני': 2,
+            'שלישי': 3,
+            'רביעי': 4,
+            'חמישי': 5,
+            'שישי': 6,
+            'א': 1,
+            'ב': 2,
+            'ג': 3,
+            'ד': 4,
+            'ה': 5,
+            'ו': 6
+        };
+
         var lessonType = getLessonType(course, lesson);
-        var lessonDay = lesson['יום'].charCodeAt(0) - 'א'.charCodeAt(0) + 1;
+        var lessonDay = dayMapping[lesson['יום']];
         var lessonStartEnd = courseCalendar.courseManager.parseLessonTime(lesson['שעה']);
         var eventStartEnd = {
             start: courseCalendar.element.fullCalendar('getCalendar').moment('2017-01-0' + lessonDay + 'T' + lessonStartEnd.start + ':00'),
