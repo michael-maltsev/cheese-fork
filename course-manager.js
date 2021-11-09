@@ -364,11 +364,11 @@ CourseManager.prototype.filterCourses = function (filters) {
             return;
         }
 
-        if (filters.faculties && filters.faculties.indexOf(general['פקולטה']) === -1) {
+        if (filters.faculties && general['פקולטה'] && filters.faculties.indexOf(general['פקולטה']) === -1) {
             return;
         }
 
-        if (filters.frameworks) {
+        if (filters.frameworks && general['מסגרת לימודים']) {
             var frameworkMatch = general['מסגרת לימודים'].split('\n').some(function (item) {
                 return filters.frameworks.indexOf(item) !== -1;
             });
