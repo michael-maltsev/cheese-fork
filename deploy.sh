@@ -18,8 +18,10 @@ function fetch_semester {
 	local dest_file_min=deploy/courses/$courses_file.min.js
 	local dest_file=deploy/courses/$courses_file.js
 
-	echo -n 'var courses_from_rishum = ' > $dest_file_min
-	cat $src_file >> $dest_file_min
+	echo -n "var courses_from_rishum = JSON.parse('" > $dest_file_min
+	local php_cmd="echo addcslashes(file_get_contents('$src_file'), '\\\\\\'');"
+	php -r "$php_cmd" >> $dest_file_min
+	echo -n "')" >> $dest_file_min
 
 	echo -n 'var courses_from_rishum = ' > $dest_file
 	local php_cmd="echo json_encode(json_decode(file_get_contents('$src_file')), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);"
