@@ -1651,9 +1651,18 @@
         };
 
         var keyExclude = {
+            // Old keys.
             'אתר הקורס': true,
             'עבור לסמסטר': true,
-            'מיקום': true
+            'מיקום': true,
+
+            // New, unsupported keys.
+            'מסגרת לימודים': true,
+            'בוחן מועד א': true,
+            'בוחן מועד ב': true,
+            'בוחן מועד ג': true,
+            'בוחן מועד ד': true,
+            'בוחן מועד ה': true
         };
 
         var oldText = '';
