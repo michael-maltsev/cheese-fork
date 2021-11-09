@@ -1613,56 +1613,51 @@
     }
 
     function computeCourseGeneralMetadataDiff(oldGeneral, newGeneral) {
-        var keyOrder = {
-            'פקולטה'                          : 1,
-            'שם מקצוע'                        : 2,
-            'מספר מקצוע'                      : 3,
-            'אתר הקורס'                       : 4,
-            'נקודות'                          : 5,
-            'הרצאה'                           : 6,
-            'תרגיל'                           : 7,
-            'מעבדה'                           : 8,
-            'סמינר\/פרויקט'                   : 9,
-            'סילבוס'                          : 10,
-            'מקצועות קדם'                     : 11,
-            'מקצועות צמודים'                  : 12,
-            'מקצועות ללא זיכוי נוסף'          : 13,
-            'מקצועות ללא זיכוי נוסף (מכילים)' : 14,
-            'מקצועות ללא זיכוי נוסף (מוכלים)' : 15,
-            'מקצועות זהים'                    : 16,
-            'עבור לסמסטר'                     : 17,
-            'אחראים'                          : 18,
-            'הערות'                           : 19,
-            'מועד הבחינה'                     : 20,
-            'מועד א'                          : 21,
-            'מועד ב'                          : 22,
-            'מיקום'                           : 23
-        };
+        var keyOrder = [
+            'פקולטה',
+            'מסגרת לימודים',
+            'שם מקצוע',
+            'מספר מקצוע',
+            'אתר הקורס', // old format
+            'נקודות',
+            'הרצאה',
+            'תרגיל',
+            'מעבדה',
+            'סמינר\/פרויקט',
+            'סילבוס',
+            'מקצועות קדם',
+            'מקצועות צמודים',
+            'מקצועות ללא זיכוי נוסף',
+            'מקצועות ללא זיכוי נוסף (מכילים)',
+            'מקצועות ללא זיכוי נוסף (מוכלים)', // old format
+            'מקצועות זהים', // old format
+            'עבור לסמסטר', // old format
+            'אחראים',
+            'הערות',
+            'מועד הבחינה', // old format
+            'בוחן מועד א',
+            'בוחן מועד ב',
+            'בוחן מועד ג',
+            'בוחן מועד ד',
+            'בוחן מועד ה',
+            'מועד א',
+            'מועד ב',
+            'מיקום' // old format
+        ];
         var compareFunction = function (a, b) {
-            if (keyOrder[a] && keyOrder[b]) {
-                return keyOrder[a] - keyOrder[b];
-            } else if (keyOrder[a]) {
-                return -1;
-            } else if (keyOrder[b]) {
-                return 1;
-            } else {
-                return a.localeCompare(b);
+            var aIndex = (keyOrder.indexOf(a) + 1) || Number.MAX_VALUE;
+            var bIndex = (keyOrder.indexOf(b) + 1) || Number.MAX_VALUE;
+            if (aIndex !== bIndex) {
+                return aIndex - bIndex;
             }
+
+            return a.localeCompare(b);
         };
 
         var keyExclude = {
-            // Old keys.
             'אתר הקורס': true,
             'עבור לסמסטר': true,
-            'מיקום': true,
-
-            // New, unsupported keys.
-            'מסגרת לימודים': true,
-            'בוחן מועד א': true,
-            'בוחן מועד ב': true,
-            'בוחן מועד ג': true,
-            'בוחן מועד ד': true,
-            'בוחן מועד ה': true
+            'מיקום': true
         };
 
         var oldText = '';
@@ -1710,23 +1705,21 @@
         return diff;
 
         function scheduleToGroupOfTexts(schedule) {
-            var keyOrder = {
-                'מרצה\/מתרגל' : 1,
-                'יום'         : 2,
-                'שעה'         : 3,
-                'בניין'       : 4,
-                'חדר'         : 5
-            };
+            var keyOrder = [
+                'מרצה\/מתרגל',
+                'יום',
+                'שעה',
+                'בניין',
+                'חדר'
+            ];
             var compareFunction = function (a, b) {
-                if (keyOrder[a] && keyOrder[b]) {
-                    return keyOrder[a] - keyOrder[b];
-                } else if (keyOrder[a]) {
-                    return -1;
-                } else if (keyOrder[b]) {
-                    return 1;
-                } else {
-                    return a.localeCompare(b);
+                var aIndex = (keyOrder.indexOf(a) + 1) || Number.MAX_VALUE;
+                var bIndex = (keyOrder.indexOf(b) + 1) || Number.MAX_VALUE;
+                if (aIndex !== bIndex) {
+                    return aIndex - bIndex;
                 }
+
+                return a.localeCompare(b);
             };
 
             var lessonsAdded = {};

@@ -173,6 +173,29 @@ CourseManager.prototype.getDescription = function (course, options) {
         content += '\n\nאחראים: ' + general['אחראים'];
     }
 
+    if (general['בוחן מועד א'] ||
+        general['בוחן מועד ב'] ||
+        general['בוחן מועד ג'] ||
+        general['בוחן מועד ד'] ||
+        general['בוחן מועד ה']) {
+        content += '\n';
+        if (general['בוחן מועד א']) {
+            content += '\nבוחן מועד א\': ' + general['בוחן מועד א'];
+        }
+        if (general['בוחן מועד ב']) {
+            content += '\nבוחן מועד ב\': ' + general['בוחן מועד ב'];
+        }
+        if (general['בוחן מועד ג']) {
+            content += '\nבוחן מועד ג\': ' + general['בוחן מועד ג'];
+        }
+        if (general['בוחן מועד ד']) {
+            content += '\nבוחן מועד ד\': ' + general['בוחן מועד ד'];
+        }
+        if (general['בוחן מועד ה']) {
+            content += '\nבוחן מועד ה\': ' + general['בוחן מועד ה'];
+        }
+    }
+
     if (general['מועד א'] || general['מועד ב']) {
         content += '\n';
         if (general['מועד א']) {
@@ -342,6 +365,10 @@ CourseManager.prototype.filterCourses = function (filters) {
         }
 
         if (filters.faculties && filters.faculties.indexOf(general['פקולטה']) === -1) {
+            return;
+        }
+
+        if (filters.frameworks && filters.frameworks.indexOf(general['מסגרת לימודים']) === -1) {
             return;
         }
 
