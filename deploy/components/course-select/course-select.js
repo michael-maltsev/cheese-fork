@@ -165,7 +165,9 @@ var CourseSelect = (function () {
             }
 
             if (general['מסגרת לימודים']) {
-                frameworks[general['מסגרת לימודים']] = true;
+                general['מסגרת לימודים'].split('\n').forEach(function (item) {
+                    frameworks[item] = true;
+                });
             }
 
             if (general['נקודות']) {

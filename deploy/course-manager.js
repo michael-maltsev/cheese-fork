@@ -368,8 +368,13 @@ CourseManager.prototype.filterCourses = function (filters) {
             return;
         }
 
-        if (filters.frameworks && filters.frameworks.indexOf(general['מסגרת לימודים']) === -1) {
-            return;
+        if (filters.frameworks) {
+            var frameworkMatch = general['מסגרת לימודים'].split('\n').some(function (item) {
+                return filters.frameworks.indexOf(item) !== -1;
+            });
+            if (!frameworkMatch) {
+                return;
+            }
         }
 
         if (general['נקודות']) {
