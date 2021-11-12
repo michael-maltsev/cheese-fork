@@ -333,6 +333,9 @@ var CourseCalendar = (function () {
     }
 
     function makeLessonEvent(courseCalendar, course, lesson) {
+        var lessonType = getLessonType(course, lesson);
+        var lessonStartEnd = courseCalendar.courseManager.parseLessonTime(lesson['שעה']);
+
         var dayMapping = {
             'ראשון': 1,
             'שני': 2,
@@ -348,12 +351,15 @@ var CourseCalendar = (function () {
             'ו': 6
         };
 
-        var lessonType = getLessonType(course, lesson);
-        var lessonDay = dayMapping[lesson['יום']];
-        var lessonStartEnd = courseCalendar.courseManager.parseLessonTime(lesson['שעה']);
+        var lessonStartDay = dayMapping[lesson['יום']];
+        var lessonEndDay = lessonStartDay;
+        if (lessonStartEnd.end === '00:00') {
+            lessonEndDay++;
+        }
+
         var eventStartEnd = {
-            start: courseCalendar.element.fullCalendar('getCalendar').moment('2017-01-0' + lessonDay + 'T' + lessonStartEnd.start + ':00'),
-            end: courseCalendar.element.fullCalendar('getCalendar').moment('2017-01-0' + lessonDay + 'T' + lessonStartEnd.end + ':00')
+            start: courseCalendar.element.fullCalendar('getCalendar').moment('2017-01-0' + lessonStartDay + 'T' + lessonStartEnd.start + ':00'),
+            end: courseCalendar.element.fullCalendar('getCalendar').moment('2017-01-0' + lessonEndDay + 'T' + lessonStartEnd.end + ':00')
         };
 
         var eventId = course + '.' + lesson['מס.'] + '.' + lessonType;
