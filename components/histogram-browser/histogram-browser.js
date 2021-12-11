@@ -114,7 +114,7 @@ var HistogramBrowser = (function () {
                                 '</tbody>' +
                             '</table>' +
                         '</div>' +
-                        '<div class="histogram-image-container-outer"><div class="histogram-image-container-middle"><div class="histogram-image-container"></div></div></div>' +
+                        '<div class="histogram-image-container-outer"><div class="histogram-image-container"></div></div>' +
                         '<div class="histogram-staff-table row mt-3 d-none">' +
                             '<div class="col-' + selectColumnGrid + '-6">' +
                                 '<table class="table table-bordered table-sm">' +
