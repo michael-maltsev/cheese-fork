@@ -43,25 +43,17 @@
     justify-content: center;
 }
 
-.histogram-image-container-middle {
-    width: 106%;
-    /* image resolution: 800x450 */
-    max-width: 800px;
-    flex-shrink: 0;
-}
-
 /* https://stackoverflow.com/a/21992458 */
 .histogram-image-container {
-    /* image resolution: 800x450 */
-    padding-bottom: 56.25%;
-    position: relative;
+    flex-shrink: 0;
+    width: 108%;
+    max-width: 800px;
+    aspect-ratio: 1.77; /* 800/450 */
 }
 
 .histogram-image {
-    width: 100%;
-    height: 100%;
     display: block;
-    position: absolute;
+    margin: 0 auto;
 }
 
 .histogram-modal-guide-content p {
