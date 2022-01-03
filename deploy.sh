@@ -1,5 +1,9 @@
 #!/bin/bash
 
+function semester_available {
+	curl -s 'https://students.technion.ac.il/local/technionsearch/search' | grep '<option value="'$1'"' > /dev/null
+}
+
 function fetch_semester {
 	local semester=$1
 	echo Fetching semester $semester...
@@ -30,6 +34,10 @@ function fetch_semester {
 	return 0
 }
 
+# Make sure next semester is not available yet.
+semester_available 202103 && exit 1
+
+# Fetch last three semesters.
 fetch_semester 202003 || exit 1
 fetch_semester 202101 || exit 1
 fetch_semester 202102 || exit 1
