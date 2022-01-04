@@ -54,7 +54,8 @@ var CourseButtonList = (function () {
                     var button = dialog.getButton('update-link');
                     button.disable();
 
-                    var url = body.find('.whatsapp-group-link').val();
+                    var url = body.find('.whatsapp-group-link').val()
+                        .trim().replace(/[?&]fbclid=[a-zA-Z0-9_-]+$/, '');
 
                     firebase.firestore().collection('courseExtraDetails').doc(course)
                         .set({whatsappGroupLink: url}, {merge: true})
