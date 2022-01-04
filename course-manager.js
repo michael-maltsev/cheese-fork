@@ -220,7 +220,7 @@ CourseManager.prototype.getDescription = function (course, options) {
 
     if (options.links) {
         var loggingProps = options.logging ? ' onclick="gtag(\'event\', \'info-click-link-rishum\')"' : '';
-        linksHtml += '<br><br><a href="https://ug3.technion.ac.il/rishum/course/' + course + '/" target="_blank" rel="noopener"' + loggingProps + '>' +
+        linksHtml += '<br><br><a href="https://students.technion.ac.il/local/technionsearch/course/' + course + '" target="_blank" rel="noopener"' + loggingProps + '>' +
             '<img src="assets/icon_rishum.png" alt="icon"> אתר הרישום</a>';
 
         if (/^23\d\d\d\d$/.test(course)) {

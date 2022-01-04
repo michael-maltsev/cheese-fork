@@ -54,7 +54,8 @@ var CourseButtonList = (function () {
                     var button = dialog.getButton('update-link');
                     button.disable();
 
-                    var url = body.find('.whatsapp-group-link').val();
+                    var url = body.find('.whatsapp-group-link').val()
+                        .trim().replace(/[?&]fbclid=[a-zA-Z0-9_-]+$/, '');
 
                     firebase.firestore().collection('courseExtraDetails').doc(course)
                         .set({whatsappGroupLink: url}, {merge: true})
@@ -298,17 +299,26 @@ var CourseButtonList = (function () {
         }).each(function () {
             var replaced = false;
             var html = $('<div>').text(this.textContent).html().replace(/\b\d{6}\b/g, function (match) {
-                if (match === course || !courseManager.doesExist(match)) {
+                if (match === course) {
                     return match;
+                }
+
+                var tooltipTitle;
+                if (courseManager.doesExist(match)) {
+                    tooltipTitle = courseManager.getTitle(match);
+                } else {
+                    tooltipTitle = '(לא מועבר בסמסטר)';
                 }
 
                 replaced = true;
                 return $('<a>', {
-                    href: '#',
-                    class: 'course-reference-link',
-                    title: courseManager.getTitle(match),
+                    href: 'https://students.technion.ac.il/local/technionsearch/course/' + match,
+                    target: '_blank',
+                    rel: 'noopener',
+                    onclick: 'gtag(\'event\', \'info-click-dependency-link-rishum\')',
+                    title: tooltipTitle,
                     'data-toggle': 'tooltip',
-                    'data-course': match,
+                    'data-trigger': 'hover',
                     text: match
                 })[0].outerHTML;
             });
@@ -316,13 +326,6 @@ var CourseButtonList = (function () {
             if (replaced) {
                 var newElement = $('<span>', { html: html });
                 newElement.find('[data-toggle="tooltip"]').tooltip();
-                newElement.find('.course-reference-link').click(function () {
-                    $(this).tooltip('hide');
-                    var newCourse = $(this).attr('data-course');
-                    dialog.setTitle(courseManager.getTitle(newCourse));
-                    setInfoDialogContent(dialog, newCourse, courseManager);
-                    return false;
-                });
                 $(this).replaceWith(newElement);
             }
         });
