@@ -41,3 +41,5 @@ fetch_semester 202102 || exit 1
 
 # Make sure next semester is not available yet.
 semester_available 202103 && exit 1
+
+exit 0
