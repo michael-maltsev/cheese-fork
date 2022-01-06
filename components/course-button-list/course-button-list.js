@@ -18,33 +18,135 @@ var CourseButtonList = (function () {
         that.infoDialogs = [];
     }
 
+    function makeWhatsappGroupLinkContent(data) {
+        var result = $('<div>');
+
+        var linksFound = 0;
+
+        var whatsappLinks = [];
+        var whatsappLinkKeys = [
+            'whatsappGroupLink',
+            'whatsappGroupLink2',
+            'whatsappGroupLink3'
+        ];
+
+        whatsappLinkKeys.forEach(function (whatsappLinkKey) {
+            var url = data[whatsappLinkKey];
+            if (url && url.match(/^https:\/\/chat\.whatsapp\.com\//)) {
+                whatsappLinks.push(url);
+                linksFound++;
+            }
+        });
+
+        whatsappLinks.forEach(function (url, i) {
+            var linkText = 'קבוצת וואטסאפ';
+            if (i > 0) {
+                linkText += ' ' + (i + 1);
+            }
+
+            result.append($('<div>', {
+                html: $('<a>', {
+                    href: url,
+                    target: '_blank',
+                    rel: 'noopener',
+                    onclick: 'gtag(\'event\', \'info-click-group-link-whatsapp\')',
+                    text: linkText
+                })
+            }));
+        });
+
+        var url = data.telegramGroupLink;
+        if (url && url.match(/^https:\/\/t\.me\/joinchat\//)) {
+            linksFound++;
+            result.append($('<div>', {
+                html: $('<a>', {
+                    href: url,
+                    target: '_blank',
+                    rel: 'noopener',
+                    onclick: 'gtag(\'event\', \'info-click-group-link-telegram\')',
+                    text: 'קבוצת טלגרם'
+                })
+            }));
+        }
+
+        if (linksFound > 1) {
+            result.prepend('<div>באפשרותכם להצטרף לקבוצות בעזרת הלינקים הבאים:</div>');
+        } else if (linksFound > 0) {
+            result.prepend('<div>באפשרותכם להצטרף לקבוצה בעזרת הלינק הבא:</div>');
+        } else {
+            result.text('לא קיימים קישורי הצטרפות לקבוצת וואטסאפ/טלגרם עבור קורס זה. אם יש ברשותכם קישור עדכני, אנא לחצו על כפתור העדכון והזינו אותו.');
+        }
+
+        return result;
+    }
+
+    function makeWhatsappGroupLinkForm(data) {
+        var result = $('<form>', {
+            html: [
+                $('<input>', {
+                    type: 'text',
+                    value: data.whatsappGroupLink || '',
+                    class: 'form-control mt-2 whatsapp-group-link',
+                    placeholder: 'https://chat.whatsapp.com/...',
+                    style: 'direction: ltr;',
+                    pattern: 'https://chat\\.whatsapp\\.com/.+'
+                }),
+                $('<input>', {
+                    type: 'text',
+                    value: data.whatsappGroupLink2 || '',
+                    class: 'form-control mt-2 whatsapp-group-link2',
+                    placeholder: 'https://chat.whatsapp.com/...',
+                    style: 'direction: ltr;',
+                    pattern: 'https://chat\\.whatsapp\\.com/.+'
+                }),
+                $('<input>', {
+                    type: 'text',
+                    value: data.whatsappGroupLink3 || '',
+                    class: 'form-control mt-2 whatsapp-group-link3',
+                    placeholder: 'https://chat.whatsapp.com/...',
+                    style: 'direction: ltr;',
+                    pattern: 'https://chat\\.whatsapp\\.com/.+'
+                }),
+                $('<input>', {
+                    type: 'text',
+                    value: data.telegramGroupLink || '',
+                    class: 'form-control mt-2 telegram-group-link',
+                    placeholder: 'https://t.me/joinchat/...',
+                    style: 'direction: ltr;',
+                    pattern: 'https://t\\.me/joinchat/.+'
+                }),
+                '<div class="invalid-feedback">' +
+                    '<div>קישורים לקבוצות וואטסאפ חייבים להיות מהצורה: <span style="direction: ltr; unicode-bidi: embed;">https://chat.whatsapp.com/...</span></div>' +
+                    '<div>קישורים לקבוצות טלגרם חייבים להיות מהצורה: <span style="direction: ltr; unicode-bidi: embed;">https://t.me/joinchat/...</span></div>' +
+                '</div>'
+            ]
+        });
+
+        return result;
+    }
+
     function showWhatsappGroupLink(course) {
-        var whatsappGroupLink = null;
+        var groupLinksData = {};
 
         var whatsappGroupDialog = BootstrapDialog.show({
-            title: 'קבוצת וואטסאפ',
+            title: 'קבוצת וואטסאפ/טלגרם',
             message: '<div class="whatsapp-group-link-content">טוען נתונים...</div>',
             onshow: function (dialog) {
-                dialog.getButton('open-link').disable();
                 dialog.getButton('update-link').disable();
             },
             buttons: [{
-                id: 'open-link',
-                label: 'הצטרף לקבוצה',
-                cssClass: 'btn-primary',
-                action: function (dialog) {
-                    var win = window.open(whatsappGroupLink, '_blank', 'noopener');
-                    if (win) {
-                        win.focus();
-                    }
-                }
-            }, {
                 id: 'update-link',
-                label: 'עדכן קישור',
+                label: 'עדכן קישורים',
                 action: function (dialog) {
-                    var body = dialog.getModalBody();
+                    var content = dialog.getModalBody().find('.whatsapp-group-link-content');
 
-                    var form = body.find('form').get(0);
+                    var form = content.find('form').get(0);
+                    if (!form) {
+                        content.html(makeWhatsappGroupLinkForm(groupLinksData));
+                        content.find('form input:first').focus();
+                        return;
+                    }
+
                     if (form.checkValidity() === false) {
                         form.classList.add('was-validated');
                         return;
@@ -54,16 +156,28 @@ var CourseButtonList = (function () {
                     var button = dialog.getButton('update-link');
                     button.disable();
 
-                    var url = body.find('.whatsapp-group-link').val()
+                    var whatsappGroupLink = content.find('.whatsapp-group-link').val()
+                        .trim().replace(/[?&]fbclid=[a-zA-Z0-9_-]+$/, '');
+
+                    var whatsappGroupLink2 = content.find('.whatsapp-group-link2').val()
+                        .trim().replace(/[?&]fbclid=[a-zA-Z0-9_-]+$/, '');
+
+                    var whatsappGroupLink3 = content.find('.whatsapp-group-link3').val()
+                        .trim().replace(/[?&]fbclid=[a-zA-Z0-9_-]+$/, '');
+
+                    var telegramGroupLink = content.find('.telegram-group-link').val()
                         .trim().replace(/[?&]fbclid=[a-zA-Z0-9_-]+$/, '');
 
                     firebase.firestore().collection('courseExtraDetails').doc(course)
-                        .set({whatsappGroupLink: url}, {merge: true})
+                        .set({
+                            whatsappGroupLink: whatsappGroupLink,
+                            whatsappGroupLink2: whatsappGroupLink2,
+                            whatsappGroupLink3: whatsappGroupLink3,
+                            telegramGroupLink: telegramGroupLink
+                        }, { merge: true })
                         .then(function () {
-                            whatsappGroupLink = url;
-                            dialog.getButton('open-link').enable();
-                        })
-                        .catch(function (error) {
+                            dialog.close();
+                        }, function (error) {
                             button.enable();
                             alert('Error writing document: ' + error);
                         });
@@ -84,44 +198,15 @@ var CourseButtonList = (function () {
         if (typeof firebase !== 'undefined') {
             firebase.firestore().collection('courseExtraDetails').doc(course).get()
                 .then(function (doc) {
-                    var url = null;
                     if (doc.exists) {
-                        var data = doc.data();
-                        url = data.whatsappGroupLink;
+                        groupLinksData = doc.data();
                     }
 
-                    var text;
-                    if (url && url.match(/^https:\/\/chat\.whatsapp\.com\//)) {
-                        text = 'באפשרותכם להצטרף לקבוצה ובמידת הצורך לעדכן את הקישור.';
-                        whatsappGroupLink = url;
-                        whatsappGroupDialog.getButton('open-link').enable();
-                    } else {
-                        text = 'לא קיים קישור הצטרפות לקבוצת וואטסאפ עבור קורס זה. אם ידוע לכם הקישור העדכני, אנא הכניסו אותו ולחצו על כפתור העדכון.';
-                    }
+                    whatsappGroupDialog.getModalBody().find('.whatsapp-group-link-content')
+                        .html(makeWhatsappGroupLinkContent(groupLinksData));
 
-                    whatsappGroupDialog.getModalBody().find('.whatsapp-group-link-content').html([
-                        $('<div>', {text: text}),
-                        $('<form>', {
-                            html: [
-                                $('<input>', {
-                                    type: 'text',
-                                    value: url || '',
-                                    class: 'form-control mt-2 whatsapp-group-link',
-                                    placeholder: 'https://chat.whatsapp.com/...',
-                                    style: 'direction: ltr;',
-                                    pattern: 'https://chat\.whatsapp\.com/.+',
-                                    required: true
-                                }).on('input', function () {
-                                    whatsappGroupDialog.getButton('update-link').enable();
-                                }),
-                                '<div class="invalid-feedback">' +
-                                    'הקישור חייב להיות מהצורה: <span style="direction: ltr; unicode-bidi: embed;">https://chat.whatsapp.com/...</span>' +
-                                '</div>'
-                            ]
-                        })
-                    ]);
-                })
-                .catch(function (error) {
+                    whatsappGroupDialog.getButton('update-link').enable();
+                }, function (error) {
                     onError();
                 });
         } else {

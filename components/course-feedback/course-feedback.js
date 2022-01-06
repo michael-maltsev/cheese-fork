@@ -114,8 +114,7 @@ var CourseFeedback = (function () {
                     .set(update, {merge: true})
                     .then(function () {
                         options.onSubmit();
-                    })
-                    .catch(function (error) {
+                    }, function (error) {
                         alert('Error writing document: ' + error);
                     });
 
@@ -486,8 +485,7 @@ var CourseFeedback = (function () {
                     }
 
                     renderFeedback(that, course, posts);
-                })
-                .catch(function (error) {
+                }, function (error) {
                     onError();
                 });
         } else {

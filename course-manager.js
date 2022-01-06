@@ -241,7 +241,7 @@ CourseManager.prototype.getDescription = function (course, options) {
         if (options.whatsappGroupLink) {
             loggingProps = options.logging ? ' onclick="gtag(\'event\', \'info-click-link-whatsapp\')"' : '';
             linksHtml += '<br><a href="#" class="whatsapp-group-link"' + loggingProps + '>' +
-                '<img src="assets/icon_whatsapp.png" alt="icon"> קבוצת וואטסאפ</a>';
+                '<img src="assets/icon_whatsapp.png" alt="icon"> קבוצת וואטסאפ/טלגרם</a>';
         }
     }
 
