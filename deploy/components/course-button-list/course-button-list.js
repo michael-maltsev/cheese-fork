@@ -168,15 +168,19 @@ var CourseButtonList = (function () {
                     var telegramGroupLink = content.find('.telegram-group-link').val()
                         .trim().replace(/[?&]fbclid=[a-zA-Z0-9_-]+$/, '');
 
+                    var newGroupLinksData = {
+                        whatsappGroupLink: whatsappGroupLink,
+                        whatsappGroupLink2: whatsappGroupLink2,
+                        whatsappGroupLink3: whatsappGroupLink3,
+                        telegramGroupLink: telegramGroupLink
+                    };
+
                     firebase.firestore().collection('courseExtraDetails').doc(course)
-                        .set({
-                            whatsappGroupLink: whatsappGroupLink,
-                            whatsappGroupLink2: whatsappGroupLink2,
-                            whatsappGroupLink3: whatsappGroupLink3,
-                            telegramGroupLink: telegramGroupLink
-                        }, { merge: true })
+                        .set(newGroupLinksData, { merge: true })
                         .then(function () {
-                            dialog.close();
+                            groupLinksData = newGroupLinksData;
+                            content.html(makeWhatsappGroupLinkContent(groupLinksData));
+                            button.enable();
                         }, function (error) {
                             button.enable();
                             alert('Error writing document: ' + error);
