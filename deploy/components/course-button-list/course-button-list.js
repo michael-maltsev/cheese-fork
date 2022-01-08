@@ -156,27 +156,30 @@ var CourseButtonList = (function () {
                     var button = dialog.getButton('update-link');
                     button.disable();
 
-                    var whatsappGroupLink = content.find('.whatsapp-group-link').val()
-                        .trim().replace(/[?&]fbclid=[a-zA-Z0-9_-]+$/, '');
-
-                    var whatsappGroupLink2 = content.find('.whatsapp-group-link2').val()
-                        .trim().replace(/[?&]fbclid=[a-zA-Z0-9_-]+$/, '');
-
-                    var whatsappGroupLink3 = content.find('.whatsapp-group-link3').val()
-                        .trim().replace(/[?&]fbclid=[a-zA-Z0-9_-]+$/, '');
-
-                    var telegramGroupLink = content.find('.telegram-group-link').val()
-                        .trim().replace(/[?&]fbclid=[a-zA-Z0-9_-]+$/, '');
-
-                    var newGroupLinksData = {
-                        whatsappGroupLink: whatsappGroupLink,
-                        whatsappGroupLink2: whatsappGroupLink2,
-                        whatsappGroupLink3: whatsappGroupLink3,
-                        telegramGroupLink: telegramGroupLink
+                    var newGroupLinksData = {};
+                    var newGroupLinksDataWithDelete = {};
+                    var newGroupLinksDataSelectors = {
+                        whatsappGroupLink: '.whatsapp-group-link',
+                        whatsappGroupLink2: '.whatsapp-group-link2',
+                        whatsappGroupLink3: '.whatsapp-group-link3',
+                        telegramGroupLink: '.telegram-group-link'
                     };
 
+                    Object.keys(newGroupLinksDataSelectors).forEach(function (key) {
+                        var selector = newGroupLinksDataSelectors[key];
+                        var url = content.find(selector).val()
+                            .trim().replace(/[?&]fbclid=[a-zA-Z0-9_-]+$/, '');
+
+                        if (url !== '') {
+                            newGroupLinksData[key] = url;
+                            newGroupLinksDataWithDelete[key] = url;
+                        } else {
+                            newGroupLinksDataWithDelete[key] = firebase.firestore.FieldValue.delete();
+                        }
+                    });
+
                     firebase.firestore().collection('courseExtraDetails').doc(course)
-                        .set(newGroupLinksData, { merge: true })
+                        .set(newGroupLinksDataWithDelete, { merge: true })
                         .then(function () {
                             groupLinksData = newGroupLinksData;
                             content.html(makeWhatsappGroupLinkContent(groupLinksData));
