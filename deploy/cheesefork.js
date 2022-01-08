@@ -934,7 +934,7 @@
         function handleSignedInUser(user) {
             $('#top-navbar-login').addClass('d-none');
             $('#top-navbar-logout').removeClass('d-none')
-                .find('a').attr('data-original-title', 'מחובר בתור: ' + firestoreDisplayNameDecode(user.displayName));
+                .find('a').attr('data-original-title', 'מחובר בתור: ' + firestoreDisplayNameDecode(user.displayName || user.email || 'משתמש לא מזוהה'));
             $('#top-navbar-share').find('a').removeClass('disabled').tooltip('disable');
         }
 
@@ -1221,9 +1221,10 @@
                     return;
                 }
 
-                if (!firstDataLoaded) {
+                var displayName = firebase.auth().currentUser.displayName;
+                if (!firstDataLoaded && displayName) {
                     // Save name in server for sharing purposes.
-                    doc.set({displayName: firebase.auth().currentUser.displayName}, {merge: true});
+                    doc.set({displayName: displayName}, {merge: true});
                 }
 
                 var session = savedSessionFromFirestoreData(result.exists ? result.data() : {});
