@@ -2,6 +2,7 @@
 
 /* global moment, BootstrapDialog */
 
+// eslint-disable-next-line no-unused-vars
 var CourseCalendar = (function () {
     function CourseCalendar(element, options) {
         this.element = element;
@@ -237,7 +238,7 @@ var CourseCalendar = (function () {
             }
 
             var type = getLessonType(course, event.lessonData);
-            if (!availableOptionsPerType.propertyIsEnumerable(type)) {
+            if (!availableOptionsPerType[type]) {
                 availableOptionsPerType[type] = 0;
             }
 
@@ -407,7 +408,7 @@ var CourseCalendar = (function () {
 
         for (var i = 0; i < schedule.length; i++) {
             var lesson = schedule[i];
-            if (lessonsAdded.propertyIsEnumerable(lesson['מס.']) && lessonsAdded[lesson['מס.']] !== lesson['קבוצה']) {
+            if (lessonsAdded[lesson['מס.']] && lessonsAdded[lesson['מס.']] !== lesson['קבוצה']) {
                 continue;
             }
 
@@ -446,7 +447,7 @@ var CourseCalendar = (function () {
                     cbEvent.end.add(7, 'days');
                 }
 
-                if (conflictedIds.propertyIsEnumerable(cbEvent.id)) {
+                if (conflictedIds[cbEvent.id]) {
                     var weeks = conflictedIds[cbEvent.id];
                     cbEvent.start.add(7 * weeks, 'days');
                     cbEvent.end.add(7 * weeks, 'days');
@@ -462,7 +463,7 @@ var CourseCalendar = (function () {
                 }
 
                 if (areEventsOverlapping(cbEvent, event)) {
-                    if (!conflictedIds.propertyIsEnumerable(cbEvent.id)) {
+                    if (!conflictedIds[cbEvent.id]) {
                         conflictedIds[cbEvent.id] = 0;
                     }
                     conflictedIds[cbEvent.id]++;
@@ -655,7 +656,7 @@ var CourseCalendar = (function () {
                 }
 
                 if (areEventsOverlapping(cbEvent, event)) {
-                    if (!conflictedIds.propertyIsEnumerable(cbEvent.id)) {
+                    if (!conflictedIds[cbEvent.id]) {
                         conflictedIds[cbEvent.id] = 1;
                         return true;
                     }
@@ -729,7 +730,7 @@ var CourseCalendar = (function () {
 
         for (var i = 0; i < schedule.length; i++) {
             var lesson = schedule[i];
-            if (lessonsAdded.propertyIsEnumerable(lesson['מס.']) && lessonsAdded[lesson['מס.']] !== lesson['קבוצה']) {
+            if (lessonsAdded[lesson['מס.']] && lessonsAdded[lesson['מס.']] !== lesson['קבוצה']) {
                 continue;
             }
 
@@ -737,7 +738,7 @@ var CourseCalendar = (function () {
 
             var conflictCount = countEventConflicts(event);
             if (conflictCount > 0) {
-                if (!conflictedIds.propertyIsEnumerable(event.id)) {
+                if (!conflictedIds[event.id]) {
                     conflictedIds[event.id] = 0;
                 }
                 conflictedIds[event.id] += conflictCount;
@@ -749,7 +750,7 @@ var CourseCalendar = (function () {
         }
 
         for (i = 0; i < events.length; i++) {
-            if (conflictedIds.propertyIsEnumerable(events[i].id)) {
+            if (conflictedIds[events[i].id]) {
                 var weeks = conflictedIds[events[i].id];
                 events[i].start.add(7 * weeks, 'days');
                 events[i].end.add(7 * weeks, 'days');
@@ -785,7 +786,7 @@ var CourseCalendar = (function () {
 
         var conflictedEvents = calendar.fullCalendar('clientEvents', function (event) {
             if (event.courseNumber !== null && event.courseNumber !== course && isConflicted(event, course)) {
-                if (!conflictedIds.propertyIsEnumerable(event.id)) {
+                if (!conflictedIds[event.id]) {
                     conflictedIds[event.id] = 1;
                     return true;
                 }

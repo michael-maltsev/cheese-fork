@@ -2,6 +2,7 @@
 
 /* global BootstrapDialog, gtag */
 
+// eslint-disable-next-line no-unused-vars
 var HistogramBrowser = (function () {
     function HistogramBrowser(element, options) {
         this.element = element;
@@ -64,7 +65,7 @@ var HistogramBrowser = (function () {
                 }));
             });
 
-            var activated = shouldActivateHistorgramView();
+            var activated = shouldActivateHistogramView();
             var selectColumnGrid = histogramBrowser.selectColumnGrid || 'lg';
             var html = '<div class="histogram-container' + (activated ? ' histogram-activated' : '') + '">' +
                     '<div class="histogram-overlay-message">' +
@@ -151,11 +152,11 @@ var HistogramBrowser = (function () {
                 onSemesterSelect(histogramBrowser, course, this.value, data[this.value]);
             }).trigger('change');
         } else {
-            var html = '<div>לא קיימות היסטוגרמות לקורס זה.</div>' +
+            var noDataHtml = '<div>לא קיימות היסטוגרמות לקורס זה.</div>' +
                 '<div>' +
                     '<a href="share-histograms.html" target="_blank" class="small">שיתוף היסטוגרמות</a>' +
                 '</div>';
-            element.html(html);
+            element.html(noDataHtml);
         }
     }
 
@@ -228,7 +229,7 @@ var HistogramBrowser = (function () {
         activateAndSetNextShowDate(histogramBrowser, nextShowDate);
     }
 
-    function shouldActivateHistorgramView() {
+    function shouldActivateHistogramView() {
         var nextShowDate = localStorage.getItem('nextHistogramShareMessage');
         return nextShowDate && Date.now() < nextShowDate;
     }
@@ -236,10 +237,10 @@ var HistogramBrowser = (function () {
     function activateAndSetNextShowDate(histogramBrowser, nextShowDate) {
         localStorage.setItem('nextHistogramShareMessage', nextShowDate.valueOf().toString());
 
-        activateHistorgramView(histogramBrowser);
+        activateHistogramView(histogramBrowser);
     }
 
-    function activateHistorgramView(histogramBrowser) {
+    function activateHistogramView(histogramBrowser) {
         var element = histogramBrowser.element;
         element.find('.histogram-container').addClass('histogram-activated');
     }
@@ -350,6 +351,7 @@ var HistogramBrowser = (function () {
             fallbackCopyTextToClipboard(text);
             return;
         }
+        // eslint-disable-next-line compat/compat
         navigator.clipboard.writeText(text).then(function () {
             onSuccess();
         }, function (err) {
@@ -366,7 +368,9 @@ var HistogramBrowser = (function () {
             var successful = false;
             try {
                 successful = document.execCommand('copy');
-            } catch (err) { }
+            } catch (err) {
+                // We tried...
+            }
 
             document.body.removeChild(textArea);
 

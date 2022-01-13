@@ -2,6 +2,7 @@
 
 /* global HistogramBrowser, CourseFeedback, BootstrapDialog, showBootstrapDialogWithModelessButton, firebase, gtag */
 
+// eslint-disable-next-line no-unused-vars
 var CourseButtonList = (function () {
     function CourseButtonList(element, options) {
         this.element = element;
