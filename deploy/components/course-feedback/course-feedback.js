@@ -2,6 +2,7 @@
 
 /* global BootstrapDialog, firebase, currentSemester */
 
+// eslint-disable-next-line no-unused-vars
 var CourseFeedback = (function () {
     function CourseFeedback(element, options) {
         this.element = element;
@@ -328,9 +329,9 @@ var CourseFeedback = (function () {
             text = text.replace(regex, t2);
         }
 
-        var t1 = templateParts[templateParts.length - 1];
-        var regex = new RegExp(t1 + '\\s*$');
-        text = text.replace(regex, '');
+        var t1Last = templateParts[templateParts.length - 1];
+        var regexLast = new RegExp(t1Last + '\\s*$');
+        text = text.replace(regexLast, '');
 
         return text.trim();
     }

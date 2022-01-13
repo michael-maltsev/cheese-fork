@@ -1,7 +1,7 @@
 'use strict';
 
 /* global introJs, ColorHash, BootstrapDialog, ics, JsDiff, firebase, firebaseui, gtag */
-/* global CourseManager, CourseSelect, CourseButtonList, CourseExamInfo, CourseCalendar */
+/* global CourseManager, CourseSelect, CourseButtonList, CourseExamInfo, CourseCalendar, CourseFeedback */
 /* global courses_from_rishum, availableSemesters, currentSemester, scheduleSharingUserId */
 
 (function () {
@@ -899,17 +899,17 @@
         var semesterCode = semester.slice(4);
 
         switch (semesterCode) {
-            case '01':
-                return 'חורף ' + year + '-' + (year + 1);
+        case '01':
+            return 'חורף ' + year + '-' + (year + 1);
 
-            case '02':
-                return 'אביב ' + (year + 1);
+        case '02':
+            return 'אביב ' + (year + 1);
 
-            case '03':
-                return 'קיץ ' + (year + 1);
+        case '03':
+            return 'קיץ ' + (year + 1);
 
-            default:
-                return semester;
+        default:
+            return semester;
         }
     }
 
@@ -918,17 +918,17 @@
         var semesterCode = semester.slice(4);
 
         switch (semesterCode) {
-            case '01':
-                return 'winter-' + year + '-' + (year + 1);
+        case '01':
+            return 'winter-' + year + '-' + (year + 1);
 
-            case '02':
-                return 'spring-' + (year + 1);
+        case '02':
+            return 'spring-' + (year + 1);
 
-            case '03':
-                return 'summer-' + (year + 1);
+        case '03':
+            return 'summer-' + (year + 1);
 
-            default:
-                return semester;
+        default:
+            return semester;
         }
     }
 
@@ -1030,7 +1030,7 @@
 
         onSavedSessionChange();
 
-        if (metadataDiff && metadataDiff.propertyIsEnumerable(course)) {
+        if (metadataDiff && metadataDiff[course]) {
             delete metadataDiff[course];
             onMetadataDiffChange();
         }
@@ -1530,7 +1530,7 @@
             'הרצאה',
             'תרגיל',
             'מעבדה',
-            'סמינר\/פרויקט',
+            'סמינר/פרויקט',
             'סילבוס',
             'מקצועות קדם',
             'מקצועות צמודים',
@@ -1613,7 +1613,7 @@
 
         function scheduleToGroupOfTexts(schedule) {
             var keyOrder = [
-                'מרצה\/מתרגל',
+                'מרצה/מתרגל',
                 'יום',
                 'שעה',
                 'בניין',
@@ -1633,7 +1633,7 @@
 
             var scheduleByGroups = {};
             schedule.forEach(function (lesson) {
-                if (lessonsAdded.propertyIsEnumerable(lesson['מס.']) && lessonsAdded[lesson['מס.']] !== lesson['קבוצה']) {
+                if (lessonsAdded[lesson['מס.']] && lessonsAdded[lesson['מס.']] !== lesson['קבוצה']) {
                     return;
                 }
 
@@ -1648,7 +1648,7 @@
                 });
 
                 var typeAndNumber = courseManager.getLessonTypeAndNumber(lesson);
-                if (!scheduleByGroups.propertyIsEnumerable(typeAndNumber)) {
+                if (!scheduleByGroups[typeAndNumber]) {
                     scheduleByGroups[typeAndNumber] = '';
                 }
 
@@ -1808,6 +1808,7 @@
             fallbackCopyTextToClipboard(text);
             return;
         }
+        // eslint-disable-next-line compat/compat
         navigator.clipboard.writeText(text).then(function () {
             onSuccess();
         }, function (err) {
@@ -1824,7 +1825,9 @@
             var successful = false;
             try {
                 successful = document.execCommand('copy');
-            } catch (err) { }
+            } catch (err) {
+                // We tried...
+            }
 
             document.body.removeChild(textArea);
 
@@ -1942,7 +1945,7 @@
 
         var lessonsAdded = {};
         courseManager.getSchedule(course).forEach(function (lesson) {
-            if (lessonsAdded.propertyIsEnumerable(lesson['מס.']) && lessonsAdded[lesson['מס.']] !== lesson['קבוצה']) {
+            if (lessonsAdded[lesson['מס.']] && lessonsAdded[lesson['מס.']] !== lesson['קבוצה']) {
                 return;
             }
 
@@ -1951,9 +1954,9 @@
             var typeAndNumber = courseManager.getLessonTypeAndNumber(lesson);
             content.append($('<div style="font-weight: bold;"></div>').text(typeAndNumber));
 
-            if (lesson['מרצה\/מתרגל']) {
-                var staffContents = $('<div>').text('מרצה\/מתרגל' + ': ');
-                lesson['מרצה\/מתרגל'].split('\n').forEach(function (name, i) {
+            if (lesson['מרצה/מתרגל']) {
+                var staffContents = $('<div>').text('מרצה/מתרגל' + ': ');
+                lesson['מרצה/מתרגל'].split('\n').forEach(function (name, i) {
                     if (i > 0) {
                         staffContents.append(', ');
                     }
@@ -1972,14 +1975,16 @@
                 content.append($('<div>').text('שעה' + ': ' + lesson['שעה']));
             }
 
+            var roomUrl;
+            var roomLink;
             if (lesson['בניין'] && lesson['חדר']) {
                 content.append($('<div>').text('בניין' + ': ' + lesson['בניין']));
-                var roomUrl = '?semester=' + encodeURIComponent(currentSemester) + '&room=' + encodeURIComponent(lesson['בניין'] + ' ' + lesson['חדר']);
-                var roomLink = $('<a>').text(lesson['חדר']).prop('href', roomUrl);
+                roomUrl = '?semester=' + encodeURIComponent(currentSemester) + '&room=' + encodeURIComponent(lesson['בניין'] + ' ' + lesson['חדר']);
+                roomLink = $('<a>').text(lesson['חדר']).prop('href', roomUrl);
                 content.append($('<div>').text('חדר' + ': ').append(roomLink));
             } else if (lesson['בניין']) {
-                var roomUrl = '?semester=' + encodeURIComponent(currentSemester) + '&room=' + encodeURIComponent(lesson['בניין']);
-                var roomLink = $('<a>').text(lesson['בניין']).prop('href', roomUrl);
+                roomUrl = '?semester=' + encodeURIComponent(currentSemester) + '&room=' + encodeURIComponent(lesson['בניין']);
+                roomLink = $('<a>').text(lesson['בניין']).prop('href', roomUrl);
                 content.append($('<div>').text('בניין' + ': ').append(roomLink));
             } else if (lesson['חדר']) {
                 content.append($('<div>').text('חדר' + ': ' + lesson['חדר']));
@@ -2003,11 +2008,11 @@
         courseManager.getAllCourses().forEach(function (course) {
             var lessonsAdded = {};
             courseManager.getSchedule(course).forEach(function (lesson) {
-                if (lessonsAdded.propertyIsEnumerable(lesson['מס.']) && lessonsAdded[lesson['מס.']] !== lesson['קבוצה']) {
+                if (lessonsAdded[lesson['מס.']] && lessonsAdded[lesson['מס.']] !== lesson['קבוצה']) {
                     return;
                 }
 
-                if (lesson['מרצה\/מתרגל'] && lesson['מרצה\/מתרגל'].split('\n').indexOf(staff) !== -1) {
+                if (lesson['מרצה/מתרגל'] && lesson['מרצה/מתרגל'].split('\n').indexOf(staff) !== -1) {
                     var time = null;
                     if (lesson['יום']) {
                         if (lesson['שעה']) {
@@ -2063,8 +2068,8 @@
         var staff = {};
         courseManager.getAllCourses().forEach(function (course) {
             courseManager.getSchedule(course).forEach(function (lesson) {
-                if (lesson['מרצה\/מתרגל']) {
-                    lesson['מרצה\/מתרגל'].split('\n').forEach(function (name) {
+                if (lesson['מרצה/מתרגל']) {
+                    lesson['מרצה/מתרגל'].split('\n').forEach(function (name) {
                         staff[name] = true;
                     });
                 }
@@ -2083,7 +2088,7 @@
         courseManager.getAllCourses().forEach(function (course) {
             var lessonsAdded = {};
             courseManager.getSchedule(course).forEach(function (lesson) {
-                if (lessonsAdded.propertyIsEnumerable(lesson['מס.']) && lessonsAdded[lesson['מס.']] !== lesson['קבוצה']) {
+                if (lessonsAdded[lesson['מס.']] && lessonsAdded[lesson['מס.']] !== lesson['קבוצה']) {
                     return;
                 }
 
@@ -2172,7 +2177,7 @@
     // https://stackoverflow.com/a/901144
     function getParameterByName(name, url) {
         if (!url) url = window.location.href;
-        name = name.replace(/[\[\]]/g, "\\$&");
+        name = name.replace(/[[\]]/g, "\\$&");
         var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
             results = regex.exec(url);
         if (!results) return null;
@@ -2189,6 +2194,7 @@
     }
 })();
 
+// eslint-disable-next-line no-unused-vars
 function showBootstrapDialogWithModelessButton(dialogName, options) {
     var newOptions = $.extend({}, options, {
         onshow: function (dialog) {
@@ -2209,19 +2215,19 @@ function showBootstrapDialogWithModelessButton(dialogName, options) {
                     'padding-right': ''
                 }).find('> .modal-backdrop').hide();
 
-                var numOfmodelessDialogs = $('body > .bootstrap-dialog.cheesefork-modeless-dialog').length;
+                var numOfModelessDialogs = $('body > .bootstrap-dialog.cheesefork-modeless-dialog').length;
 
                 var thatDialogModal = dialog.getModal();
                 thatDialogModal.removeClass('modal')
                     .addClass('cheesefork-modeless-dialog')
-                    .css('z-index', 1000 + numOfmodelessDialogs)
+                    .css('z-index', 1000 + numOfModelessDialogs)
                     .click(function () {
                         var modelessDialogs = $('body > .bootstrap-dialog.cheesefork-modeless-dialog');
-                        var prevZindex = thatDialogModal.css('z-index');
-                        if (prevZindex < 1000 + modelessDialogs.length - 1) {
+                        var prevZIndex = thatDialogModal.css('z-index');
+                        if (prevZIndex < 1000 + modelessDialogs.length - 1) {
                             modelessDialogs.each(function () {
                                 var iter = $(this);
-                                if (iter.css('z-index') > prevZindex) {
+                                if (iter.css('z-index') > prevZIndex) {
                                     iter.css('z-index', iter.css('z-index') - 1);
                                 }
                             });
@@ -2241,11 +2247,11 @@ function showBootstrapDialogWithModelessButton(dialogName, options) {
         onhidden: function (dialog) {
             var thatDialogModal = dialog.getModal();
             var modelessDialogs = $('body > .bootstrap-dialog.cheesefork-modeless-dialog');
-            var prevZindex = thatDialogModal.css('z-index');
-            if (prevZindex < 1000 + modelessDialogs.length - 1) {
+            var prevZIndex = thatDialogModal.css('z-index');
+            if (prevZIndex < 1000 + modelessDialogs.length - 1) {
                 modelessDialogs.each(function () {
                     var iter = $(this);
-                    if (iter.css('z-index') > prevZindex) {
+                    if (iter.css('z-index') > prevZIndex) {
                         iter.css('z-index', iter.css('z-index') - 1);
                     }
                 });

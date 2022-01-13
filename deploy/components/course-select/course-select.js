@@ -1,7 +1,8 @@
 'use strict';
 
-/* global moment, BootstrapDialog, showBootstrapDialogWithModelessButton, currentSemester, gtag */
+/* global moment, showBootstrapDialogWithModelessButton, currentSemester, gtag */
 
+// eslint-disable-next-line no-unused-vars
 var CourseSelect = (function () {
     function CourseSelect(element, options) {
         this.element = element;
