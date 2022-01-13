@@ -229,21 +229,12 @@ var HistogramBrowser = (function () {
     }
 
     function shouldActivateHistorgramView() {
-        try {
-            var nextShowDate = localStorage.getItem('nextHistogramShareMessage');
-            return nextShowDate && Date.now() < nextShowDate;
-        } catch (e) {
-            // localStorage is not available in IE/Edge when running from a local file.
-            return true;
-        }
+        var nextShowDate = localStorage.getItem('nextHistogramShareMessage');
+        return nextShowDate && Date.now() < nextShowDate;
     }
 
     function activateAndSetNextShowDate(histogramBrowser, nextShowDate) {
-        try {
-            localStorage.setItem('nextHistogramShareMessage', nextShowDate.valueOf().toString());
-        } catch (e) {
-            // localStorage is not available in IE/Edge when running from a local file.
-        }
+        localStorage.setItem('nextHistogramShareMessage', nextShowDate.valueOf().toString());
 
         activateHistorgramView(histogramBrowser);
     }

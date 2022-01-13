@@ -273,11 +273,7 @@ var CourseButtonList = (function () {
             if (firstTimeTooltipBadge.length > 0) {
                 firstTimeTooltipBadge.tooltip('dispose');
                 addTooltipToBadge(firstTimeTooltipBadge, courseDescriptionHtml, false);
-                try {
-                    localStorage.setItem('dontShowHistogramsTip', Date.now().toString());
-                } catch (e) {
-                    // localStorage is not available in IE/Edge when running from a local file.
-                }
+                localStorage.setItem('dontShowHistogramsTip', Date.now().toString());
             }
 
             $(this).tooltip('hide');
@@ -303,11 +299,7 @@ var CourseButtonList = (function () {
 
         var showFirstTimeTooltip = false;
         if (that.element.find('li.list-group-item:first').length === 0) {
-            try {
-                showFirstTimeTooltip = !localStorage.getItem('dontShowHistogramsTip');
-            } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
-            }
+            showFirstTimeTooltip = !localStorage.getItem('dontShowHistogramsTip');
         }
 
         var tooltipHtml = courseDescriptionHtml;
