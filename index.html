@@ -336,12 +336,7 @@
 
         currentSemester = getParameterByName('semester');
         if (!currentSemester || !availableSemesters[currentSemester]) {
-            try {
-                currentSemester = localStorage.getItem('lastSelectedSemester');
-            } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
-            }
-
+            currentSemester = localStorage.getItem('lastSelectedSemester');
             if (!currentSemester || !availableSemesters[currentSemester]) {
                 currentSemester = Object.keys(availableSemesters).sort().pop();
             }
@@ -354,11 +349,7 @@
             getParameterByName('staff') === null &&
             getParameterByName('room') === null
         ) {
-            try {
-                localStorage.setItem('lastSelectedSemester', currentSemester);
-            } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
-            }
+            localStorage.setItem('lastSelectedSemester', currentSemester);
         }
 
         var script = document.createElement('script');

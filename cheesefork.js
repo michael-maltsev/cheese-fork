@@ -1,7 +1,7 @@
 'use strict';
 
 /* global introJs, ColorHash, BootstrapDialog, ics, JsDiff, firebase, firebaseui, gtag */
-/* global CourseManager, CourseSelect, CourseButtonList, CourseExamInfo, CourseCalendar */
+/* global CourseManager, CourseSelect, CourseButtonList, CourseExamInfo, CourseCalendar, CourseFeedback */
 /* global courses_from_rishum, availableSemesters, currentSemester, scheduleSharingUserId */
 
 (function () {
@@ -28,7 +28,7 @@
 
     function cheeseforkInit() {
         // Use overlayScrollbars only if the scrollbar has width.
-        // On desktop it usually does, on mobile it ususally doesn't.
+        // On desktop it usually does, on mobile it usually doesn't.
         if (getScrollBarWidth() > 0) {
             $('body').overlayScrollbars({ }).removeClass('os-host-rtl');
         }
@@ -242,21 +242,13 @@
     }
 
     function showIntro() {
-        try {
-            var dontShowDate = localStorage.getItem('dontShowIntro');
-            if (dontShowDate) {
-                return false;
-            }
-        } catch (e) {
-            // localStorage is not available in IE/Edge when running from a local file.
+        var dontShowDate = localStorage.getItem('dontShowIntro');
+        if (dontShowDate) {
+            return false;
         }
 
         if (courseButtonList.getCourseNumbers(true).length > 0) {
-            try {
-                localStorage.setItem('dontShowIntro', Date.now().toString());
-            } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
-            }
+            localStorage.setItem('dontShowIntro', Date.now().toString());
             return false;
         }
 
@@ -271,11 +263,7 @@
             scrollToElement: false,
             helperElementPadding: 0
         }).onexit(function () {
-            try {
-                localStorage.setItem('dontShowIntro', Date.now().toString());
-            } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
-            }
+            localStorage.setItem('dontShowIntro', Date.now().toString());
         }).start();
 
         return true;
@@ -308,13 +296,9 @@
     }
 
     function showCourseFeedbackPopupPrevSemesters() {
-        try {
-            var dontShowDate = localStorage.getItem('dontShowPrevCourseFeedbackPopup_' + currentSemester);
-            if (dontShowDate) {
-                return false;
-            }
-        } catch (e) {
-            // localStorage is not available in IE/Edge when running from a local file.
+        var dontShowDate = localStorage.getItem('dontShowPrevCourseFeedbackPopup_' + currentSemester);
+        if (dontShowDate) {
+            return false;
         }
 
         var prevSemesters = Object.keys(availableSemesters).sort().reverse();
@@ -363,11 +347,7 @@
                 if (document.getElementById('dont-show-course-feedback-popup').checked) {
                     gtag('event', 'course-feedback-prev-dont-show');
 
-                    try {
-                        localStorage.setItem('dontShowPrevCourseFeedbackPopup_' + currentSemester, Date.now().toString());
-                    } catch (e) {
-                        // localStorage is not available in IE/Edge when running from a local file.
-                    }
+                    localStorage.setItem('dontShowPrevCourseFeedbackPopup_' + currentSemester, Date.now().toString());
                 }
             }
         });
@@ -376,13 +356,9 @@
     }
 
     function showCourseFeedbackPopupThisSemester() {
-        try {
-            var dontShowDate = localStorage.getItem('dontShowThisCourseFeedbackPopup_' + currentSemester);
-            if (dontShowDate) {
-                return false;
-            }
-        } catch (e) {
-            // localStorage is not available in IE/Edge when running from a local file.
+        var dontShowDate = localStorage.getItem('dontShowThisCourseFeedbackPopup_' + currentSemester);
+        if (dontShowDate) {
+            return false;
         }
 
         var courseNumbers = courseButtonList.getCourseNumbers(true);
@@ -415,27 +391,15 @@
                 if (document.getElementById('dont-show-course-feedback-popup').checked) {
                     gtag('event', 'course-feedback-this-dont-show');
 
-                    try {
-                        localStorage.setItem('dontShowThisCourseFeedbackPopup_' + currentSemester, Date.now().toString());
-                    } catch (e) {
-                        // localStorage is not available in IE/Edge when running from a local file.
-                    }
+                    localStorage.setItem('dontShowThisCourseFeedbackPopup_' + currentSemester, Date.now().toString());
                 } else {
-                    try {
-                        localStorage.removeItem('dontShowThisCourseFeedbackPopup_' + currentSemester);
-                    } catch (e) {
-                        // localStorage is not available in IE/Edge when running from a local file.
-                    }
+                    localStorage.removeItem('dontShowThisCourseFeedbackPopup_' + currentSemester);
                 }
             },
             onSharingDone: function () {
                 gtag('event', 'course-feedback-this-shared');
 
-                try {
-                    localStorage.setItem('dontShowThisCourseFeedbackPopup_' + currentSemester, Date.now().toString());
-                } catch (e) {
-                    // localStorage is not available in IE/Edge when running from a local file.
-                }
+                localStorage.setItem('dontShowThisCourseFeedbackPopup_' + currentSemester, Date.now().toString());
             }
         });
 
@@ -448,13 +412,9 @@
             return false;
         }
 
-        try {
-            var nextShowDate = localStorage.getItem('nextShowThursdayGraphPopup');
-            if (nextShowDate && Date.now() < nextShowDate) {
-                return false;
-            }
-        } catch (e) {
-            // localStorage is not available in IE/Edge when running from a local file.
+        var nextShowDate = localStorage.getItem('nextShowThursdayGraphPopup');
+        if (nextShowDate && Date.now() < nextShowDate) {
+            return false;
         }
 
         BootstrapDialog.show({
@@ -502,11 +462,7 @@
                     }
                 }
 
-                try {
-                    localStorage.setItem('nextShowThursdayGraphPopup', nextShowDate.valueOf().toString());
-                } catch (e) {
-                    // localStorage is not available in IE/Edge when running from a local file.
-                }
+                localStorage.setItem('nextShowThursdayGraphPopup', nextShowDate.valueOf().toString());
             }
         });
 
@@ -527,16 +483,12 @@
             return false;
         }
 
-        try {
-            var dontShowDate = localStorage.getItem('dontShowTechnionScansPopup');
-            if (dontShowDate) {
-                var days = (Date.now() - parseInt(dontShowDate, 10)) / (24 * 3600 * 1000);
-                if (days <= 30) {
-                    return false;
-                }
+        var dontShowDate = localStorage.getItem('dontShowTechnionScansPopup');
+        if (dontShowDate) {
+            var days = (Date.now() - parseInt(dontShowDate, 10)) / (24 * 3600 * 1000);
+            if (days <= 30) {
+                return false;
             }
-        } catch (e) {
-            // localStorage is not available in IE/Edge when running from a local file.
         }
 
         BootstrapDialog.show({
@@ -580,11 +532,7 @@
                 if (document.getElementById('dont-show-technion-scans-popup').checked) {
                     gtag('event', 'scans-dont-show');
 
-                    try {
-                        localStorage.setItem('dontShowTechnionScansPopup', Date.now().toString());
-                    } catch (e) {
-                        // localStorage is not available in IE/Edge when running from a local file.
-                    }
+                    localStorage.setItem('dontShowTechnionScansPopup', Date.now().toString());
                 }
             }
         });
@@ -951,17 +899,17 @@
         var semesterCode = semester.slice(4);
 
         switch (semesterCode) {
-            case '01':
-                return 'חורף ' + year + '-' + (year + 1);
+        case '01':
+            return 'חורף ' + year + '-' + (year + 1);
 
-            case '02':
-                return 'אביב ' + (year + 1);
+        case '02':
+            return 'אביב ' + (year + 1);
 
-            case '03':
-                return 'קיץ ' + (year + 1);
+        case '03':
+            return 'קיץ ' + (year + 1);
 
-            default:
-                return semester;
+        default:
+            return semester;
         }
     }
 
@@ -970,17 +918,17 @@
         var semesterCode = semester.slice(4);
 
         switch (semesterCode) {
-            case '01':
-                return 'winter-' + year + '-' + (year + 1);
+        case '01':
+            return 'winter-' + year + '-' + (year + 1);
 
-            case '02':
-                return 'spring-' + (year + 1);
+        case '02':
+            return 'spring-' + (year + 1);
 
-            case '03':
-                return 'summer-' + (year + 1);
+        case '03':
+            return 'summer-' + (year + 1);
 
-            default:
-                return semester;
+        default:
+            return semester;
         }
     }
 
@@ -1046,14 +994,10 @@
             }
             doc.update(input);
         } else {
-            try {
-                localStorage.setItem(semesterCoursesKey, JSON.stringify(currentSavedSession[semesterCoursesKey]));
-                localStorage.removeItem(courseKey);
-                if (metadataUpdate) {
-                    localStorage.setItem(metadataCourseKey, JSON.stringify(courseData));
-                }
-            } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
+            localStorage.setItem(semesterCoursesKey, JSON.stringify(currentSavedSession[semesterCoursesKey]));
+            localStorage.removeItem(courseKey);
+            if (metadataUpdate) {
+                localStorage.setItem(metadataCourseKey, JSON.stringify(courseData));
             }
         }
 
@@ -1079,18 +1023,14 @@
             input[metadataCourseKey] = firebase.firestore.FieldValue.delete();
             doc.update(input);
         } else {
-            try {
-                localStorage.setItem(semesterCoursesKey, JSON.stringify(currentSavedSession[semesterCoursesKey]));
-                localStorage.removeItem(courseKey);
-                localStorage.removeItem(metadataCourseKey);
-            } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
-            }
+            localStorage.setItem(semesterCoursesKey, JSON.stringify(currentSavedSession[semesterCoursesKey]));
+            localStorage.removeItem(courseKey);
+            localStorage.removeItem(metadataCourseKey);
         }
 
         onSavedSessionChange();
 
-        if (metadataDiff && metadataDiff.propertyIsEnumerable(course)) {
+        if (metadataDiff && metadataDiff[course]) {
             delete metadataDiff[course];
             onMetadataDiffChange();
         }
@@ -1107,11 +1047,7 @@
             input[courseKey + '.' + lessonType] = lessonNumber;
             doc.update(input);
         } else {
-            try {
-                localStorage.setItem(courseKey, JSON.stringify(currentSavedSession[courseKey]));
-            } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
-            }
+            localStorage.setItem(courseKey, JSON.stringify(currentSavedSession[courseKey]));
         }
 
         onSavedSessionChange();
@@ -1128,11 +1064,7 @@
             input[courseKey + '.' + lessonType] = firebase.firestore.FieldValue.delete();
             doc.update(input);
         } else {
-            try {
-                localStorage.setItem(courseKey, JSON.stringify(currentSavedSession[courseKey]));
-            } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
-            }
+            localStorage.setItem(courseKey, JSON.stringify(currentSavedSession[courseKey]));
         }
 
         onSavedSessionChange();
@@ -1149,11 +1081,7 @@
             input[semesterCustomEventsKey + '.' + eventId] = eventData;
             doc.update(input);
         } else {
-            try {
-                localStorage.setItem(semesterCustomEventsKey, JSON.stringify(currentSavedSession[semesterCustomEventsKey]));
-            } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
-            }
+            localStorage.setItem(semesterCustomEventsKey, JSON.stringify(currentSavedSession[semesterCustomEventsKey]));
         }
 
         onSavedSessionChange();
@@ -1170,11 +1098,7 @@
             input[semesterCustomEventsKey + '.' + eventId] = firebase.firestore.FieldValue.delete();
             doc.update(input);
         } else {
-            try {
-                localStorage.setItem(semesterCustomEventsKey, JSON.stringify(currentSavedSession[semesterCustomEventsKey]));
-            } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
-            }
+            localStorage.setItem(semesterCustomEventsKey, JSON.stringify(currentSavedSession[semesterCustomEventsKey]));
         }
 
         onSavedSessionChange();
@@ -1299,24 +1223,14 @@
     function savedSessionFromLocalStorage() {
         var semesterCoursesKey = currentSemester + '_courses';
         var session = {};
-        try {
-            session[semesterCoursesKey] = JSON.parse(localStorage.getItem(semesterCoursesKey) || '[]');
-            session[semesterCoursesKey].forEach(function (course) {
-                var courseKey = currentSemester + '_' + course;
-                session[courseKey] = JSON.parse(localStorage.getItem(courseKey) || '{}');
-            });
-        } catch (e) {
-            // localStorage is not available in IE/Edge when running from a local file.
-            session[semesterCoursesKey] = [];
-        }
+        session[semesterCoursesKey] = JSON.parse(localStorage.getItem(semesterCoursesKey) || '[]');
+        session[semesterCoursesKey].forEach(function (course) {
+            var courseKey = currentSemester + '_' + course;
+            session[courseKey] = JSON.parse(localStorage.getItem(courseKey) || '{}');
+        });
 
         var semesterCustomEventsKey = currentSemester + '_custom_events';
-        try {
-            session[semesterCustomEventsKey] = JSON.parse(localStorage.getItem(semesterCustomEventsKey) || '{}');
-        } catch (e) {
-            // localStorage is not available in IE/Edge when running from a local file.
-            session[semesterCustomEventsKey] = {};
-        }
+        session[semesterCustomEventsKey] = JSON.parse(localStorage.getItem(semesterCustomEventsKey) || '{}');
 
         return session;
     }
@@ -1324,24 +1238,20 @@
     function savedMetadataFromLocalStorage() {
         var semesterCoursesKey = currentSemester + '_courses';
         var metadata = {};
-        try {
-            var courses = JSON.parse(localStorage.getItem(semesterCoursesKey) || '[]');
-            courses.forEach(function (course) {
-                var metadataCourseKey = currentSemester + '_metadata_' + course;
-                var courseMetadataEncoded = localStorage.getItem(metadataCourseKey);
-                if (courseMetadataEncoded) {
-                    metadata[course] = JSON.parse(courseMetadataEncoded);
-                }
-            });
-
-            // If there's at least one course but no metadata at all, that probably means that
-            // the user built the schedule before the feature was introduced.
-            // Return null to handle the case.
-            if (courses.length > 0 && Object.keys(metadata).length === 0) {
-                metadata = null;
+        var courses = JSON.parse(localStorage.getItem(semesterCoursesKey) || '[]');
+        courses.forEach(function (course) {
+            var metadataCourseKey = currentSemester + '_metadata_' + course;
+            var courseMetadataEncoded = localStorage.getItem(metadataCourseKey);
+            if (courseMetadataEncoded) {
+                metadata[course] = JSON.parse(courseMetadataEncoded);
             }
-        } catch (e) {
-            // localStorage is not available in IE/Edge when running from a local file.
+        });
+
+        // If there's at least one course but no metadata at all, that probably means that
+        // the user built the schedule before the feature was introduced.
+        // Return null to handle the case.
+        if (courses.length > 0 && Object.keys(metadata).length === 0) {
+            metadata = null;
         }
 
         return metadata;
@@ -1454,22 +1364,18 @@
 
             doc.update(input);
         } else {
-            try {
-                removeKeys.forEach(function (key) {
-                    localStorage.removeItem(key);
-                });
+            removeKeys.forEach(function (key) {
+                localStorage.removeItem(key);
+            });
 
-                newKeys.forEach(function (key) {
-                    localStorage.setItem(key, JSON.stringify(sessionToRestore[key]));
-                });
+            newKeys.forEach(function (key) {
+                localStorage.setItem(key, JSON.stringify(sessionToRestore[key]));
+            });
 
-                newMetadataCourses.forEach(function (course) {
-                    var metadataCourseKey = currentSemester + '_metadata_' + course;
-                    localStorage.setItem(metadataCourseKey, JSON.stringify(courseManager.getCourseData(course)));
-                });
-            } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
-            }
+            newMetadataCourses.forEach(function (course) {
+                var metadataCourseKey = currentSemester + '_metadata_' + course;
+                localStorage.setItem(metadataCourseKey, JSON.stringify(courseManager.getCourseData(course)));
+            });
         }
 
         setScheduleFromSavedSession(sessionToRestore);
@@ -1624,7 +1530,7 @@
             'הרצאה',
             'תרגיל',
             'מעבדה',
-            'סמינר\/פרויקט',
+            'סמינר/פרויקט',
             'סילבוס',
             'מקצועות קדם',
             'מקצועות צמודים',
@@ -1707,7 +1613,7 @@
 
         function scheduleToGroupOfTexts(schedule) {
             var keyOrder = [
-                'מרצה\/מתרגל',
+                'מרצה/מתרגל',
                 'יום',
                 'שעה',
                 'בניין',
@@ -1727,7 +1633,7 @@
 
             var scheduleByGroups = {};
             schedule.forEach(function (lesson) {
-                if (lessonsAdded.propertyIsEnumerable(lesson['מס.']) && lessonsAdded[lesson['מס.']] !== lesson['קבוצה']) {
+                if (lessonsAdded[lesson['מס.']] && lessonsAdded[lesson['מס.']] !== lesson['קבוצה']) {
                     return;
                 }
 
@@ -1742,7 +1648,7 @@
                 });
 
                 var typeAndNumber = courseManager.getLessonTypeAndNumber(lesson);
-                if (!scheduleByGroups.propertyIsEnumerable(typeAndNumber)) {
+                if (!scheduleByGroups[typeAndNumber]) {
                     scheduleByGroups[typeAndNumber] = '';
                 }
 
@@ -1847,27 +1753,23 @@
 
             doc.update(input);
         } else {
-            try {
-                courseNumbers.forEach(function (course) {
-                    var metadataCourseKey = currentSemester + '_metadata_' + course;
-                    var courseData = courseManager.getCourseData(course);
-                    localStorage.setItem(metadataCourseKey, JSON.stringify(courseData));
-                });
+            courseNumbers.forEach(function (course) {
+                var metadataCourseKey = currentSemester + '_metadata_' + course;
+                var courseData = courseManager.getCourseData(course);
+                localStorage.setItem(metadataCourseKey, JSON.stringify(courseData));
+            });
 
-                if (deletedCourses.length > 0) {
-                    localStorage.setItem(semesterCoursesKey, JSON.stringify(currentSavedSession[semesterCoursesKey]));
-                }
-
-                deletedCourses.forEach(function (course) {
-                    var courseKey = currentSemester + '_' + course;
-                    localStorage.removeItem(courseKey);
-
-                    var metadataCourseKey = currentSemester + '_metadata_' + course;
-                    localStorage.removeItem(metadataCourseKey);
-                });
-            } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
+            if (deletedCourses.length > 0) {
+                localStorage.setItem(semesterCoursesKey, JSON.stringify(currentSavedSession[semesterCoursesKey]));
             }
+
+            deletedCourses.forEach(function (course) {
+                var courseKey = currentSemester + '_' + course;
+                localStorage.removeItem(courseKey);
+
+                var metadataCourseKey = currentSemester + '_metadata_' + course;
+                localStorage.removeItem(metadataCourseKey);
+            });
         }
 
         metadataDiff = {};
@@ -1906,6 +1808,7 @@
             fallbackCopyTextToClipboard(text);
             return;
         }
+        // eslint-disable-next-line compat/compat
         navigator.clipboard.writeText(text).then(function () {
             onSuccess();
         }, function (err) {
@@ -1922,7 +1825,9 @@
             var successful = false;
             try {
                 successful = document.execCommand('copy');
-            } catch (err) { }
+            } catch (err) {
+                // We tried...
+            }
 
             document.body.removeChild(textArea);
 
@@ -2040,7 +1945,7 @@
 
         var lessonsAdded = {};
         courseManager.getSchedule(course).forEach(function (lesson) {
-            if (lessonsAdded.propertyIsEnumerable(lesson['מס.']) && lessonsAdded[lesson['מס.']] !== lesson['קבוצה']) {
+            if (lessonsAdded[lesson['מס.']] && lessonsAdded[lesson['מס.']] !== lesson['קבוצה']) {
                 return;
             }
 
@@ -2049,9 +1954,9 @@
             var typeAndNumber = courseManager.getLessonTypeAndNumber(lesson);
             content.append($('<div style="font-weight: bold;"></div>').text(typeAndNumber));
 
-            if (lesson['מרצה\/מתרגל']) {
-                var staffContents = $('<div>').text('מרצה\/מתרגל' + ': ');
-                lesson['מרצה\/מתרגל'].split('\n').forEach(function (name, i) {
+            if (lesson['מרצה/מתרגל']) {
+                var staffContents = $('<div>').text('מרצה/מתרגל' + ': ');
+                lesson['מרצה/מתרגל'].split('\n').forEach(function (name, i) {
                     if (i > 0) {
                         staffContents.append(', ');
                     }
@@ -2070,14 +1975,16 @@
                 content.append($('<div>').text('שעה' + ': ' + lesson['שעה']));
             }
 
+            var roomUrl;
+            var roomLink;
             if (lesson['בניין'] && lesson['חדר']) {
                 content.append($('<div>').text('בניין' + ': ' + lesson['בניין']));
-                var roomUrl = '?semester=' + encodeURIComponent(currentSemester) + '&room=' + encodeURIComponent(lesson['בניין'] + ' ' + lesson['חדר']);
-                var roomLink = $('<a>').text(lesson['חדר']).prop('href', roomUrl);
+                roomUrl = '?semester=' + encodeURIComponent(currentSemester) + '&room=' + encodeURIComponent(lesson['בניין'] + ' ' + lesson['חדר']);
+                roomLink = $('<a>').text(lesson['חדר']).prop('href', roomUrl);
                 content.append($('<div>').text('חדר' + ': ').append(roomLink));
             } else if (lesson['בניין']) {
-                var roomUrl = '?semester=' + encodeURIComponent(currentSemester) + '&room=' + encodeURIComponent(lesson['בניין']);
-                var roomLink = $('<a>').text(lesson['בניין']).prop('href', roomUrl);
+                roomUrl = '?semester=' + encodeURIComponent(currentSemester) + '&room=' + encodeURIComponent(lesson['בניין']);
+                roomLink = $('<a>').text(lesson['בניין']).prop('href', roomUrl);
                 content.append($('<div>').text('בניין' + ': ').append(roomLink));
             } else if (lesson['חדר']) {
                 content.append($('<div>').text('חדר' + ': ' + lesson['חדר']));
@@ -2101,11 +2008,11 @@
         courseManager.getAllCourses().forEach(function (course) {
             var lessonsAdded = {};
             courseManager.getSchedule(course).forEach(function (lesson) {
-                if (lessonsAdded.propertyIsEnumerable(lesson['מס.']) && lessonsAdded[lesson['מס.']] !== lesson['קבוצה']) {
+                if (lessonsAdded[lesson['מס.']] && lessonsAdded[lesson['מס.']] !== lesson['קבוצה']) {
                     return;
                 }
 
-                if (lesson['מרצה\/מתרגל'] && lesson['מרצה\/מתרגל'].split('\n').indexOf(staff) !== -1) {
+                if (lesson['מרצה/מתרגל'] && lesson['מרצה/מתרגל'].split('\n').indexOf(staff) !== -1) {
                     var time = null;
                     if (lesson['יום']) {
                         if (lesson['שעה']) {
@@ -2161,8 +2068,8 @@
         var staff = {};
         courseManager.getAllCourses().forEach(function (course) {
             courseManager.getSchedule(course).forEach(function (lesson) {
-                if (lesson['מרצה\/מתרגל']) {
-                    lesson['מרצה\/מתרגל'].split('\n').forEach(function (name) {
+                if (lesson['מרצה/מתרגל']) {
+                    lesson['מרצה/מתרגל'].split('\n').forEach(function (name) {
                         staff[name] = true;
                     });
                 }
@@ -2181,7 +2088,7 @@
         courseManager.getAllCourses().forEach(function (course) {
             var lessonsAdded = {};
             courseManager.getSchedule(course).forEach(function (lesson) {
-                if (lessonsAdded.propertyIsEnumerable(lesson['מס.']) && lessonsAdded[lesson['מס.']] !== lesson['קבוצה']) {
+                if (lessonsAdded[lesson['מס.']] && lessonsAdded[lesson['מס.']] !== lesson['קבוצה']) {
                     return;
                 }
 
@@ -2270,7 +2177,7 @@
     // https://stackoverflow.com/a/901144
     function getParameterByName(name, url) {
         if (!url) url = window.location.href;
-        name = name.replace(/[\[\]]/g, "\\$&");
+        name = name.replace(/[[\]]/g, "\\$&");
         var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
             results = regex.exec(url);
         if (!results) return null;
@@ -2287,11 +2194,12 @@
     }
 })();
 
+// eslint-disable-next-line no-unused-vars
 function showBootstrapDialogWithModelessButton(dialogName, options) {
     var newOptions = $.extend({}, options, {
         onshow: function (dialog) {
             var restoreButton = $('<div class="bootstrap-dialog-close-button" style="margin-right: auto;">' +
-                '<button class="close">' +
+                '<button class="close d-none d-sm-inline-block">' +
                 '<i class="far fa-window-restore" style="font-size: 18px;"></i>' +
                 '</button>' +
                 '</div>');
@@ -2307,19 +2215,19 @@ function showBootstrapDialogWithModelessButton(dialogName, options) {
                     'padding-right': ''
                 }).find('> .modal-backdrop').hide();
 
-                var numOfmodelessDialogs = $('body > .bootstrap-dialog.cheesefork-modeless-dialog').length;
+                var numOfModelessDialogs = $('body > .bootstrap-dialog.cheesefork-modeless-dialog').length;
 
                 var thatDialogModal = dialog.getModal();
                 thatDialogModal.removeClass('modal')
                     .addClass('cheesefork-modeless-dialog')
-                    .css('z-index', 1000 + numOfmodelessDialogs)
+                    .css('z-index', 1000 + numOfModelessDialogs)
                     .click(function () {
                         var modelessDialogs = $('body > .bootstrap-dialog.cheesefork-modeless-dialog');
-                        var prevZindex = thatDialogModal.css('z-index');
-                        if (prevZindex < 1000 + modelessDialogs.length - 1) {
+                        var prevZIndex = thatDialogModal.css('z-index');
+                        if (prevZIndex < 1000 + modelessDialogs.length - 1) {
                             modelessDialogs.each(function () {
                                 var iter = $(this);
-                                if (iter.css('z-index') > prevZindex) {
+                                if (iter.css('z-index') > prevZIndex) {
                                     iter.css('z-index', iter.css('z-index') - 1);
                                 }
                             });
@@ -2339,11 +2247,11 @@ function showBootstrapDialogWithModelessButton(dialogName, options) {
         onhidden: function (dialog) {
             var thatDialogModal = dialog.getModal();
             var modelessDialogs = $('body > .bootstrap-dialog.cheesefork-modeless-dialog');
-            var prevZindex = thatDialogModal.css('z-index');
-            if (prevZindex < 1000 + modelessDialogs.length - 1) {
+            var prevZIndex = thatDialogModal.css('z-index');
+            if (prevZIndex < 1000 + modelessDialogs.length - 1) {
                 modelessDialogs.each(function () {
                     var iter = $(this);
-                    if (iter.css('z-index') > prevZindex) {
+                    if (iter.css('z-index') > prevZIndex) {
                         iter.css('z-index', iter.css('z-index') - 1);
                     }
                 });

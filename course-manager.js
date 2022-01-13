@@ -84,20 +84,20 @@ CourseManager.prototype.getSchedule = function (course) {
 
                         var building = match[6] || '';
                         switch (building) {
-                            case 'פ\'':
-                                building = 'פישבך';
-                                break;
+                        case 'פ\'':
+                            building = 'פישבך';
+                            break;
 
-                            case 'מ\'':
-                                building = 'מאייר';
-                                break;
+                        case 'מ\'':
+                            building = 'מאייר';
+                            break;
                         }
 
                         sadnaot.push({
                             'קבוצה': sadnaId,
                             'מס.': sadnaId,
                             'סוג': 'sadna',
-                            'מרצה\/מתרגל': match[8] || sadnaotTa,
+                            'מרצה/מתרגל': match[8] || sadnaotTa,
                             'יום': match[1],
                             'שעה': match[2] + ':' + match[3] + ' - ' + match[4] + ':' + match[5],
                             'בניין': building,
