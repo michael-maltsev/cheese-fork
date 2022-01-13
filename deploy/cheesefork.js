@@ -2199,7 +2199,7 @@ function showBootstrapDialogWithModelessButton(dialogName, options) {
     var newOptions = $.extend({}, options, {
         onshow: function (dialog) {
             var restoreButton = $('<div class="bootstrap-dialog-close-button" style="margin-right: auto;">' +
-                '<button class="close">' +
+                '<button class="close d-none d-sm-inline-block">' +
                 '<i class="far fa-window-restore" style="font-size: 18px;"></i>' +
                 '</button>' +
                 '</div>');
