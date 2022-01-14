@@ -294,10 +294,6 @@ let cheeseforkShareHistograms = function () {
         }
 
         const fileSha = calcGitFileSha(buffer);
-        if (fileSha === options.skipIfSha) {
-            return 'skipped';
-        }
-
         const filename = category + suffix;
         const path = course + '/' + semester;
         const token = getGithubToken();
@@ -412,13 +408,8 @@ let cheeseforkShareHistograms = function () {
                     const properties = new TextEncoder().encode(JSON.stringify(histogram.properties, null, 2)).buffer;
                     propertiesResult = await submitToGithub(course, semester, category, '.json', properties, { skipIfExists });
 
-                    // Don't upload test images (stop testing in production!)
-                    // Example:
-                    // https://github.com/michael-maltsev/technion-histograms/blob/b019fc77f269415b54095545a6406ce15b9b35dd/114071/201901/Finals.png
-                    const skipIfSha = 'd99615c00efa8cb2bcfaf00457c08eb0b2d95621';
-
                     const image = await (await fetchValidResponse(histogram.imgSrc, 'histogram image')).arrayBuffer();
-                    imageResult = await submitToGithub(course, semester, category, '.png', image, { skipIfSha });
+                    imageResult = await submitToGithub(course, semester, category, '.png', image);
                 }
 
                 if (propertiesResult === 'skipped' || imageResult === 'skipped') {
