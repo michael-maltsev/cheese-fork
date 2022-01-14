@@ -47,6 +47,11 @@
     text-shadow: 0 0 10px black;
 }
 
+.course-button-list-content-has-hidden {
+    text-decoration: underline dotted;
+    cursor: help;
+}
+
 .course-button-list-tooltip-persistent {
     /* Push below bootstrap dialog which uses z-index 1040 for backdrop */
     z-index: 1039;

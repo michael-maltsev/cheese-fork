@@ -20,7 +20,7 @@
     cursor: default;
 }
 
-/* Remove opcaity layer - https://github.com/fullcalendar/fullcalendar/issues/3684 */
+/* Remove opacity layer - https://github.com/fullcalendar/fullcalendar/issues/3684 */
 .course-calendar .fc-event .fc-bg {
     display: none;
 }
@@ -55,6 +55,31 @@
     background-color: #F8F9FA !important;
     color: black !important;
     border-color: black !important;
+}
+
+.calendar-item-unselected-hide-button {
+    display: none;
+    position: absolute;
+    /* Place above the text which has the z-index value of 2 */
+    z-index: 3;
+    top: 5px;
+    right: calc(min(5px, 20%));
+    padding: 0 3px;
+    color: black;
+    background-color: white;
+    border: 1px solid black;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.calendar-item-unselected:hover .calendar-item-unselected-hide-button {
+    display: block;
+}
+
+.calendar-item-unselected-hide-button:hover {
+    color: white;
+    background-color: #6c757d;
+    border-color: #6c757d;
 }
 
 .calendar-item-previewed {
