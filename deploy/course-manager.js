@@ -248,6 +248,13 @@ CourseManager.prototype.getDescription = function (course, options) {
     return headerHtml + linksHtml + contentHtml;
 };
 
+CourseManager.prototype.getLessonType = function (lesson) {
+    if (lesson['סוג'] === 'sadna') {
+        return 'סדנה';
+    }
+    return lesson['סוג'];
+};
+
 CourseManager.prototype.getLessonTypeAndNumber = function (lesson) {
     if (lesson['סוג'] === 'sadna') {
         // No number since that's our addition to the schedule.
