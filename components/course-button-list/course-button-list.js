@@ -346,6 +346,8 @@ var CourseButtonList = (function () {
         function onCourseButtonClick(button, course) {
             if (button.hasClass('active')) {
                 button.removeClass('active').removeClass('course-button-list-item-conflicted');
+                button.find('.content-absolute').removeClass('course-button-list-content-has-hidden')
+                    .tooltip('dispose');
                 button.css('background-color', '');
                 that.onDisableCourse(course);
             } else {
@@ -461,6 +463,28 @@ var CourseButtonList = (function () {
     CourseButtonList.prototype.removeConflicted = function (course) {
         var selector = 'li.list-group-item[data-course-number="' + course + '"]';
         this.element.find(selector).removeClass('course-button-list-item-conflicted');
+    };
+
+    CourseButtonList.prototype.setLessonTypesHidden = function (course, lessonTypesHidden) {
+        var selector = 'li.list-group-item[data-course-number="' + course + '"] .content-absolute';
+        var listGroupTextItem = this.element.find(selector);
+
+        if (lessonTypesHidden.length > 0) {
+            var title = 'אירועים מהסוגים הבאים הוסתרו מהמערכת:\n' + lessonTypesHidden.sort().join(', ');
+            var titleHtml = $('<div>').text(title).html().replace(/\n/g, '<br>');
+
+            listGroupTextItem.addClass('course-button-list-content-has-hidden')
+                .tooltip('dispose')
+                .prop('title', titleHtml)
+                .attr('data-toggle', 'tooltip')
+                .tooltip({
+                    html: true,
+                    placement: 'bottom'
+                });
+        } else {
+            listGroupTextItem.removeClass('course-button-list-content-has-hidden')
+                .tooltip('dispose');
+        }
     };
 
     CourseButtonList.prototype.isCourseInList = function (course) {

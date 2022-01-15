@@ -98,9 +98,12 @@ var CourseFeedback = (function () {
                 }
                 form.classList.remove('was-validated');
 
+                var feedbackDisplayName = body.find('#feedback-form-author').val().trim();
+                localStorage.setItem('feedbackDisplayName', feedbackDisplayName);
+
                 var data = {
                     timestamp: Date.now(),
-                    author: body.find('#feedback-form-author').val().trim(),
+                    author: feedbackDisplayName,
                     semester: body.find('#feedback-form-semester').val(),
                     text: body.find('#feedback-form-text').val().trim(),
                     difficultyRank: parseInt(body.find('#feedback-form-difficulty').val(), 10),
@@ -169,7 +172,11 @@ var CourseFeedback = (function () {
                 selectSemester.prepend($('<option value="">לחצו לבחירת סמסטר...</option>')).val(selectValue);
 
                 try {
-                    var displayName = firebase.auth().currentUser.displayName;
+                    var displayName = localStorage.getItem('feedbackDisplayName');
+                    if (!displayName) {
+                        displayName = firebase.auth().currentUser.displayName;
+                    }
+
                     if (displayName) {
                         body.find('#feedback-form-author').val(displayName);
                     }

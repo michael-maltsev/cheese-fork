@@ -1,6 +1,6 @@
 'use strict';
 
-/* global moment, BootstrapDialog */
+/* global moment, BootstrapDialog, gtag */
 
 // eslint-disable-next-line no-unused-vars
 var CourseCalendar = (function () {
@@ -12,6 +12,7 @@ var CourseCalendar = (function () {
         this.onCourseHoverIn = options.onCourseHoverIn;
         this.onCourseHoverOut = options.onCourseHoverOut;
         this.onCourseConflictedStatusChanged = options.onCourseConflictedStatusChanged;
+        this.onLessonTypesHidden = options.onLessonTypesHidden;
         this.onLessonSelected = options.onLessonSelected;
         this.onLessonUnselected = options.onLessonUnselected;
         this.onCustomEventAdded = options.onCustomEventAdded;
@@ -230,36 +231,44 @@ var CourseCalendar = (function () {
     }
 
     function getCourseConflictedStatus(calendar, course) {
-        var availableOptionsPerType = {};
+        var lessonTypesAvailable = {};
+        var lessonTypesVisible = {};
 
         calendar.fullCalendar('clientEvents', function (event) {
-            if (event.courseNumber !== course) {
+            if (event.courseNumber !== course || event.lessonTypeHidden) {
                 return false;
             }
 
             var type = getLessonType(course, event.lessonData);
-            if (!availableOptionsPerType[type]) {
-                availableOptionsPerType[type] = 0;
-            }
-
+            lessonTypesAvailable[type] = true;
             if (event.start.week() === 1) {
-                availableOptionsPerType[type]++;
+                lessonTypesVisible[type] = true;
             }
 
             return false;
         });
 
-        var conflicted = false;
+        return Object.keys(lessonTypesAvailable).some(function (type) {
+            return !lessonTypesVisible[type];
+        });
+    }
 
-        Object.keys(availableOptionsPerType).some(function (type) {
-            if (availableOptionsPerType[type] === 0) {
-                conflicted = true;
-                return true;
+    function getCourseHiddenLessonTypes(calendar, course, courseManager) {
+        var lessonTypesHidden = {};
+
+        calendar.fullCalendar('clientEvents', function (event) {
+            if (event.courseNumber !== course || !event.lessonTypeHidden) {
+                return false;
             }
+
+            var lesson = event.lessonData;
+            var lessonType = courseManager.getLessonType(lesson);
+            lessonTypesHidden[lessonType] = true;
+
             return false;
         });
 
-        return conflicted;
+        return Object.keys(lessonTypesHidden);
     }
 
     function updateCalendarMaxDayAndTime(calendar) {
@@ -423,19 +432,23 @@ var CourseCalendar = (function () {
         var selected = false;
         var conflictedIds = {};
 
-        events.forEach(function (cbEvent) {
-            if (cbEvent.start.week() === 1 &&
-                !cbEvent.selected &&
-                cbEvent.courseNumber === courseNumber &&
-                getEventLessonType(cbEvent) === lessonType &&
-                cbEvent.lessonData['מס.'] === lessonNumber) {
+        if (lessonNumber !== '-') {
+            events.forEach(function (cbEvent) {
+                if (cbEvent.start.week() === 1 &&
+                    !cbEvent.selected &&
+                    cbEvent.courseNumber === courseNumber &&
+                    getEventLessonType(cbEvent) === lessonType &&
+                    cbEvent.lessonData['מס.'] === lessonNumber) {
 
-                cbEvent.selected = true;
-                selected = true;
+                    cbEvent.selected = true;
+                    selected = true;
 
-                markConflictedEvents(cbEvent);
-            }
-        });
+                    markConflictedEvents(cbEvent);
+                }
+            });
+        } else {
+            selected = true;
+        }
 
         if (selected) {
             events.forEach(function (cbEvent) {
@@ -445,6 +458,10 @@ var CourseCalendar = (function () {
                     // Different lesson number of the same course and type - can no longer be selected.
                     cbEvent.start.add(7, 'days');
                     cbEvent.end.add(7, 'days');
+
+                    if (lessonNumber === '-') {
+                        cbEvent.lessonTypeHidden = true;
+                    }
                 }
 
                 if (conflictedIds[cbEvent.id]) {
@@ -550,13 +567,66 @@ var CourseCalendar = (function () {
         });
     }
 
-    function onEventClick(event) {
+    function onEventClick(event, jsEvent) {
         if (this.readonly) {
             return;
         }
 
         var that = this;
         var calendar = that.element;
+
+        // The ':hover' check is for mobile, otherwise clicking on an event
+        // can trigger the hide button even though it wasn't visible when clicking.
+        if ($(jsEvent.target).hasClass('calendar-item-unselected-hide-button') && $(jsEvent.target).is(':hover')) {
+            gtag('event', 'calendar-hide-click');
+
+            var courseTitle = that.courseManager.getTitle(event.courseNumber);
+            var lesson = event.lessonData;
+            var lessonType = that.courseManager.getLessonType(lesson);
+
+            var title = 'הסתרת אירועים מסוג ' + lessonType;
+            var message = 'הפעולה תסתיר אירועים מסוג ' + lessonType + ' עבור הקורס ' + courseTitle + '. ' +
+                'ניתן לבטל את ההסתרה על ידי ביטול בחירת הקורס ובחירתו מחדש.';
+
+            BootstrapDialog.show({
+                title: title,
+                message: message,
+                buttons: [{
+                    label: 'הסתר',
+                    cssClass: 'btn-primary',
+                    action: function (dialog) {
+                        gtag('event', 'calendar-hide-proceed');
+
+                        dialog.close();
+
+                        var targetLessonTypeEvents = calendar.fullCalendar('clientEvents', function (cbEvent) {
+                            return cbEvent.courseNumber === event.courseNumber &&
+                                getEventLessonType(cbEvent) === getEventLessonType(event);
+                        });
+
+                        targetLessonTypeEvents.forEach(function (cbEvent) {
+                            cbEvent.start.add(7, 'days');
+                            cbEvent.end.add(7, 'days');
+                            cbEvent.lessonTypeHidden = true;
+                        });
+
+                        updateLessonEvents(calendar, targetLessonTypeEvents);
+
+                        that.onLessonSelected(event.courseNumber, '-', getEventLessonType(event));
+
+                        var lessonTypesHidden = getCourseHiddenLessonTypes(calendar, event.courseNumber, that.courseManager);
+                        that.onLessonTypesHidden(event.courseNumber, lessonTypesHidden);
+                    }
+                }, {
+                    label: 'סגור',
+                    action: function (dialog) {
+                        dialog.close();
+                    }
+                }]
+            });
+
+            return;
+        }
 
         if (event.courseNumber === null) {
             BootstrapDialog.show({
@@ -608,7 +678,7 @@ var CourseCalendar = (function () {
         event.selected = selectingEvent;
         updateLessonEvent(calendar, event);
 
-        var sameCourseTypeEvents = calendar.fullCalendar('clientEvents', function (cbEvent) {
+        var sameLessonTypeEvents = calendar.fullCalendar('clientEvents', function (cbEvent) {
             if (cbEvent.courseNumber === event.courseNumber &&
                 getEventLessonType(cbEvent) === getEventLessonType(event)) {
 
@@ -624,12 +694,12 @@ var CourseCalendar = (function () {
             return false;
         });
 
-        for (var i = 0; i < sameCourseTypeEvents.length; i++) {
-            sameCourseTypeEvents[i].start.add(selectingEvent ? 7 : -7, 'days');
-            sameCourseTypeEvents[i].end.add(selectingEvent ? 7 : -7, 'days');
-        }
+        sameLessonTypeEvents.forEach(function (cbEvent) {
+            cbEvent.start.add(selectingEvent ? 7 : -7, 'days');
+            cbEvent.end.add(selectingEvent ? 7 : -7, 'days');
+        });
 
-        updateLessonEvents(calendar, sameCourseTypeEvents);
+        updateLessonEvents(calendar, sameLessonTypeEvents);
 
         Object.keys(conflictedCourses).forEach(function (conflictedCourse) {
             var conflicted = getCourseConflictedStatus(calendar, conflictedCourse);
@@ -709,6 +779,10 @@ var CourseCalendar = (function () {
                     .not('.calendar-item-course-' + event.courseNumber + '-lesson-' + event.lessonData['מס.']);
                 if (sameType.length === 0) {
                     element.addClass('calendar-item-last-choice');
+                }
+
+                if (!this.readonly && !event.temporary) {
+                    element.append('<div class="calendar-item-unselected-hide-button">הסתר</div>');
                 }
             }
         }
@@ -893,9 +967,7 @@ var CourseCalendar = (function () {
         var that = this;
         var calendar = that.element;
 
-        calendar.fullCalendar('removeEvents', function () {
-            return true;
-        });
+        calendar.fullCalendar('removeEvents');
 
         var events = [];
         Object.keys(schedule).forEach(function (course) {
@@ -923,6 +995,11 @@ var CourseCalendar = (function () {
         Object.keys(schedule).forEach(function (course) {
             if (getCourseConflictedStatus(calendar, course)) {
                 that.onCourseConflictedStatusChanged(course, true);
+            }
+
+            var lessonTypesHidden = getCourseHiddenLessonTypes(calendar, course, that.courseManager);
+            if (lessonTypesHidden.length > 0) {
+                that.onLessonTypesHidden(course, lessonTypesHidden);
             }
         });
     };
@@ -1006,9 +1083,7 @@ var CourseCalendar = (function () {
         var that = this;
         var calendar = that.element;
 
-        calendar.fullCalendar('removeEvents', function () {
-            return true;
-        });
+        calendar.fullCalendar('removeEvents');
 
         updateCalendarMaxDayAndTime(calendar);
     };

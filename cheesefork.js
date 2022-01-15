@@ -162,6 +162,9 @@
                     courseButtonList.removeConflicted(course);
                 }
             },
+            onLessonTypesHidden: function (course, lessonTypesHidden) {
+                courseButtonList.setLessonTypesHidden(course, lessonTypesHidden);
+            },
             onLessonSelected: function (course, lessonNumber, lessonType) {
                 selectedLessonSave(course, lessonNumber, lessonType);
             },

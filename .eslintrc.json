@@ -12,6 +12,7 @@
     "compat/compat": "error",
     "strict": ["error", "global"],
     "indent": ["error", 4],
-    "no-unused-vars": ["error", { "args": "none" }]
+    "no-unused-vars": ["error", { "args": "none" }],
+    "semi": "error"
   }
 }
