@@ -265,7 +265,7 @@ CourseManager.prototype.getLessonTypeAndNumber = function (lesson) {
 };
 
 CourseManager.prototype.parseExamDateTime = function (strDate) {
-    var match = /^(\d+)-(\d+)-(\d+)(?:\s+(\d+)(:\d+)?\s*-\s*(\d+)(:\d+)?)?/.exec(strDate);
+    var match = /^(\d+)-(\d+)-(\d+)(?:\s+(\d+)(:\d+)\s*-\s*(\d+)(:\d+))?/.exec(strDate);
     if (!match) {
         match = /^בתאריך (\d+)\.(\d+)\.(\d+) (?:יום [א-ו] משעה (\d+)(:\d+)? עד השעה (\d+)(:\d+)?)?/.exec(strDate);
     }
