@@ -48,7 +48,8 @@
 }
 
 .course-button-list-content-has-hidden {
-    text-decoration: underline dotted;
+    text-decoration: underline;
+    text-decoration-style: dotted;
     cursor: help;
 }
 
