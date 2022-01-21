@@ -46,7 +46,7 @@ CourseManager.prototype.getSchedule = function (course) {
         var schedule = that.coursesHashmap[course].schedule;
 
         if (general['הערות']) {
-            // Extract sadnaot from course comments.
+            // Extract workshops from course comments.
             var comment = general['הערות'];
 
             // Fix common typos.
@@ -61,14 +61,14 @@ CourseManager.prototype.getSchedule = function (course) {
                 // Check if the line starts with a required prefix.
                 // https://stackoverflow.com/a/4579228
                 if (line.lastIndexOf('סדנאות', 0) === 0 || line.lastIndexOf('סדנת', 0) === 0) {
-                    var sadnaotTa = '';
+                    var workshopsTa = '';
                     var match = /(?:\n|^)מתרגל[ית]? הסדנ(?:א|ה|אות).*?:\s*([\s\S]*?)\s*(?:=|$)/.exec(comment);
                     if (match) {
-                        sadnaotTa = match[1].replace(/\s+/g, ' ').replace(/(\((גם אחראי[תם]?|\d+)\)\s*)+,?/g, ',').replace(/\s*,\s*/g, '\n').trim();
+                        workshopsTa = match[1].replace(/\s+/g, ' ').replace(/(\((גם אחראי[תם]?|\d+)\)\s*)+,?/g, ',').replace(/\s*,\s*/g, '\n').trim();
                     }
 
-                    var sadnaot = [];
-                    var sadnaId = 101;
+                    var workshops = [];
+                    var workshopId = 101;
                     for (i++; i < commentLines.length; i++) {
                         line = commentLines[i];
                         match = /^ב?(?:ימי|יום) ([א-ו])'?,? (\d+)\.(\d+)-(\d+)\.(\d+)(?:\s*,\s*(.*?)(?:\s+(\d+))?(?:\s*,\s*(.*?))?)?$/.exec(line);
@@ -93,21 +93,21 @@ CourseManager.prototype.getSchedule = function (course) {
                             break;
                         }
 
-                        sadnaot.push({
-                            'קבוצה': sadnaId,
-                            'מס.': sadnaId,
+                        workshops.push({
+                            'קבוצה': workshopId,
+                            'מס.': workshopId,
                             'סוג': 'sadna',
-                            'מרצה/מתרגל': match[8] || sadnaotTa,
+                            'מרצה/מתרגל': match[8] || workshopsTa,
                             'יום': match[1],
                             'שעה': match[2] + ':' + match[3] + ' - ' + match[4] + ':' + match[5],
                             'בניין': building,
                             'חדר': match[7] || ''
                         });
-                        sadnaId++;
+                        workshopId++;
                     }
 
-                    if (sadnaot.length > 0) {
-                        schedule = schedule.concat(sadnaot);
+                    if (workshops.length > 0) {
+                        schedule = schedule.concat(workshops);
                     }
 
                     break;
@@ -258,7 +258,7 @@ CourseManager.prototype.getLessonType = function (lesson) {
 CourseManager.prototype.getLessonTypeAndNumber = function (lesson) {
     if (lesson['סוג'] === 'sadna') {
         // No number since that's our addition to the schedule.
-        // We assume only one sadna can be selected.
+        // We assume only one workshop can be selected.
         return 'סדנה';
     }
     return lesson['סוג'] + ' ' + lesson['מס.'];
