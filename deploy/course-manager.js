@@ -196,13 +196,16 @@ CourseManager.prototype.getDescription = function (course, options) {
         }
     }
 
-    if (general['מועד א'] || general['מועד ב']) {
+    if (general['מועד א'] || general['מועד ב'] || general['מועד ג']) {
         content += '\n';
         if (general['מועד א']) {
             content += '\nמועד א\': ' + general['מועד א'];
         }
         if (general['מועד ב']) {
             content += '\nמועד ב\': ' + general['מועד ב'];
+        }
+        if (general['מועד ג']) {
+            content += '\nמועד ג\': ' + general['מועד ג'];
         }
     }
 

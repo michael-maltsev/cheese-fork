@@ -1552,6 +1552,7 @@
             'בוחן מועד ה',
             'מועד א',
             'מועד ב',
+            'מועד ג',
             'מיקום' // old format
         ];
         var compareFunction = function (a, b) {
