@@ -62,7 +62,7 @@ CourseManager.prototype.getSchedule = function (course) {
                 // https://stackoverflow.com/a/4579228
                 if (line.lastIndexOf('סדנאות', 0) === 0 || line.lastIndexOf('סדנת', 0) === 0) {
                     var workshopsTa = '';
-                    var match = /(?:\n|^)מתרגל[ית]? הסדנ(?:א|ה|אות).*?:\s*([\s\S]*?)\s*(?:=|$)/.exec(comment);
+                    var match = /(?:\n|^)מתרגל[ית]? ה?סדנ(?:א|ה|אות).*?:\s*([\s\S]*?)\s*(?:=|$)/.exec(comment);
                     if (match) {
                         workshopsTa = match[1].replace(/\s+/g, ' ').replace(/(\((גם אחראי[תם]?|\d+)\)\s*)+,?/g, ',').replace(/\s*,\s*/g, '\n').trim();
                     }
