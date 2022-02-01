@@ -55,6 +55,9 @@ CourseManager.prototype.getSchedule = function (course) {
             // Semester 202001, course 044137: סדאות רשות
             comment = comment.replace(/(^|[^א-ת])(ה?ס)(דנ|ד|נ)(א|ה|אות)($|[^א-ת])/g, '$1$2דנ$4$5');
 
+            // Add a newline for a single workshop.
+            comment = comment.replace(/^(סדנת רשות:) (ב?ימי|יום )/mg, '$1\n$2');
+
             var commentLines = comment.split('\n');
             for (var i = 0; i < commentLines.length; i++) {
                 var line = commentLines[i];
