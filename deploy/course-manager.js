@@ -71,8 +71,16 @@ CourseManager.prototype.getSchedule = function (course) {
                     var workshopId = 101;
                     for (i++; i < commentLines.length; i++) {
                         line = commentLines[i];
-                        match = /^ב?(?:ימי|יום) ([א-ו])'?,? (\d+)\.(\d+)-(\d+)\.(\d+)(?:\s*,\s*(.*?)(?:\s+(\d+))?(?:\s*,\s*(.*?))?)?$/.exec(line);
+                        match = /^ב?(?:ימי|יום) ([א-ת]+)'?,? (\d+)\.(\d+)-(\d+)\.(\d+)(?:\s*,\s*(.*?)(?:\s+(\d+))?(?:\s*,\s*(.*?))?)?$/.exec(line);
                         if (!match) {
+                            break;
+                        }
+
+                        var day = match[1];
+                        if ([
+                            'ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי',
+                            'א', 'ב', 'ג', 'ד', 'ה', 'ו'
+                        ].indexOf(day) === -1) {
                             break;
                         }
 
@@ -98,7 +106,7 @@ CourseManager.prototype.getSchedule = function (course) {
                             'מס.': workshopId,
                             'סוג': 'sadna',
                             'מרצה/מתרגל': match[8] || workshopsTa,
-                            'יום': match[1],
+                            'יום': day,
                             'שעה': match[2] + ':' + match[3] + ' - ' + match[4] + ':' + match[5],
                             'בניין': building,
                             'חדר': match[7] || ''
