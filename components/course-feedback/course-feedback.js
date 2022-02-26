@@ -327,7 +327,9 @@ var CourseFeedback = (function () {
             'שעורי הבית:',
             'המבחן:',
             'השורה התחתונה:'
-        ];
+        ].filter(function (templatePart) {
+            return text.indexOf(templatePart) !== -1;
+        });
 
         for (var i = 0; i + 1 < templateParts.length; i++) {
             var t1 = templateParts[i];

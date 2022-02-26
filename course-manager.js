@@ -195,40 +195,36 @@ CourseManager.prototype.getDescription = function (course, options) {
         content += '\n\nאחראים: ' + general['אחראים'];
     }
 
-    if (general['בוחן מועד א'] ||
-        general['בוחן מועד ב'] ||
-        general['בוחן מועד ג'] ||
-        general['בוחן מועד ד'] ||
-        general['בוחן מועד ה']) {
-        content += '\n';
-        if (general['בוחן מועד א']) {
-            content += '\nבוחן מועד א\': ' + general['בוחן מועד א'];
+    var pre_exam_content = '';
+    [
+        'בוחן מועד א',
+        'בוחן מועד ב',
+        'בוחן מועד ג',
+        'בוחן מועד ד',
+        'בוחן מועד ה'
+    ].forEach(function (key) {
+        if (general[key]) {
+            pre_exam_content += '\n' + key + '\': ' + general[key].replace(/\n\n/g, '\n====================\n');
         }
-        if (general['בוחן מועד ב']) {
-            content += '\nבוחן מועד ב\': ' + general['בוחן מועד ב'];
-        }
-        if (general['בוחן מועד ג']) {
-            content += '\nבוחן מועד ג\': ' + general['בוחן מועד ג'];
-        }
-        if (general['בוחן מועד ד']) {
-            content += '\nבוחן מועד ד\': ' + general['בוחן מועד ד'];
-        }
-        if (general['בוחן מועד ה']) {
-            content += '\nבוחן מועד ה\': ' + general['בוחן מועד ה'];
-        }
+    });
+
+    if (pre_exam_content) {
+        content += '\n' + pre_exam_content;
     }
 
-    if (general['מועד א'] || general['מועד ב'] || general['מועד ג']) {
-        content += '\n';
-        if (general['מועד א']) {
-            content += '\nמועד א\': ' + general['מועד א'];
+    var exam_content = '';
+    [
+        'מועד א',
+        'מועד ב',
+        'מועד ג'
+    ].forEach(function (key) {
+        if (general[key]) {
+            exam_content += '\n' + key + '\': ' + general[key].replace(/\n\n/g, '\n====================\n');
         }
-        if (general['מועד ב']) {
-            content += '\nמועד ב\': ' + general['מועד ב'];
-        }
-        if (general['מועד ג']) {
-            content += '\nמועד ג\': ' + general['מועד ג'];
-        }
+    });
+
+    if (exam_content) {
+        content += '\n' + exam_content;
     }
 
     if (general['הערות']) {
