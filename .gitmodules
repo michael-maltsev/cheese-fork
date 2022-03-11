@@ -2,3 +2,8 @@
 	path = technion-ug-info-fetcher
 	url = https://github.com/michael-maltsev/technion-ug-info-fetcher
 	branch = master
+
+[submodule "huji-cheesefork"]
+	path = huji-cheesefork
+	url = https://github.com/yotamgod/huji-cheesefork
+	branch = main

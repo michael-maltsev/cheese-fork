@@ -10,16 +10,35 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: true
-      - name: Set up PHP
-        uses: shivammathur/setup-php@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2.3.2
         with:
-          php-version: '8.1'
-      - name: Run Periodic Update
-        run: bash deploy.sh
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./deploy
-          user_name: 'github-actions[bot]'
-          user_email: 'github-actions[bot]@users.noreply.github.com'
+          python-version: 3.9
+          cache: pip
+      - name: Install requirements for huji-cheesefork downloader
+        run: |
+          python -m pip install --upgrade pip
+          pip install wheel setuptools
+          cd huji-cheesefork
+          pip install -r requirements.txt
+          cd ..
+      - name: Download specific courses
+        env:
+          COURSES: 67109 69166 72155 76563 80031 80035 80131 80135
+          SEMESTER: b
+          YEAR: 2022
+        run: |
+          cd huji-cheesefork
+          mkdir downloaded_courses
+          python downloader.py -c ${{env.COURSES}} -s ${{env.SEMESTER}} -y ${{env.YEAR}} -d downloaded_courses
+          cd ..
+      - name: Save courses into correct format
+        run: |
+          python collect_courses.py huji-cheesefork/downloaded_courses deploy/courses ${{env.YEAR}} ${{env.SEMESTER}}
+#      - name: Deploy
+#        uses: peaceiris/actions-gh-pages@v3
+#        with:
+#          github_token: ${{ secrets.GITHUB_TOKEN }}
+#          publish_dir: ./deploy
+#          user_name: 'github-actions[bot]'
+#          user_email: 'github-actions[bot]@users.noreply.github.com'
