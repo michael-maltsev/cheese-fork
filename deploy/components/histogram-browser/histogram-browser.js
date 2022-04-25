@@ -24,15 +24,20 @@ var HistogramBrowser = (function () {
                 var text = semesterFriendlyName(semester);
                 var props = [];
 
-                var moedA = data[semester].Final_A || data[semester].Exam_A;
-                if (moedA) {
-                    props.push('א\' ' + roundGrade(moedA.average));
+                var termA = data[semester].Final_A || data[semester].Exam_A;
+                if (termA) {
+                    props.push('א\' ' + roundGrade(termA.average));
                 }
 
-                var moedB = data[semester].Final_B || data[semester].Exam_B;
-                if (moedB) {
-                    props.push('ב\' ' + roundGrade(moedB.average));
+                var termB = data[semester].Final_B || data[semester].Exam_B;
+                if (termB) {
+                    props.push('ב\' ' + roundGrade(termB.average));
                 }
+
+                // var termC = data[semester].Final_C || data[semester].Exam_C;
+                // if (termC) {
+                //     props.push('ג\' ' + roundGrade(termC.average));
+                // }
 
                 var final = data[semester].Finals;
                 if (final) {
@@ -252,6 +257,8 @@ var HistogramBrowser = (function () {
             'Final_A',
             'Exam_B',
             'Final_B',
+            'Exam_C',
+            'Final_C',
             'Finals'
         ];
         var categorySelect = $('<select class="form-control"></select>');
@@ -339,6 +346,8 @@ var HistogramBrowser = (function () {
             Final_A: 'סופי מועד א\'',
             Exam_B: 'מבחן מועד ב\'',
             Final_B: 'סופי מועד ב\'',
+            Exam_C: 'מבחן מועד ג\'',
+            Final_C: 'סופי מועד ג\'',
             Finals: 'סופי'
         };
 
