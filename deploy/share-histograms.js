@@ -6,6 +6,8 @@ let cheeseforkShareHistograms = function () {
         'Final_A',
         'Exam_B',
         'Final_B',
+        'Exam_C',
+        'Final_C',
         'Finals'
     ];
     let histogramUploadQueue = [];
@@ -41,6 +43,8 @@ let cheeseforkShareHistograms = function () {
             '<th>סופי מועד א\'</th>' +
             '<th>מבחן מועד ב\'</th>' +
             '<th>סופי מועד ב\'</th>' +
+            '<th>מבחן מועד ג\'</th>' +
+            '<th>סופי מועד ג\'</th>' +
             '<th>סופי</th>' +
             '</tr></thead>' +
             '<tbody>';
