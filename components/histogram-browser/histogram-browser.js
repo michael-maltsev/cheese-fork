@@ -235,12 +235,21 @@ var HistogramBrowser = (function () {
     }
 
     function shouldActivateHistogramView() {
-        var nextShowDate = localStorage.getItem('nextHistogramShareMessage');
-        return nextShowDate && Date.now() < nextShowDate;
+        try {
+            var nextShowDate = localStorage.getItem('nextHistogramShareMessage');
+            return nextShowDate && Date.now() < nextShowDate;
+        } catch (e) {
+            // localStorage is not available in IE/Edge when running from a local file.
+            return true;
+        }
     }
 
     function activateAndSetNextShowDate(histogramBrowser, nextShowDate) {
-        localStorage.setItem('nextHistogramShareMessage', nextShowDate.valueOf().toString());
+        try {
+            localStorage.setItem('nextHistogramShareMessage', nextShowDate.valueOf().toString());
+        } catch (e) {
+            // localStorage is not available in IE/Edge when running from a local file.
+        }
 
         activateHistogramView(histogramBrowser);
     }

@@ -99,7 +99,11 @@ var CourseFeedback = (function () {
                 form.classList.remove('was-validated');
 
                 var feedbackDisplayName = body.find('#feedback-form-author').val().trim();
-                localStorage.setItem('feedbackDisplayName', feedbackDisplayName);
+                try {
+                    localStorage.setItem('feedbackDisplayName', feedbackDisplayName);
+                } catch (e) {
+                    // localStorage is not available in IE/Edge when running from a local file.
+                }
 
                 var data = {
                     timestamp: Date.now(),

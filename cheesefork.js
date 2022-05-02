@@ -28,7 +28,7 @@
 
     function cheeseforkInit() {
         // Use overlayScrollbars only if the scrollbar has width.
-        // On desktop it usually does, on mobile it usually doesn't.
+        // On desktop it usually does, on mobile it ususally doesn't.
         if (getScrollBarWidth() > 0) {
             $('body').overlayScrollbars({ }).removeClass('os-host-rtl');
         }
@@ -245,13 +245,21 @@
     }
 
     function showIntro() {
-        var dontShowDate = localStorage.getItem('dontShowIntro');
-        if (dontShowDate) {
-            return false;
+        try {
+            var dontShowDate = localStorage.getItem('dontShowIntro');
+            if (dontShowDate) {
+                return false;
+            }
+        } catch (e) {
+            // localStorage is not available in IE/Edge when running from a local file.
         }
 
         if (courseButtonList.getCourseNumbers(true).length > 0) {
-            localStorage.setItem('dontShowIntro', Date.now().toString());
+            try {
+                localStorage.setItem('dontShowIntro', Date.now().toString());
+            } catch (e) {
+                // localStorage is not available in IE/Edge when running from a local file.
+            }
             return false;
         }
 
@@ -266,7 +274,11 @@
             scrollToElement: false,
             helperElementPadding: 0
         }).onexit(function () {
-            localStorage.setItem('dontShowIntro', Date.now().toString());
+            try {
+                localStorage.setItem('dontShowIntro', Date.now().toString());
+            } catch (e) {
+                // localStorage is not available in IE/Edge when running from a local file.
+            }
         }).start();
 
         return true;
@@ -299,9 +311,13 @@
     }
 
     function showCourseFeedbackPopupPrevSemesters() {
-        var dontShowDate = localStorage.getItem('dontShowPrevCourseFeedbackPopup_' + currentSemester);
-        if (dontShowDate) {
-            return false;
+        try {
+            var dontShowDate = localStorage.getItem('dontShowPrevCourseFeedbackPopup_' + currentSemester);
+            if (dontShowDate) {
+                return false;
+            }
+        } catch (e) {
+            // localStorage is not available in IE/Edge when running from a local file.
         }
 
         var prevSemesters = Object.keys(availableSemesters).sort().reverse();
@@ -350,7 +366,11 @@
                 if (document.getElementById('dont-show-course-feedback-popup').checked) {
                     gtag('event', 'course-feedback-prev-dont-show');
 
-                    localStorage.setItem('dontShowPrevCourseFeedbackPopup_' + currentSemester, Date.now().toString());
+                    try {
+                        localStorage.setItem('dontShowPrevCourseFeedbackPopup_' + currentSemester, Date.now().toString());
+                    } catch (e) {
+                        // localStorage is not available in IE/Edge when running from a local file.
+                    }
                 }
             }
         });
@@ -359,9 +379,13 @@
     }
 
     function showCourseFeedbackPopupThisSemester() {
-        var dontShowDate = localStorage.getItem('dontShowThisCourseFeedbackPopup_' + currentSemester);
-        if (dontShowDate) {
-            return false;
+        try {
+            var dontShowDate = localStorage.getItem('dontShowThisCourseFeedbackPopup_' + currentSemester);
+            if (dontShowDate) {
+                return false;
+            }
+        } catch (e) {
+            // localStorage is not available in IE/Edge when running from a local file.
         }
 
         var courseNumbers = courseButtonList.getCourseNumbers(true);
@@ -394,15 +418,27 @@
                 if (document.getElementById('dont-show-course-feedback-popup').checked) {
                     gtag('event', 'course-feedback-this-dont-show');
 
-                    localStorage.setItem('dontShowThisCourseFeedbackPopup_' + currentSemester, Date.now().toString());
+                    try {
+                        localStorage.setItem('dontShowThisCourseFeedbackPopup_' + currentSemester, Date.now().toString());
+                    } catch (e) {
+                        // localStorage is not available in IE/Edge when running from a local file.
+                    }
                 } else {
-                    localStorage.removeItem('dontShowThisCourseFeedbackPopup_' + currentSemester);
+                    try {
+                        localStorage.removeItem('dontShowThisCourseFeedbackPopup_' + currentSemester);
+                    } catch (e) {
+                        // localStorage is not available in IE/Edge when running from a local file.
+                    }
                 }
             },
             onSharingDone: function () {
                 gtag('event', 'course-feedback-this-shared');
 
-                localStorage.setItem('dontShowThisCourseFeedbackPopup_' + currentSemester, Date.now().toString());
+                try {
+                    localStorage.setItem('dontShowThisCourseFeedbackPopup_' + currentSemester, Date.now().toString());
+                } catch (e) {
+                    // localStorage is not available in IE/Edge when running from a local file.
+                }
             }
         });
 
@@ -415,9 +451,13 @@
             return false;
         }
 
-        var nextShowDate = localStorage.getItem('nextShowThursdayGraphPopup');
-        if (nextShowDate && Date.now() < nextShowDate) {
-            return false;
+        try {
+            var nextShowDate = localStorage.getItem('nextShowThursdayGraphPopup');
+            if (nextShowDate && Date.now() < nextShowDate) {
+                return false;
+            }
+        } catch (e) {
+            // localStorage is not available in IE/Edge when running from a local file.
         }
 
         BootstrapDialog.show({
@@ -465,7 +505,11 @@
                     }
                 }
 
-                localStorage.setItem('nextShowThursdayGraphPopup', nextShowDate.valueOf().toString());
+                try {
+                    localStorage.setItem('nextShowThursdayGraphPopup', nextShowDate.valueOf().toString());
+                } catch (e) {
+                    // localStorage is not available in IE/Edge when running from a local file.
+                }
             }
         });
 
@@ -486,12 +530,16 @@
             return false;
         }
 
-        var dontShowDate = localStorage.getItem('dontShowTechnionScansPopup');
-        if (dontShowDate) {
-            var days = (Date.now() - parseInt(dontShowDate, 10)) / (24 * 3600 * 1000);
-            if (days <= 30) {
-                return false;
+        try {
+            var dontShowDate = localStorage.getItem('dontShowTechnionScansPopup');
+            if (dontShowDate) {
+                var days = (Date.now() - parseInt(dontShowDate, 10)) / (24 * 3600 * 1000);
+                if (days <= 30) {
+                    return false;
+                }
             }
+        } catch (e) {
+            // localStorage is not available in IE/Edge when running from a local file.
         }
 
         BootstrapDialog.show({
@@ -535,7 +583,11 @@
                 if (document.getElementById('dont-show-technion-scans-popup').checked) {
                     gtag('event', 'scans-dont-show');
 
-                    localStorage.setItem('dontShowTechnionScansPopup', Date.now().toString());
+                    try {
+                        localStorage.setItem('dontShowTechnionScansPopup', Date.now().toString());
+                    } catch (e) {
+                        // localStorage is not available in IE/Edge when running from a local file.
+                    }
                 }
             }
         });
@@ -997,10 +1049,14 @@
             }
             doc.update(input);
         } else {
-            localStorage.setItem(semesterCoursesKey, JSON.stringify(currentSavedSession[semesterCoursesKey]));
-            localStorage.removeItem(courseKey);
-            if (metadataUpdate) {
-                localStorage.setItem(metadataCourseKey, JSON.stringify(courseData));
+            try {
+                localStorage.setItem(semesterCoursesKey, JSON.stringify(currentSavedSession[semesterCoursesKey]));
+                localStorage.removeItem(courseKey);
+                if (metadataUpdate) {
+                    localStorage.setItem(metadataCourseKey, JSON.stringify(courseData));
+                }
+            } catch (e) {
+                // localStorage is not available in IE/Edge when running from a local file.
             }
         }
 
@@ -1026,9 +1082,13 @@
             input[metadataCourseKey] = firebase.firestore.FieldValue.delete();
             doc.update(input);
         } else {
-            localStorage.setItem(semesterCoursesKey, JSON.stringify(currentSavedSession[semesterCoursesKey]));
-            localStorage.removeItem(courseKey);
-            localStorage.removeItem(metadataCourseKey);
+            try {
+                localStorage.setItem(semesterCoursesKey, JSON.stringify(currentSavedSession[semesterCoursesKey]));
+                localStorage.removeItem(courseKey);
+                localStorage.removeItem(metadataCourseKey);
+            } catch (e) {
+                // localStorage is not available in IE/Edge when running from a local file.
+            }
         }
 
         onSavedSessionChange();
@@ -1050,7 +1110,11 @@
             input[courseKey + '.' + lessonType] = lessonNumber;
             doc.update(input);
         } else {
-            localStorage.setItem(courseKey, JSON.stringify(currentSavedSession[courseKey]));
+            try {
+                localStorage.setItem(courseKey, JSON.stringify(currentSavedSession[courseKey]));
+            } catch (e) {
+                // localStorage is not available in IE/Edge when running from a local file.
+            }
         }
 
         onSavedSessionChange();
@@ -1067,7 +1131,11 @@
             input[courseKey + '.' + lessonType] = firebase.firestore.FieldValue.delete();
             doc.update(input);
         } else {
-            localStorage.setItem(courseKey, JSON.stringify(currentSavedSession[courseKey]));
+            try {
+                localStorage.setItem(courseKey, JSON.stringify(currentSavedSession[courseKey]));
+            } catch (e) {
+                // localStorage is not available in IE/Edge when running from a local file.
+            }
         }
 
         onSavedSessionChange();
@@ -1084,7 +1152,11 @@
             input[semesterCustomEventsKey + '.' + eventId] = eventData;
             doc.update(input);
         } else {
-            localStorage.setItem(semesterCustomEventsKey, JSON.stringify(currentSavedSession[semesterCustomEventsKey]));
+            try {
+                localStorage.setItem(semesterCustomEventsKey, JSON.stringify(currentSavedSession[semesterCustomEventsKey]));
+            } catch (e) {
+                // localStorage is not available in IE/Edge when running from a local file.
+            }
         }
 
         onSavedSessionChange();
@@ -1101,7 +1173,11 @@
             input[semesterCustomEventsKey + '.' + eventId] = firebase.firestore.FieldValue.delete();
             doc.update(input);
         } else {
-            localStorage.setItem(semesterCustomEventsKey, JSON.stringify(currentSavedSession[semesterCustomEventsKey]));
+            try {
+                localStorage.setItem(semesterCustomEventsKey, JSON.stringify(currentSavedSession[semesterCustomEventsKey]));
+            } catch (e) {
+                // localStorage is not available in IE/Edge when running from a local file.
+            }
         }
 
         onSavedSessionChange();
@@ -1228,14 +1304,24 @@
     function savedSessionFromLocalStorage() {
         var semesterCoursesKey = currentSemester + '_courses';
         var session = {};
-        session[semesterCoursesKey] = JSON.parse(localStorage.getItem(semesterCoursesKey) || '[]');
-        session[semesterCoursesKey].forEach(function (course) {
-            var courseKey = currentSemester + '_' + course;
-            session[courseKey] = JSON.parse(localStorage.getItem(courseKey) || '{}');
-        });
+        try {
+            session[semesterCoursesKey] = JSON.parse(localStorage.getItem(semesterCoursesKey) || '[]');
+            session[semesterCoursesKey].forEach(function (course) {
+                var courseKey = currentSemester + '_' + course;
+                session[courseKey] = JSON.parse(localStorage.getItem(courseKey) || '{}');
+            });
+        } catch (e) {
+            // localStorage is not available in IE/Edge when running from a local file.
+            session[semesterCoursesKey] = [];
+        }
 
         var semesterCustomEventsKey = currentSemester + '_custom_events';
-        session[semesterCustomEventsKey] = JSON.parse(localStorage.getItem(semesterCustomEventsKey) || '{}');
+        try {
+            session[semesterCustomEventsKey] = JSON.parse(localStorage.getItem(semesterCustomEventsKey) || '{}');
+        } catch (e) {
+            // localStorage is not available in IE/Edge when running from a local file.
+            session[semesterCustomEventsKey] = {};
+        }
 
         return session;
     }
@@ -1243,20 +1329,24 @@
     function savedMetadataFromLocalStorage() {
         var semesterCoursesKey = currentSemester + '_courses';
         var metadata = {};
-        var courses = JSON.parse(localStorage.getItem(semesterCoursesKey) || '[]');
-        courses.forEach(function (course) {
-            var metadataCourseKey = currentSemester + '_metadata_' + course;
-            var courseMetadataEncoded = localStorage.getItem(metadataCourseKey);
-            if (courseMetadataEncoded) {
-                metadata[course] = JSON.parse(courseMetadataEncoded);
-            }
-        });
+        try {
+            var courses = JSON.parse(localStorage.getItem(semesterCoursesKey) || '[]');
+            courses.forEach(function (course) {
+                var metadataCourseKey = currentSemester + '_metadata_' + course;
+                var courseMetadataEncoded = localStorage.getItem(metadataCourseKey);
+                if (courseMetadataEncoded) {
+                    metadata[course] = JSON.parse(courseMetadataEncoded);
+                }
+            });
 
-        // If there's at least one course but no metadata at all, that probably means that
-        // the user built the schedule before the feature was introduced.
-        // Return null to handle the case.
-        if (courses.length > 0 && Object.keys(metadata).length === 0) {
-            metadata = null;
+            // If there's at least one course but no metadata at all, that probably means that
+            // the user built the schedule before the feature was introduced.
+            // Return null to handle the case.
+            if (courses.length > 0 && Object.keys(metadata).length === 0) {
+                metadata = null;
+            }
+        } catch (e) {
+            // localStorage is not available in IE/Edge when running from a local file.
         }
 
         return metadata;
@@ -1369,18 +1459,22 @@
 
             doc.update(input);
         } else {
-            removeKeys.forEach(function (key) {
-                localStorage.removeItem(key);
-            });
+            try {
+                removeKeys.forEach(function (key) {
+                    localStorage.removeItem(key);
+                });
 
-            newKeys.forEach(function (key) {
-                localStorage.setItem(key, JSON.stringify(sessionToRestore[key]));
-            });
+                newKeys.forEach(function (key) {
+                    localStorage.setItem(key, JSON.stringify(sessionToRestore[key]));
+                });
 
-            newMetadataCourses.forEach(function (course) {
-                var metadataCourseKey = currentSemester + '_metadata_' + course;
-                localStorage.setItem(metadataCourseKey, JSON.stringify(courseManager.getCourseData(course)));
-            });
+                newMetadataCourses.forEach(function (course) {
+                    var metadataCourseKey = currentSemester + '_metadata_' + course;
+                    localStorage.setItem(metadataCourseKey, JSON.stringify(courseManager.getCourseData(course)));
+                });
+            } catch (e) {
+                // localStorage is not available in IE/Edge when running from a local file.
+            }
         }
 
         setScheduleFromSavedSession(sessionToRestore);
@@ -1759,23 +1853,27 @@
 
             doc.update(input);
         } else {
-            courseNumbers.forEach(function (course) {
-                var metadataCourseKey = currentSemester + '_metadata_' + course;
-                var courseData = courseManager.getCourseData(course);
-                localStorage.setItem(metadataCourseKey, JSON.stringify(courseData));
-            });
+            try {
+                courseNumbers.forEach(function (course) {
+                    var metadataCourseKey = currentSemester + '_metadata_' + course;
+                    var courseData = courseManager.getCourseData(course);
+                    localStorage.setItem(metadataCourseKey, JSON.stringify(courseData));
+                });
 
-            if (deletedCourses.length > 0) {
-                localStorage.setItem(semesterCoursesKey, JSON.stringify(currentSavedSession[semesterCoursesKey]));
+                if (deletedCourses.length > 0) {
+                    localStorage.setItem(semesterCoursesKey, JSON.stringify(currentSavedSession[semesterCoursesKey]));
+                }
+
+                deletedCourses.forEach(function (course) {
+                    var courseKey = currentSemester + '_' + course;
+                    localStorage.removeItem(courseKey);
+
+                    var metadataCourseKey = currentSemester + '_metadata_' + course;
+                    localStorage.removeItem(metadataCourseKey);
+                });
+            } catch (e) {
+                // localStorage is not available in IE/Edge when running from a local file.
             }
-
-            deletedCourses.forEach(function (course) {
-                var courseKey = currentSemester + '_' + course;
-                localStorage.removeItem(courseKey);
-
-                var metadataCourseKey = currentSemester + '_metadata_' + course;
-                localStorage.removeItem(metadataCourseKey);
-            });
         }
 
         metadataDiff = {};
