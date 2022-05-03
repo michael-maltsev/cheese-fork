@@ -355,7 +355,12 @@ let cheeseforkShareHistograms = function () {
     async function fetchValidResponse(url, name) {
         let lastStatus;
         for (let i = 0; i < 4; i++) {
-            const result = await fetch(url);
+            const result = await fetch(url, {
+                // Disable redirects because if not logged in, the user is
+                // redirected to /login.aspx, and we don't want to use the login
+                // page as the response.
+                redirect: 'error'
+            });
             if (result.ok) {
                 return result;
             }
