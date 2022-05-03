@@ -204,7 +204,7 @@ CourseManager.prototype.getDescription = function (course, options) {
         'בוחן מועד ה'
     ].forEach(function (key) {
         if (general[key]) {
-            pre_exam_content += '\n' + key + '\': ' + general[key].replace(/\n\n/g, '\n====================\n');
+            pre_exam_content += '\n' + key + '\': ' + general[key].replace(/\n\n/g, '\n========\n');
         }
     });
 
@@ -219,7 +219,7 @@ CourseManager.prototype.getDescription = function (course, options) {
         'מועד ג'
     ].forEach(function (key) {
         if (general[key]) {
-            exam_content += '\n' + key + '\': ' + general[key].replace(/\n\n/g, '\n====================\n');
+            exam_content += '\n' + key + '\': ' + general[key].replace(/\n\n/g, '\n========\n');
         }
     });
 
