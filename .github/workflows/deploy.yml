@@ -26,6 +26,8 @@ jobs:
           sudo update-ca-certificates
       - name: Run Periodic Update
         run: bash deploy.sh
+        env:
+          MOODLE_SESSIONSTUDENTSPROD: ${{ secrets.MOODLE_SESSIONSTUDENTSPROD }}
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
