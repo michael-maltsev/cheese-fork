@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function semester_available {
-	curl -s 'https://students.technion.ac.il/local/technionsearch/search' | grep '<option value="'$1'"' > /dev/null
+	curl -s 'https://students.technion.ac.il/local/technionsearch/search' | grep -F 'name="semesterscheckboxgroup['$1']"' > /dev/null
 }
 
 function fetch_semester {
@@ -40,6 +40,7 @@ fetch_semester 202101 || exit 1
 fetch_semester 202102 || exit 1
 
 # Make sure next semester is not available yet.
+semester_available 202102 || exit 1
 semester_available 202103 && exit 1
 
 exit 0
