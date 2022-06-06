@@ -1,7 +1,12 @@
 #!/bin/bash
 
+semester_1=202101
+semester_2=202102
+semester_3=202103
+semester_next=202201
+
 function semester_available {
-	curl -s 'https://students.technion.ac.il/local/technionsearch/search' | grep -F 'name="semesterscheckboxgroup['$1']"' > /dev/null
+	curl -s 'https://students.technion.ac.il/local/technionsearch/search' | grep -qF 'name="semesterscheckboxgroup['$1']"'
 }
 
 function fetch_semester {
@@ -35,12 +40,12 @@ function fetch_semester {
 }
 
 # Fetch last three semesters.
-fetch_semester 202003 || exit 1
-fetch_semester 202101 || exit 1
-fetch_semester 202102 || exit 1
+fetch_semester $semester_1 || exit 1
+fetch_semester $semester_2 || exit 1
+fetch_semester $semester_3 || exit 1
 
 # Make sure next semester is not available yet.
-semester_available 202102 || exit 1
-semester_available 202103 && exit 1
+semester_available $semester_3 || exit 1
+semester_available $semester_next && exit 1
 
 exit 0
