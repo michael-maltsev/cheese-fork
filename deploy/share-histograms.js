@@ -424,7 +424,7 @@ let cheeseforkShareHistograms = function () {
                     // Don't upload test images (stop testing in production!)
                     // Example:
                     // https://github.com/michael-maltsev/technion-histograms/blob/f985c9133f4b5858e3b9605707fad6a913842e12/104013/201802/Final_B.png
-                    const skipIfSha = '69c39015341c48540ef07afdd45252696987b212';
+                    const skipIfSha = '76b85c3ecefcb57e8856889dbb44b31c52b50fc3';
 
                     const image = await (await fetchValidResponse(histogram.imgSrc, 'histogram image')).arrayBuffer();
                     imageResult = await submitToGithub(course, semester, category, '.png', image, { skipIfSha });
