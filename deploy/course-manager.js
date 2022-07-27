@@ -61,9 +61,7 @@ CourseManager.prototype.getSchedule = function (course) {
             var commentLines = comment.split('\n');
             for (var i = 0; i < commentLines.length; i++) {
                 var line = commentLines[i];
-                // Check if the line starts with a required prefix.
-                // https://stackoverflow.com/a/4579228
-                if (line.lastIndexOf('סדנאות', 0) === 0 || line.lastIndexOf('סדנת', 0) === 0) {
+                if (line.match(/^סדנ(ה|א|אות)[: ]/)) {
                     var workshopsTa = '';
                     var match = /(?:\n|^)מתרגל[ית]? ה?סדנ(?:א|ה|אות).*?:\s*([\s\S]*?)\s*(?:=|$)/.exec(comment);
                     if (match) {
@@ -74,7 +72,7 @@ CourseManager.prototype.getSchedule = function (course) {
                     var workshopId = 101;
                     for (i++; i < commentLines.length; i++) {
                         line = commentLines[i];
-                        match = /^ב?(?:ימי|יום) ([א-ת]+)'?,? (\d+)\.(\d+)-(\d+)\.(\d+)(?:\s*,\s*(.*?)(?:\s+(\d+))?(?:\s*,\s*(.*?))?)?$/.exec(line);
+                        match = /^ב?(?:ימי|יום) ([א-ת]+)'?,?\s*(\d+)\.(\d+)-(\d+)\.(\d+)(?:\s*,\s*(.*?)(?:\s+(\d+))?(?:\s*,\s*(.*?))?)?$/.exec(line);
                         if (!match) {
                             break;
                         }
