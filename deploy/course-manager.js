@@ -56,7 +56,7 @@ CourseManager.prototype.getSchedule = function (course) {
             comment = comment.replace(/(^|[^א-ת])(ה?ס)(דנ|ד|נ)(א|ה|אות)($|[^א-ת])/g, '$1$2דנ$4$5');
 
             // Add a newline for a single workshop.
-            comment = comment.replace(/^(סדנת רשות:) (ב?ימי|יום )/mg, '$1\n$2');
+            comment = comment.replace(/^(סדנת רשות:)\s*(ב?ימי|יום)(\s)/mg, '$1\n$2$3');
 
             var commentLines = comment.split('\n');
             for (var i = 0; i < commentLines.length; i++) {
