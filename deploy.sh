@@ -1,9 +1,9 @@
 #!/bin/bash
 
-semester_1=202102
-semester_2=202103
-semester_3=202201
-semester_next=202202
+semester_1=202103
+semester_2=202201
+semester_3=202202
+semester_next=202203
 
 function semester_available {
 	curl -s 'https://students.technion.ac.il/local/technionsearch/search' | grep -qF 'name="semesterscheckboxgroup['$1']"'
