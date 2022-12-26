@@ -45,7 +45,12 @@ fetch_semester $semester_2 || exit 1
 fetch_semester $semester_3 || exit 1
 
 # Make sure next semester is not available yet.
+echo Verifying semester $semester_3 is available...
 semester_available $semester_3 || exit 1
+
+echo Verifying semester $semester_next is not available yet...
 semester_available $semester_next && exit 1
+
+echo Done
 
 exit 0
