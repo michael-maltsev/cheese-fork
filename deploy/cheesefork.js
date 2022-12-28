@@ -228,11 +228,13 @@
         // So here we cause the color of 114246 to be different.
         // Similar fixup: pink 124503, 124708 and 134019.
         // Similar fixup: green 334222 and 336537.
+        // Similar fixup: green 034055 and 114052.
         var coursePrefixForHashCalc = {
             '114246': 'a',
             '124708': 'c',
             '134019': 'a',
             '336537': 'a',
+            '034055': 'a',
         };
         if (coursePrefixForHashCalc[str]) {
             str = coursePrefixForHashCalc[str] + str;
