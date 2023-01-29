@@ -45,13 +45,25 @@
     filter: invert(100%);
 }
 
+/* Center items with margin instead of justify-content - https://stackoverflow.com/a/34455253 */
+#course-feedback-carousel .carousel-indicators::before,
+#course-feedback-carousel .carousel-indicators::after {
+    content: '';
+    margin: auto;
+}
+
 #course-feedback-carousel .carousel-indicators {
     bottom: -25px;
+    /* Show only last items if there are too many */
+    overflow: hidden;
+    justify-content: end;
 }
 
 #course-feedback-carousel .carousel-indicators li {
     filter: invert(100%);
     cursor: pointer;
+    /* Show only last items if there are too many */
+    min-width: 5px;
 }
 
 /* Comment box, based on https://codepen.io/jo_Geek/pen/NLoGZZ */
