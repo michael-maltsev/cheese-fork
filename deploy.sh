@@ -6,7 +6,7 @@ semester_3=202202
 semester_next=202203
 
 function semester_available {
-	curl -s 'https://students.technion.ac.il/local/technionsearch/search' | grep -qF 'name="semesterscheckboxgroup['$1']"'
+	curl -s -x "$COURSE_INFO_FETCHER_PROXY" 'https://students.technion.ac.il/local/technionsearch/search' | grep -qF 'name="semesterscheckboxgroup['$1']"'
 }
 
 function fetch_semester {
