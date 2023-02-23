@@ -28,6 +28,7 @@ jobs:
         run: bash deploy.sh
         env:
           MOODLE_SESSIONSTUDENTSPROD: ${{ secrets.MOODLE_SESSIONSTUDENTSPROD }}
+          COURSE_INFO_FETCHER_PROXY: ${{ secrets.COURSE_INFO_FETCHER_PROXY }}
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
