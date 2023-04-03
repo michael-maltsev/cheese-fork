@@ -763,6 +763,14 @@
             // Schedule.
             var dateFrom = availableSemesters[currentSemester].start;
             var dateTo = availableSemesters[currentSemester].end;
+
+            // This is a workaround for a crazy Outlook bug. Recurring events
+            // that start from 26 or 27 of March 2023 are shifted by several
+            // hours.
+            if (dateFrom === '2023-03-21') {
+                dateFrom = '2023-03-19';
+            }
+
             courseCalendar.saveAsIcs(icsCal, dateFrom, dateTo);
 
             // Exams.
