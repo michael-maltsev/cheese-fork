@@ -5,8 +5,17 @@ semester_2=202201
 semester_3=202202
 semester_next=202203
 
+function technion_url_get {
+	local url=$1
+	if [[ -z "${COURSE_INFO_FETCHER_PROXY_URL}" ]] && [[ -z "${COURSE_INFO_FETCHER_PROXY_AUTH}" ]]; then
+		curl -s -x "$COURSE_INFO_FETCHER_PROXY" "$url"
+	else
+		curl -s "$COURSE_INFO_FETCHER_PROXY_URL" --header "Proxy-Auth: $COURSE_INFO_FETCHER_PROXY_AUTH" --header "Proxy-Target-URL: $url"
+	fi
+}
+
 function semester_available {
-	curl -s -x "$COURSE_INFO_FETCHER_PROXY" 'https://students.technion.ac.il/local/technionsearch/search' | grep -qF 'name="semesterscheckboxgroup['$1']"'
+	technion_url_get 'https://students.technion.ac.il/local/technionsearch/search' | grep -qF 'name="semesterscheckboxgroup['$1']"'
 }
 
 function fetch_semester {
