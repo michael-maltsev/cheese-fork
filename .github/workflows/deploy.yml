@@ -24,6 +24,8 @@ jobs:
         env:
           MOODLE_SESSIONSTUDENTSPROD: ${{ secrets.MOODLE_SESSIONSTUDENTSPROD }}
           COURSE_INFO_FETCHER_PROXY: ${{ secrets.COURSE_INFO_FETCHER_PROXY }}
+          COURSE_INFO_FETCHER_PROXY_URL: ${{ secrets.COURSE_INFO_FETCHER_PROXY_URL }}
+          COURSE_INFO_FETCHER_PROXY_AUTH: ${{ secrets.COURSE_INFO_FETCHER_PROXY_AUTH }}
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
