@@ -1,9 +1,9 @@
 #!/bin/bash
 
-semester_1=202103
-semester_2=202201
-semester_3=202202
-semester_next=202203
+semester_1=202201
+semester_2=202202
+semester_3=202203
+semester_next=202301
 
 function technion_url_get {
 	local url=$1
