@@ -15,7 +15,10 @@ function technion_url_get {
 }
 
 function semester_available {
-	technion_url_get 'https://students.technion.ac.il/local/technionsearch/search' | grep -qF 'name="semesterscheckboxgroup['$1']"'
+	local semester=$1
+	echo Checking semester $semester availability...
+
+	technion_url_get 'https://students.technion.ac.il/local/technionsearch/search' | grep -qF 'name="semesterscheckboxgroup['$semester']"'
 }
 
 function fetch_semester {
@@ -48,17 +51,16 @@ function fetch_semester {
 	return 0
 }
 
+# Check semester availability.
+semester_available $semester_1 || exit 1
+semester_available $semester_2 || exit 1
+semester_available $semester_3 || exit 1
+semester_available $semester_next && exit 1
+
 # Fetch last three semesters.
 fetch_semester $semester_1 || exit 1
 fetch_semester $semester_2 || exit 1
 fetch_semester $semester_3 || exit 1
-
-# Make sure next semester is not available yet.
-echo Verifying semester $semester_3 is available...
-semester_available $semester_3 || exit 1
-
-echo Verifying semester $semester_next is not available yet...
-semester_available $semester_next && exit 1
 
 echo Done
 
