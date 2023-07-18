@@ -113,13 +113,23 @@ CourseManager.prototype.getSchedule = function (course) {
                             break;
                         }
 
+                        var startTime = match[2] + ':' + match[3];
+                        var endTime = match[4] + ':' + match[5];
+                        var time = startTime + ' - ' + endTime;
+
+                        // Make sure the start time is before the end time.
+                        var timeParsed = that.parseLessonTime(time);
+                        if (timeParsed.end !== '00:00' && timeParsed.start > timeParsed.end) {
+                            time = endTime + ' - ' + startTime;
+                        }
+
                         workshops.push({
                             'קבוצה': workshopId,
                             'מס.': workshopId,
                             'סוג': 'sadna',
                             'מרצה/מתרגל': match[8] || workshopsTa,
                             'יום': day,
-                            'שעה': match[2] + ':' + match[3] + ' - ' + match[4] + ':' + match[5],
+                            'שעה': time,
                             'בניין': building,
                             'חדר': match[7] || ''
                         });
