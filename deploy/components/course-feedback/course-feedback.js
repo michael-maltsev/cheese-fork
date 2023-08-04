@@ -219,6 +219,97 @@ var CourseFeedback = (function () {
         });
     }
 
+    function reportFeedbackDialog(course, postTimestamp, postText, postAuthor, options) {
+        var contentHtml =
+            '<div>' +
+                '<div>' +
+                    'טופס זה מאפשר לדווח על חוות דעת שמכילה תוכן לא ראוי.' +
+                    '<br>' +
+                    '<br>' +
+                    'דוגמאות לתוכן לא ראוי:' +
+                    '<ul>' +
+                        '<li>שפה בוטה</li>' +
+                        '<li>תוכן שאינו קשור לקורס (למשל: אמירות פוליטיות)</li>' +
+                        '<li>התייחסות אישית ולא עניינית לאיש סגל (למשל: המרצה שונא את הסטודנטים ושמח לראות אותם נכשלים)</li>' +
+                    '</ul>' +
+                    'דוגמאות לתוכן שאינו תוכן לא ראוי:' +
+                    '<ul>' +
+                        '<li>ביקורת עניינית נוקבת (למשל: המרצה מבולגן וקשה לעקוב אחרי ההסברים שלו)</li>' +
+                    '</ul>' +
+                '</div>' +
+                '<form>' +
+                    '<div class="form-row">' +
+                        '<div class="form-group col-md-6">' +
+                            '<label for="report-form-email">כתובת דואר אלקטרוני</label>' +
+                            '<input type="email" class="form-control" id="report-form-email" required>' +
+                            '<div class="invalid-feedback">' +
+                                'יש להזין כתובת דואר אלקטרוני חוקית' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="form-row">' +
+                        '<div class="form-group col-md-12">' +
+                            '<label for="report-form-reason">סיבת הדיווח</label>' +
+                            '<textarea class="form-control" id="report-form-reason" rows="6" required>' +
+                            '</textarea>' +
+                            '<div class="invalid-feedback">' +
+                                'יש להזין את סיבת הדיווח' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>' +
+                '</form>' +
+            '</div>';
+
+        var buttons = [{
+            label: 'דווח',
+            cssClass: 'btn-primary',
+            action: function (dialog) {
+                var body = dialog.getModalBody();
+
+                var form = body.find('form').get(0);
+                if (form.checkValidity() === false) {
+                    form.classList.add('was-validated');
+                    return;
+                }
+                form.classList.remove('was-validated');
+
+                var data = {
+                    timestamp: Date.now(),
+                    email: body.find('#report-form-email').val(),
+                    reason: body.find('#report-form-reason').val(),
+                    postTimestamp: postTimestamp,
+                    postText: postText,
+                    postAuthor: postAuthor
+                };
+
+                var update = {
+                    posts: firebase.firestore.FieldValue.arrayUnion(data)
+                };
+
+                firebase.firestore().collection('courseFeedbackReports').doc(course)
+                    .set(update, {merge: true})
+                    .then(function () {
+                        options.onSubmit();
+                    }, function (error) {
+                        alert('Error writing document: ' + error);
+                    });
+
+                dialog.close();
+            }
+        }, {
+            label: 'סגור',
+            action: function (dialog) {
+                dialog.close();
+            }
+        }];
+
+        BootstrapDialog.show({
+            title: 'דיווח על תוכן לא ראוי',
+            message: contentHtml,
+            buttons: buttons
+        });
+    }
+
     function makeRanksHtml(generalRank, difficultyRank, columnGrid) {
         var makeRanks = function (rank, full, half, empty) {
             var html = '';
@@ -349,7 +440,7 @@ var CourseFeedback = (function () {
         return text.trim();
     }
 
-    function makeFeedbackSinglePostHtml(post, columnGrid) {
+    function makeFeedbackSinglePostHtml(course, post, columnGrid) {
         var content = $('<div class="timeline-box"></div>');
 
         content.append($('<div>', {
@@ -376,6 +467,24 @@ var CourseFeedback = (function () {
             day: 'numeric'
         });
 
+        var flagButton = $('<a>', {
+            href: '#'
+        }).append($('<i>', {
+            class: 'fas fa-flag',
+            title: 'דיווח על תוכן לא ראוי',
+            'data-toggle': 'tooltip'
+        }).tooltip().click(function (event) {
+            reportFeedbackDialog(course, post.timestamp, post.text, post.author, {
+                onSubmit: function () {
+                    BootstrapDialog.show({
+                        title: 'הדיווח נשלח בהצלחה',
+                        message: 'תודה על הדיווח! נטפל בו בהקדם האפשרי.',
+                        size: BootstrapDialog.SIZE_SMALL
+                    });
+                }
+            });
+        }));
+
         var footerBox = $('<div>', {
             class: 'box-footer'
         }).append($('<span>', {
@@ -385,14 +494,14 @@ var CourseFeedback = (function () {
             text: post.author
         }), $('<span>', {
             text: ', ' + prettyDate
-        }));
+        }).append(' ', flagButton));
 
         content.append(footerBox);
 
         return content;
     }
 
-    function makeFeedbackPostsHtml(posts, columnGrid) {
+    function makeFeedbackPostsHtml(course, posts, columnGrid) {
         var content = $('<div id="course-feedback-carousel" class="carousel slide carousel-fade" data-ride="carousel" data-interval="false">' +
                 '<ol class="carousel-indicators"></ol>' +
                 '<div class="carousel-inner"></div>' +
@@ -416,7 +525,7 @@ var CourseFeedback = (function () {
             carouselIndicators.append(indicator);
 
             var carouselItemContents = $('<div class="carousel-item-contents"></div>')
-                .append(makeFeedbackSinglePostHtml(post, columnGrid));
+                .append(makeFeedbackSinglePostHtml(course, post, columnGrid));
 
             var carouselItem = $('<div class="carousel-item' + (active ? ' active' : '') + '"></div>')
                 .append(carouselItemContents);
@@ -436,7 +545,7 @@ var CourseFeedback = (function () {
             .append(makeFeedbackSummaryHtml(posts, columnGrid));
 
         if (posts.length > 0) {
-            content.append(makeFeedbackPostsHtml(posts, columnGrid));
+            content.append(makeFeedbackPostsHtml(course, posts, columnGrid));
         } else {
             content.append($('<div>', {
                 class: 'mb-2',
