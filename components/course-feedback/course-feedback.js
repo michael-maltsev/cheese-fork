@@ -483,6 +483,7 @@ var CourseFeedback = (function () {
                     });
                 }
             });
+            return false;
         }));
 
         var footerBox = $('<div>', {
