@@ -46,6 +46,8 @@
     <link rel="stylesheet" href="components/course-feedback/course-feedback.css">
     <link rel="stylesheet" href="components/histogram-browser/histogram-browser.css">
     <link rel="stylesheet" href="cheesefork.css">
+    <script src="dark-mode-toggle-preload.js"></script>
+    <script>document.write(getStylesheetTagsForDarkModeToggle('cheesefork-dark.css'));</script>
 </head>
 <body class="bg-light">
 <div class="container-fluid">
@@ -277,6 +279,7 @@
         <p class="mb-1">
             <span id="footer-semester" class="d-none">מציג מידע עבור סמסטר <span id="footer-semester-name"></span>.</span>
             תוכנת על ידי <a href="https://github.com/michael-maltsev" target="_blank" rel="noopener">מיכאל מלצב</a>.
+            <dark-mode-toggle permanent></dark-mode-toggle>
         </p>
     </footer>
 </div>
@@ -304,6 +307,7 @@
 <script src="modules/intro.js/intro.min.js"></script>
 <script src="modules/reparse.js"></script>
 <script src="modules/boolean-expression.js"></script>
+<script type="module" src="modules/dark-mode-toggle-0.14.6.min.mjs"></script>
 <script src="https://www.gstatic.com/firebasejs/5.3.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/5.3.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/5.3.1/firebase-storage.js"></script>

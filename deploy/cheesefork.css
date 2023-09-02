@@ -153,3 +153,13 @@ html.os-html>.os-host>.os-scrollbar {
     max-height: calc(100vh - 225px);
     overflow: auto;
 }
+
+/* dark-mode-toggle customizations */
+footer dark-mode-toggle {
+    display: inline-block;
+    vertical-align: bottom;
+    line-height: 0;
+}
+footer dark-mode-toggle::part(fieldset) {
+    padding: 0;
+}
