@@ -33,7 +33,6 @@
     <link rel="stylesheet" href="modules/bootstrap4-dialog/css/bootstrap-dialog.min.css">
     <link rel="stylesheet" href="modules/OverlayScrollbars/css/OverlayScrollbars.min.css">
     <link rel="stylesheet" href="modules/fullcalendar/fullcalendar.min.css">
-    <link rel="stylesheet" media="print" href="modules/fullcalendar/fullcalendar.print.min.css">
     <link rel="stylesheet" href="modules/selectize/css/selectize.bootstrap4.css">
     <link rel="stylesheet" href="modules/fontawesome/css/all.min.css">
     <link rel="stylesheet" href="modules/intro.js/introjs.min.css">
@@ -48,6 +47,7 @@
     <link rel="stylesheet" href="cheesefork.css">
     <script src="dark-mode-toggle-preload.js"></script>
     <script>document.write(getStylesheetTagsForDarkModeToggle('cheesefork-dark.css'));</script>
+    <link rel="stylesheet" href="cheesefork-print.css" media="print">
 </head>
 <body class="bg-light">
 <div class="container-fluid">
@@ -123,6 +123,9 @@
             <span class="navbar-toggler-icon"></span>
             <span class="unread-count-badge d-none"></span>
         </button>
+        <div id="top-navbar-print-section" class="d-none">
+            <h1 id="top-navbar-print-section-title"></h1>
+        </div>
         <a class="navbar-brand" href=".">
             <img src="logo.png" alt="logo" height="30">
             <span class="font-weight-bold">CheeseFork</span>

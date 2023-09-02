@@ -1,0 +1,42 @@
+.os-scrollbar {
+    display: none;
+}
+/* Allow breaking table instead of having the first page with just the logo */
+div.container-fluid > * {
+    break-before: avoid;
+    break-after: avoid;
+}
+#top-navbar {
+    display: flex;
+    align-items: start;
+}
+#top-navbar-print-section {
+    display: block !important;
+    flex-grow: 1;
+}
+#top-navbar .navbar-collapse,
+#top-navbar .navbar-toggler {
+    display: none !important;
+}
+#top-navbar .navbar-brand {
+    text-decoration: none;
+}
+#right-content-bar {
+    display: none;
+}
+#course-calendar {
+    flex: 1;
+    max-width: 100%;
+}
+#course-calendar .fc-time-grid-event {
+    border: 1px solid black !important;
+}
+#course-calendar .fc-time-grid-event .fc-title {
+    color: black;
+}
+#course-calendar .calendar-item-unselected {
+    display: none;
+}
+footer {
+    display: none;
+}

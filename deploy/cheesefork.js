@@ -600,6 +600,8 @@
     }
 
     function navbarInit() {
+        $('#top-navbar-print-section-title').text(semesterFriendlyName(currentSemester));
+
         if (!viewingSharedSchedule) {
             var semesterSelect = $('#top-navbar-semester').find('.dropdown-menu');
 

@@ -45,7 +45,8 @@ var CourseCalendar = (function () {
             eventClick: onEventClick.bind(that),
             eventMouseover: onEventMouseover.bind(that),
             eventMouseout: onEventMouseout.bind(that),
-            eventAfterRender: afterEventRender.bind(that)
+            eventAfterRender: afterEventRender.bind(that),
+            windowResize: onWindowResize.bind(that)
         }).fullCalendar('option', {
             // Set afterwards as a bug workaround.
             // https://github.com/fullcalendar/fullcalendar/issues/4102
@@ -53,6 +54,8 @@ var CourseCalendar = (function () {
         });
 
         initTouchScalingSupport(that);
+
+        updateDynamicSizes(that);
     }
 
     function initTouchScalingSupport(courseCalendar) {
@@ -189,6 +192,45 @@ var CourseCalendar = (function () {
             }
 
             return centerYRelative;
+        }
+    }
+
+    function updateDynamicSizes(courseCalendar) {
+        var calendar = courseCalendar.element;
+
+        // This is an ugly hack. FullCalendar calculates the positions of event
+        // elements dynamically, but the print layout doesn't interpret the css
+        // font-size rules correctly, so the elements are rendered in the wrong
+        // positions. This workaround creates a print-only stylesheet with the
+        // calculated sizes. Note that it assumes that there's only one calendar
+        // element on the page.
+        var css = '';
+
+        var el1 = $('.fc-time-grid .fc-slats td', calendar)[0];
+        if (el1) {
+            var fontSize1 = window.getComputedStyle(el1).getPropertyValue('font-size');
+            css += '.course-calendar .fc-time-grid .fc-slats td { font-size: ' + fontSize1 + '; }';
+        }
+
+        var el2 = $('.fc-event', calendar)[0];
+        if (el2) {
+            var fontSize2 = window.getComputedStyle(el2).getPropertyValue('font-size');
+            css += '.course-calendar .fc-event { font-size: ' + fontSize2 + '; }';
+        } else {
+            courseCalendar.printStyleHackWaitingForEvent = true;
+        }
+
+        if (css) {
+            css = '@media print { ' + css + ' }';
+
+            var styleElement = courseCalendar.printStyleHackStyleElement;
+            if (!styleElement) {
+                styleElement = document.createElement('style');
+                document.head.append(styleElement);
+                courseCalendar.printStyleHackStyleElement = styleElement;
+            }
+
+            styleElement.textContent = css;
         }
     }
 
@@ -769,6 +811,13 @@ var CourseCalendar = (function () {
     }
 
     function afterEventRender(event, element) {
+        var that = this;
+
+        if (that.printStyleHackWaitingForEvent) {
+            updateDynamicSizes(that);
+            that.printStyleHackWaitingForEvent = false;
+        }
+
         if (event.selected) {
             element.addClass('calendar-item-selected');
         } else {
@@ -786,6 +835,12 @@ var CourseCalendar = (function () {
                 }
             }
         }
+    }
+
+    function onWindowResize() {
+        var that = this;
+
+        updateDynamicSizes(that);
     }
 
     CourseCalendar.prototype.addCourse = function (course) {
