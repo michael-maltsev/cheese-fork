@@ -1,0 +1,150 @@
+/* Don't apply dark mode to print version */
+@media not print {
+
+/* Some colors are based on https://getbootstrap.com/docs/5.3/utilities/colors/ */
+
+body {
+    color: rgb(222,226,230);
+}
+
+.bg-light {
+    background-color: #212529 !important;
+}
+
+#page-loader::after {
+    filter: invert(1);
+}
+
+.os-scrollbar>.os-scrollbar-track>.os-scrollbar-handle {
+    background: rgba(255,255,255,.4) !important;
+}
+.os-scrollbar:hover>.os-scrollbar-track>.os-scrollbar-handle {
+    background: rgba(255,255,255,.55) !important;
+}
+.os-scrollbar>.os-scrollbar-track>.os-scrollbar-handle.active {
+    background: rgba(255,255,255,.7) !important;
+}
+
+.form-control, .selectize-input, .selectize-dropdown {
+    background-color: #212529 !important;
+    color: rgb(222,226,230) !important;
+    border-color: #495057;
+}
+
+.selectize-input input {
+    color: rgb(222,226,230) !important;
+}
+
+.table-bordered td,
+.table-bordered th {
+    border-color: #495057;
+}
+
+.text-muted {
+    color: rgba(222, 226, 230, 0.75) !important;
+}
+
+.introjs-helperLayer {
+    background-color: #212529;
+}
+.introjs-tooltip {
+    background-color: #212529;
+}
+.introjs-arrow {
+    /* border-color: #212529; */
+    /* Using border-color colors unnecessary parts, use filter instead */
+    /* Generated with https://isotropic.co/tool/hex-color-to-css-filter/ */
+    filter: invert(1) invert(14%) sepia(7%) saturate(800%) hue-rotate(169deg) brightness(93%) contrast(96%);
+}
+.introjs-bullets {
+    filter: invert(1) brightness(2);
+}
+
+.modal-dialog .modal-content {
+    background-color: #212529;
+}
+
+.modal-dialog .modal-header,
+.modal-dialog .modal-footer {
+    border-color: #495057;
+}
+
+.navbar-light .navbar-brand {
+    color: rgba(255,255,255,.9) !important;
+}
+
+.navbar-light .navbar-toggler {
+    filter: invert(1);
+}
+
+#top-navbar .navbar-nav .nav-link {
+    color: rgba(255,255,255,.9);
+}
+
+#top-navbar .navbar-nav .nav-link.disabled {
+    color: rgba(255,255,255,.3);
+}
+
+.course-select-filter-button {
+    background-color: #2b3035;
+    color: rgb(222,226,230);
+}
+
+#course-exam-info .exam-info-left-arrow {
+    border-color: rgb(222,226,230);
+}
+
+#course-button-list .list-group-item {
+    background-color: #212529;
+    border-color: #495057;
+}
+
+#course-calendar th,
+#course-calendar td {
+    border-color: #495057;
+}
+
+#course-calendar .calendar-item-unselected {
+    background-color: #212529 !important;
+    color: #fff !important;
+}
+
+#course-calendar .calendar-item-unselected:not(.calendar-item-same-course-as-hovered):not(.calendar-item-same-type-as-hovered) {
+    border-color: white !important;
+}
+
+#course-calendar .calendar-item-selected:not(.calendar-item-same-course-as-hovered):not(.calendar-item-same-type-as-hovered) {
+    border-color: #444 !important;
+}
+
+#course-feedback-summary .course-rank {
+    border-color: #495057;
+}
+
+#course-feedback-carousel .timeline-box {
+    border-color: #495057;
+}
+
+#course-feedback-carousel .timeline-box,
+#course-feedback-carousel .box-footer {
+    background-color: #333;
+}
+
+#course-feedback-carousel .box-content {
+    background-color: #1b1f22;
+}
+
+#course-feedback-carousel .carousel-indicators li {
+    filter: none;
+}
+
+#course-feedback-carousel .carousel-control-prev-icon,
+#course-feedback-carousel .carousel-control-next-icon {
+    filter: invert(1);
+}
+
+img[src="assets/icon-students.png"] {
+    filter: brightness(2);
+}
+
+}

@@ -33,7 +33,6 @@
     <link rel="stylesheet" href="modules/bootstrap4-dialog/css/bootstrap-dialog.min.css">
     <link rel="stylesheet" href="modules/OverlayScrollbars/css/OverlayScrollbars.min.css">
     <link rel="stylesheet" href="modules/fullcalendar/fullcalendar.min.css">
-    <link rel="stylesheet" media="print" href="modules/fullcalendar/fullcalendar.print.min.css">
     <link rel="stylesheet" href="modules/selectize/css/selectize.bootstrap4.css">
     <link rel="stylesheet" href="modules/fontawesome/css/all.min.css">
     <link rel="stylesheet" href="modules/intro.js/introjs.min.css">
@@ -46,6 +45,9 @@
     <link rel="stylesheet" href="components/course-feedback/course-feedback.css">
     <link rel="stylesheet" href="components/histogram-browser/histogram-browser.css">
     <link rel="stylesheet" href="cheesefork.css">
+    <script src="dark-mode-toggle-preload.js"></script>
+    <script>document.write(getStylesheetTagsForDarkModeToggle('cheesefork-dark.css'));</script>
+    <link rel="stylesheet" href="cheesefork-print.css" media="print">
 </head>
 <body class="bg-light">
 <div class="container-fluid">
@@ -121,6 +123,9 @@
             <span class="navbar-toggler-icon"></span>
             <span class="unread-count-badge d-none"></span>
         </button>
+        <div id="top-navbar-print-section" class="d-none">
+            <h1 id="top-navbar-print-section-title"></h1>
+        </div>
         <a class="navbar-brand" href=".">
             <img src="logo.png" alt="logo" height="30">
             <span class="font-weight-bold">CheeseFork</span>
@@ -277,6 +282,7 @@
         <p class="mb-1">
             <span id="footer-semester" class="d-none">מציג מידע עבור סמסטר <span id="footer-semester-name"></span>.</span>
             תוכנת על ידי <a href="https://github.com/michael-maltsev" target="_blank" rel="noopener">מיכאל מלצב</a>.
+            <dark-mode-toggle permanent></dark-mode-toggle>
         </p>
     </footer>
 </div>
@@ -304,6 +310,7 @@
 <script src="modules/intro.js/intro.min.js"></script>
 <script src="modules/reparse.js"></script>
 <script src="modules/boolean-expression.js"></script>
+<script type="module" src="modules/dark-mode-toggle-0.14.6.min.mjs"></script>
 <script src="https://www.gstatic.com/firebasejs/5.3.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/5.3.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/5.3.1/firebase-storage.js"></script>
