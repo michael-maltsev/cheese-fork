@@ -143,6 +143,13 @@ body {
     filter: invert(1);
 }
 
+.course-metadata-diff-old {
+    background-color: rgba(229,83,75,0.3);
+}
+.course-metadata-diff-new {
+    background-color: rgba(87,171,90,0.3);
+}
+
 img[src="assets/icon-students.png"] {
     filter: brightness(2);
 }
