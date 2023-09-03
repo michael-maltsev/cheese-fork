@@ -669,7 +669,23 @@
 
                 gtag('event', 'navbar-logout');
 
-                firebase.auth().signOut();
+                BootstrapDialog.show({
+                    title: 'יציאה מהמערכת',
+                    message: 'האם אתם בטוחים שברצונכם לצאת מהמערכת?',
+                    buttons: [{
+                        label: 'יציאה',
+                        cssClass: 'btn-primary',
+                        action: function (dialog) {
+                            firebase.auth().signOut();
+                            dialog.close();
+                        }
+                    }, {
+                        label: 'ביטול',
+                        action: function (dialog) {
+                            dialog.close();
+                        }
+                    }]
+                });
             });
 
             $('#top-navbar-share').click(function (event) {
