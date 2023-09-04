@@ -45,8 +45,10 @@
     <link rel="stylesheet" href="components/course-feedback/course-feedback.css">
     <link rel="stylesheet" href="components/histogram-browser/histogram-browser.css">
     <link rel="stylesheet" href="cheesefork.css">
-    <script src="dark-mode-toggle-preload.js"></script>
-    <script>document.write(getStylesheetTagsForDarkModeToggle('cheesefork-dark.css'));</script>
+    <noscript id="dark-mode-toggle-stylesheets">
+        <link rel="stylesheet" href="cheesefork-dark.css" media="(prefers-color-scheme: dark)">
+    </noscript>
+    <script src="dark-mode-toggle-stylesheets-loader.min.js"></script>
     <link rel="stylesheet" href="cheesefork-print.css" media="print">
 </head>
 <body class="bg-light">

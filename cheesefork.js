@@ -669,6 +669,8 @@
 
                 gtag('event', 'navbar-logout');
 
+                $(this).find('[data-toggle="tooltip"]').tooltip('hide');
+
                 BootstrapDialog.show({
                     title: 'יציאה מהמערכת',
                     message: 'האם אתם בטוחים שברצונכם לצאת מהמערכת?',
@@ -973,6 +975,10 @@
 
         function handleSignedOutUser() {
             $('#top-navbar-logout').addClass('d-none');
+
+            $('#top-navbar-logout').removeClass('d-none')
+                .find('a').attr('data-original-title', 'מחובר בתור: ' + firestoreDisplayNameDecode('משתמש לא מזוהה'));
+
             $('#top-navbar-login').removeClass('d-none');
             $('#top-navbar-share').find('a').addClass('disabled').tooltip('enable');
             firebaseUI.start('#firebaseui-auth-container', uiConfig);
