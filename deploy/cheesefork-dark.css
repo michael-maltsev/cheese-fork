@@ -35,6 +35,14 @@ body {
     color: rgb(222,226,230) !important;
 }
 
+.selectize-control.single .selectize-input:after {
+    /* border-color: #909294; */
+    /* Using border-color colors unnecessary parts, use filter instead */
+    /* Generated with https://isotropic.co/tool/hex-color-to-css-filter/ */
+    /* Adding brightness(0) saturate(100%) to the beginning of the list of filters will first turn it 100% black */
+    filter: brightness(0) saturate(100%) invert(66%) sepia(7%) saturate(101%) hue-rotate(169deg) brightness(87%) contrast(86%);
+}
+
 .table-bordered td,
 .table-bordered th {
     border-color: #495057;
@@ -54,7 +62,8 @@ body {
     /* border-color: #212529; */
     /* Using border-color colors unnecessary parts, use filter instead */
     /* Generated with https://isotropic.co/tool/hex-color-to-css-filter/ */
-    filter: invert(1) invert(14%) sepia(7%) saturate(800%) hue-rotate(169deg) brightness(93%) contrast(96%);
+    /* Adding brightness(0) saturate(100%) to the beginning of the list of filters will first turn it 100% black */
+    filter: brightness(0) saturate(100%) invert(14%) sepia(7%) saturate(800%) hue-rotate(169deg) brightness(93%) contrast(96%);
 }
 .introjs-bullets {
     filter: invert(1) brightness(2);
