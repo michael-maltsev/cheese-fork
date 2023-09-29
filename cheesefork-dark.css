@@ -119,11 +119,11 @@ body {
     color: #fff !important;
 }
 
-#course-calendar .calendar-item-unselected:not(.calendar-item-same-course-as-hovered):not(.calendar-item-same-type-as-hovered) {
+#course-calendar .calendar-item-unselected:not(.calendar-item-previewed):not(.calendar-item-same-course-as-hovered):not(.calendar-item-same-type-as-hovered) {
     border-color: white !important;
 }
 
-#course-calendar .calendar-item-selected:not(.calendar-item-same-course-as-hovered):not(.calendar-item-same-type-as-hovered) {
+#course-calendar .calendar-item-selected:not(.calendar-item-previewed):not(.calendar-item-same-course-as-hovered):not(.calendar-item-same-type-as-hovered) {
     border-color: #444 !important;
 }
 
