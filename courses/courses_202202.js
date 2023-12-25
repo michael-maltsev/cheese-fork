@@ -47472,6 +47472,20 @@ var courses_from_rishum = [
     },
     {
         "general": {
+            "מספר מקצוע": "274168",
+            "שם מקצוע": "ביופיסיקה ומדעי העצב ת\"א",
+            "סילבוס": "מיועד עבור סטודנטים בתוכנית TEAMS. קורס זה נלמד באנגלית במסגרת התוכנית האמריקאית. קורס מבוא למבנה הבסיסי ולפונקציה של מערכת העצבים האנושית המשלבת שלושה נושאים עיקריים ביופיזיקה, נוירואנטומיה ונוירופיזיולוגיה.",
+            "פקולטה": "רפואה",
+            "מסגרת לימודים": "תואר ראשון",
+            "מקצועות ללא זיכוי נוסף": "274124",
+            "נקודות": "6.5",
+            "הרצאה": "6",
+            "מעבדה": "2"
+        },
+        "schedule": []
+    },
+    {
+        "general": {
             "מספר מקצוע": "274172",
             "שם מקצוע": "אנטומיה ואמבריולוגיה 2 ת\"א",
             "סילבוס": "מיועד עבור סטודנטים בתוכנית TEAMS. קורס זה נלמד באנגלית במסגרת התוכנית האמריקאית. המשכו של הקורס הראשון באנטומיה קלינית אנושית. סמסטר 2 יתמקד על הראש והצוואר ומבנים של שרירי השלד (כולל הגפיים). דגש יושם על הבנה אנטומיה חריגה של פציעות נפוצות.",
@@ -49081,6 +49095,28 @@ var courses_from_rishum = [
             "מקצועות קדם": "274527 או 274534",
             "נקודות": "2",
             "מעבדה": "6"
+        },
+        "schedule": []
+    },
+    {
+        "general": {
+            "מספר מקצוע": "274648",
+            "שם מקצוע": "מבחן אמריקאי 1",
+            "סילבוס": "",
+            "פקולטה": "רפואה",
+            "מסגרת לימודים": "תואר ראשון",
+            "נקודות": "0"
+        },
+        "schedule": []
+    },
+    {
+        "general": {
+            "מספר מקצוע": "274649",
+            "שם מקצוע": "מבחן אמריקאי 2",
+            "סילבוס": "",
+            "פקולטה": "רפואה",
+            "מסגרת לימודים": "תואר ראשון",
+            "נקודות": "0"
         },
         "schedule": []
     },
@@ -58995,6 +59031,20 @@ var courses_from_rishum = [
     },
     {
         "general": {
+            "מספר מקצוע": "618033",
+            "שם מקצוע": "פרוייקטי התמחות",
+            "סילבוס": "המקצוע ניתן במסגרת הועדה הבין-יחידתית למדע יישומי בשיתוף עם המכון לחדשנות טכניון-קורנל. הסילבוס המלא מפורסם בקובץ המקצועות באנגלית.",
+            "פקולטה": "מדע יישומי",
+            "מסגרת לימודים": "תארים מתקדמים",
+            "נקודות": "8",
+            "הרצאה": "1",
+            "תרגיל": "2",
+            "סמינר\/פרויקט": "12"
+        },
+        "schedule": []
+    },
+    {
+        "general": {
             "מספר מקצוע": "618034",
             "שם מקצוע": "עתיד התעסוקה",
             "סילבוס": "המקצוע ניתן במסגרת הועדה הבין-יחידתית למדע יישומי בשיתוף עם המכון לחדשנות טכניון-קורנל. הסילבוס המלא מפורסם בקובץ המקצועות באנגלית.",
@@ -59171,6 +59221,97 @@ var courses_from_rishum = [
             "נקודות": "3",
             "הרצאה": "2",
             "סמינר\/פרויקט": "3"
+        },
+        "schedule": []
+    },
+    {
+        "general": {
+            "מספר מקצוע": "618061",
+            "שם מקצוע": "מער. עירוניות ומער. אספקת אנרגיה",
+            "סילבוס": "The Course Focuses On How to Transition From Legacy Energy Delivery Infrastructures Dependent On Fossil Fuel to a Sustainable Decarbonized Grid That Harnesses Distributed Renewable Energy Resources and Responsive Demand From Buildings, Electrified Transportation Systems, and Industrial Loads. The Content Includes Models and Abstractions For The Architecture of The Cyber-physical Energy System, Its Economics, and Future Evolution, and Numerical Optimization and Learning Methods in Support of The Infrastructure's Safety Critical Operations in The Legacy System and in The Future Architecture. _learning Outcomes# at The End of The Course The Students Will Know#\n1. to Understand and Be Able to Implement Mmodels For Demand, Supply And Transfer of Electricity Characterizing Energy Infrastructures.\n2. to Understand How Tthe Legacy System# Energy Markets Work.\n3. to Be Able to Explore Tthe Designdesigns Opportunities For New Architecture, Inference, Decision, and Market Models That Exist, Leveraging Advances in Digital Technology to Improve Emissions. 4. to Understand and Be Able to Implement Aadvanced Numerical Methods",
+            "פקולטה": "מדע יישומי",
+            "מסגרת לימודים": "תארים מתקדמים",
+            "נקודות": "3",
+            "הרצאה": "2",
+            "סמינר\/פרויקט": "2"
+        },
+        "schedule": []
+    },
+    {
+        "general": {
+            "מספר מקצוע": "618063",
+            "שם מקצוע": "יישומים מעשיים במכונות לומדות",
+            "סילבוס": "This Course Provides Hands-on Experience Developing and Deploying Foundational Machine Learning Algorithms On Real-world Datasets For Practical Applications (e.g., Healthcare, Computer Vision). Students Will Learn About The Machine Learning Pipeline End-to-end Including Dataset Creation, Pre- and Post-processing, Annotation, Annotation Validation, Preparation For Machine Learning, Training and Testing A Model, and Evaluation. Students Will Focus On Real-world Challenges At Each Stage of The Ml Pipeline While Handling Bias in Models And Datasets. Lastly, Students Will Analyze The Strengths and Weaknesses Of Regression, Classification, Clustering and Deep Learning Algorithms. Learning Outcomes# at The End of The Course The Studetns Will Know#\n1. Collect a New Dataset and Prepare It For a Ml Task, Train a Model, And Evaluate It._\n2. Apply Regression, Classification, Clustering, and Deep Learning Algorithms to Practical Applications.\n3. Analyze and Identify Key Differences in Regression, Classification, Clustering, and Deep Learning Algorithms.\n4. Understand Core Challenges of Dataset Creation Including Handling Missing Data, Bias, Unlabeled Data, Among Others.\n5. Represent Features in Datasets to Be Used For Ml Tasks.__\n6. Evaluate Model Quality Using Appropriate Metrics of Performance.",
+            "פקולטה": "מדע יישומי",
+            "מסגרת לימודים": "תארים מתקדמים",
+            "נקודות": "3",
+            "הרצאה": "2",
+            "תרגיל": "1",
+            "סמינר\/פרויקט": "1"
+        },
+        "schedule": []
+    },
+    {
+        "general": {
+            "מספר מקצוע": "618064",
+            "שם מקצוע": "ייצור ספרתי",
+            "סילבוס": "המקצוע ניתן במסגרת התכנית הבין יחידתית למדע יישומי, בשיתוף עם המכון לחדשנות טכניון-קורנל. הסילבוס המלא מפורסם בקובץ המקצועות באנגלית.",
+            "פקולטה": "מדע יישומי",
+            "מסגרת לימודים": "תארים מתקדמים",
+            "נקודות": "3",
+            "הרצאה": "2",
+            "סמינר\/פרויקט": "2"
+        },
+        "schedule": []
+    },
+    {
+        "general": {
+            "מספר מקצוע": "618072",
+            "שם מקצוע": "אופטימיזציה דיסקרטית לתכנון עירונ",
+            "סילבוס": "המקצוע ניתן במסגרת התכנית הבין יחידתית למדע יישומי בשיתןף עם המכון לחדשנות טכניון-קורנל. הסילבוס המלא מפורסם בקובץ המקצועות באנגלית.",
+            "פקולטה": "מדע יישומי",
+            "מסגרת לימודים": "תארים מתקדמים",
+            "נקודות": "3",
+            "הרצאה": "1",
+            "סמינר\/פרויקט": "2"
+        },
+        "schedule": []
+    },
+    {
+        "general": {
+            "מספר מקצוע": "618073",
+            "שם מקצוע": "בניה והובלה של צוותי מיזמים חדשים",
+            "סילבוס": "המקצוע ניתן במסגרת התכנית הבין יחידתית למדע יישומי בשיתוף עם המכון לחדשנות טכניון-קורנל. הסילבוס המלא מפורסם בקובץ המקצועות באנגלית.",
+            "פקולטה": "מדע יישומי",
+            "מסגרת לימודים": "תארים מתקדמים",
+            "נקודות": "1",
+            "הרצאה": "1"
+        },
+        "schedule": []
+    },
+    {
+        "general": {
+            "מספר מקצוע": "618074",
+            "שם מקצוע": "הבאה למוצר של  מכונות לומדות",
+            "סילבוס": "המקצוע ניתן במסגרת התכנית הבין יחידתית למדע יישומי בשיתוף עם המכון לחדשנות טכניון-קורנל. הסילבוס המלא מפורסם בקובץ המקצועות באנגלית.",
+            "פקולטה": "מדע יישומי",
+            "מסגרת לימודים": "תארים מתקדמים",
+            "נקודות": "1",
+            "הרצאה": "1"
+        },
+        "schedule": []
+    },
+    {
+        "general": {
+            "מספר מקצוע": "618077",
+            "שם מקצוע": "עיצוב אינטרקציות ניידות בין רובוט",
+            "סילבוס": "המקצוע ניתן במסגרת התכנית הבין יחידתית למדע יישומי בשיתוף עם המכון לחדשנות טכניון-קורנל. הסילבוס המלא מפורסם בקובץ המקצועות באנגלית.",
+            "פקולטה": "מדע יישומי",
+            "מסגרת לימודים": "תארים מתקדמים",
+            "נקודות": "3",
+            "הרצאה": "2",
+            "מעבדה": "2",
+            "סמינר\/פרויקט": "1"
         },
         "schedule": []
     },
