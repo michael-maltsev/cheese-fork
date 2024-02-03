@@ -274,7 +274,7 @@ let cheeseforkShareHistograms = function () {
         }
 
         async function getGitFileSha(path, filename, token) {
-            const url = 'https://api.github.com/repos/michael-maltsev/technion-histograms/git/trees/master:' +
+            const url = 'https://api.github.com/repos/michael-maltsev/technion-histograms/git/trees/main:' +
                 encodeURIComponent(path) +
                 '?t=' + Date.now();
 
@@ -336,7 +336,8 @@ let cheeseforkShareHistograms = function () {
 
         let data = {
             message,
-            content: arrayBufferToBase64(buffer)
+            content: arrayBufferToBase64(buffer),
+            branch: 'main'
         };
         if (serverSha) {
             data.sha = serverSha;
