@@ -442,33 +442,51 @@ let cheeseforkShareHistograms = function () {
                 const histogramPageHtml = await fetchValidResponseAsText(histogramUrl, 'histogram page', 'windows-1255');
                 const histogram = getCourseHistogramFromHtml(histogramPageHtml);
 
-                let propertiesResult = 'skipped';
-                let imageResult = 'skipped';
-
                 // The histogram course name might not match. This can happen if a different course page was loaded before loading the histogram page.
                 // The server determines which course's histogram to show according to the last viewed course page.
                 // The course is saved in a server session once the course page is loaded, and the histogram page URL is the same for all courses.
                 // Awful design, and the best we can do is try to detect this and refuse to upload the details of the wrong course.
                 // The image URL is unique for that histogram page, so there's no such problem with it, and the check that we do is enough.
                 // We allow an empty course name just in case it can happen (perhaps we don't detect all possible formats).
+                const histogramCourseNameMissing = !histogram.courseName;
+                const histogramCourseNameMismatch = histogram.courseName !== courseName;
+                const histogramCategoryMissing = !histogram.category;
+                const histogramCategoryMismatch = histogram.category.toLowerCase() !== category.toLowerCase();
 
-                if ((!histogram.courseName || histogram.courseName === courseName) && (!histogram.category || histogram.category.toLowerCase() === category.toLowerCase())) {
-                    // Don't override with empty data (might happen sometimes because of an error or tests)
-                    const skipIfExists = Object.values(histogram.properties).every(x => !x);
-
-                    const properties = new TextEncoder().encode(JSON.stringify(histogram.properties, null, 2)).buffer;
-                    propertiesResult = await submitToGithub(course, semester, category, '.json', properties, { commitMetadata, skipIfExists });
-
-                    // Don't upload test images (stop testing in production!)
-                    // Example:
-                    // https://github.com/michael-maltsev/technion-histograms/blob/f985c9133f4b5858e3b9605707fad6a913842e12/104013/201802/Final_B.png
-                    // The hash can be calculated with:
-                    // git hash-object image.png
-                    const skipIfSha = '76b85c3ecefcb57e8856889dbb44b31c52b50fc3';
-
-                    const image = await (await fetchValidResponse(histogram.imgSrc, 'histogram image')).arrayBuffer();
-                    imageResult = await submitToGithub(course, semester, category, '.png', image, { commitMetadata, skipIfSha });
+                // In case of a mismatch, we add a prefix to the course name to
+                // avoid overriding the correct data. We still upload the data
+                // to be able to see the mismatch and fix it manually.
+                let courseToCommit = course;
+                if ((histogramCourseNameMismatch && !histogramCourseNameMissing) || (histogramCategoryMismatch && !histogramCategoryMissing)) {
+                    courseToCommit = '_mismatch_' + courseToCommit;
                 }
+
+                const histogramCommitMetadata = {
+                    ...commitMetadata,
+                    category,
+                    histogramCourseName: histogram.courseName,
+                    histogramCategory: histogram.category,
+                    histogramCourseNameMissing,
+                    histogramCourseNameMismatch,
+                    histogramCategoryMissing,
+                    histogramCategoryMismatch
+                };
+
+                // Don't override with empty data (might happen sometimes because of an error or tests).
+                const skipIfExists = Object.values(histogram.properties).every(x => !x);
+
+                const properties = new TextEncoder().encode(JSON.stringify(histogram.properties, null, 2)).buffer;
+                const propertiesResult = await submitToGithub(courseToCommit, semester, category, '.json', properties, { histogramCommitMetadata, skipIfExists });
+
+                // Don't upload test images (stop testing in production!)
+                // Example:
+                // https://github.com/michael-maltsev/technion-histograms/blob/f985c9133f4b5858e3b9605707fad6a913842e12/104013/201802/Final_B.png
+                // The hash can be calculated with:
+                // git hash-object image.png
+                const skipIfSha = '76b85c3ecefcb57e8856889dbb44b31c52b50fc3';
+
+                const image = await (await fetchValidResponse(histogram.imgSrc, 'histogram image')).arrayBuffer();
+                const imageResult = await submitToGithub(courseToCommit, semester, category, '.png', image, { histogramCommitMetadata, skipIfSha });
 
                 if (propertiesResult === 'skipped' || imageResult === 'skipped') {
                     uiUpdateItemStatus(semester, course, category, '⚠', 'שיתוף המידע נכשל');
