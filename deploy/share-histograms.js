@@ -74,23 +74,27 @@ let cheeseforkShareHistograms = function () {
         document.getElementById('grabber_title').textContent = 'שיתוף היסטוגרמות: ' + title;
     }
 
-    function uiUpdateItemStatus(semester, course, category, status) {
+    function uiUpdateItemStatus(semester, course, category, status, statusText) {
         const className = 'grabber_course_' + semester + '_' + course;
         const node = document.querySelector('tr.' + className + ' td.' + category);
         node.textContent = status;
+        node.title = statusText;
     }
 
     function uiAddCourseCategories(semester, course, categories) {
         let status = '📁';
-        uiUpdateItemStatus(semester, course, 'Staff', status);
+        let statusText = 'קיים מידע לשיתוף';
+        uiUpdateItemStatus(semester, course, 'Staff', status, statusText);
 
         for (const category of histogramCategories) {
             if (categories.includes(category)) {
                 status = '📁';
+                statusText = 'קיים מידע לשיתוף';
             } else {
                 status = '➖';
+                statusText = 'אין מידע לשיתוף';
             }
-            uiUpdateItemStatus(semester, course, category, status);
+            uiUpdateItemStatus(semester, course, category, status, statusText);
         }
     }
 
@@ -384,7 +388,7 @@ let cheeseforkShareHistograms = function () {
 
     async function submitHistograms() {
         for (const {course, semester, url: courseUrl, name: courseName, histograms} of histogramUploadQueue) {
-            uiUpdateItemStatus(semester, course, 'Staff', '...');
+            uiUpdateItemStatus(semester, course, 'Staff', '...', 'משתף מידע...');
 
             const coursePageHtml = await fetchValidResponseAsText(courseUrl, 'course page', 'windows-1255');
             const staffArray = getStaffFromHtml(coursePageHtml);
@@ -393,13 +397,13 @@ let cheeseforkShareHistograms = function () {
             const staffResult = await submitToGithub(course, semester, 'Staff', '.json', staff, { skipIfExists });
 
             if (staffResult === 'exists') {
-                uiUpdateItemStatus(semester, course, 'Staff', '⚌');
+                uiUpdateItemStatus(semester, course, 'Staff', '⚌', 'המידע כבר קיים');
             } else {
-                uiUpdateItemStatus(semester, course, 'Staff', '✔');
+                uiUpdateItemStatus(semester, course, 'Staff', '✔', 'המידע שותף בהצלחה');
             }
 
             for (const {category, url: histogramUrl} of histograms) {
-                uiUpdateItemStatus(semester, course, category, '...');
+                uiUpdateItemStatus(semester, course, category, '...', 'משתף מידע...');
 
                 const histogramPageHtml = await fetchValidResponseAsText(histogramUrl, 'histogram page', 'windows-1255');
                 const histogram = getCourseHistogramFromHtml(histogramPageHtml);
@@ -431,11 +435,11 @@ let cheeseforkShareHistograms = function () {
                 }
 
                 if (propertiesResult === 'skipped' || imageResult === 'skipped') {
-                    uiUpdateItemStatus(semester, course, category, '⚠');
+                    uiUpdateItemStatus(semester, course, category, '⚠', 'שיתוף המידע נכשל');
                 } else if (propertiesResult === 'exists' && imageResult === 'exists') {
-                    uiUpdateItemStatus(semester, course, category, '⚌');
+                    uiUpdateItemStatus(semester, course, category, '⚌', 'המידע כבר קיים');
                 } else {
-                    uiUpdateItemStatus(semester, course, category, '✔');
+                    uiUpdateItemStatus(semester, course, category, '✔', 'המידע שותף בהצלחה');
                 }
             }
         }
