@@ -74,23 +74,27 @@ let cheeseforkShareHistograms = function () {
         document.getElementById('grabber_title').textContent = 'שיתוף היסטוגרמות: ' + title;
     }
 
-    function uiUpdateItemStatus(semester, course, category, status) {
+    function uiUpdateItemStatus(semester, course, category, status, statusText) {
         const className = 'grabber_course_' + semester + '_' + course;
         const node = document.querySelector('tr.' + className + ' td.' + category);
         node.textContent = status;
+        node.title = statusText;
     }
 
     function uiAddCourseCategories(semester, course, categories) {
         let status = '📁';
-        uiUpdateItemStatus(semester, course, 'Staff', status);
+        let statusText = 'קיים מידע לשיתוף';
+        uiUpdateItemStatus(semester, course, 'Staff', status, statusText);
 
         for (const category of histogramCategories) {
             if (categories.includes(category)) {
                 status = '📁';
+                statusText = 'קיים מידע לשיתוף';
             } else {
                 status = '➖';
+                statusText = 'אין מידע לשיתוף';
             }
-            uiUpdateItemStatus(semester, course, category, status);
+            uiUpdateItemStatus(semester, course, category, status, statusText);
         }
     }
 
@@ -132,11 +136,8 @@ let cheeseforkShareHistograms = function () {
             const semesterPretty = node.getAttribute('data-sem');
             const semesterArray = semesterPretty.split('/', 2);
             const semester = semesterArray[1] + semesterArray[0];
-            const match = /^\s*\d+\s+(\d{5,8})\s+(.*?)\s*$/.exec(node.textContent);
-            // For some reason, sometimes there are 8-digit course numbers,
-            // in which case the last two digits have an extra, unknown meaning.
-            const courseBeforePadding = match[1].length > 6 ? match[1].slice(0, -2) : match[1];
-            const course = ('00000' + courseBeforePadding).slice(-6);
+            const match = /^\s*\d+\s+(\d+)\s+(.*?)\s*$/.exec(node.textContent);
+            const course = match[1];
             const name = match[2];
 
             courses.push({
@@ -147,6 +148,32 @@ let cheeseforkShareHistograms = function () {
                 name
             });
         }
+
+        // For some reason, sometime between 20.11.2023 and 22.11.2023, the
+        // grades website started adding an additional zero digit to the course
+        // number. For example, 236363 became 2360363. This broke the upload.
+        // The following is a best-effort workaround for this issue.
+        const supportedCourseFormat = courses.every(x => x.course[x.course.length - 4] === '0');
+
+        courses = courses.map(x => {
+            const courseMatched = x.course;
+            let course;
+
+            if (supportedCourseFormat) {
+                const courseWithoutMiddleZero = courseMatched.slice(0, -4) + courseMatched.slice(-3);
+                // For some reason, sometimes there are 8-digit course numbers,
+                // in which case the last two digits have an extra, unknown
+                // meaning.
+                const courseBeforePadding = courseWithoutMiddleZero.length > 6 ? courseWithoutMiddleZero.slice(0, -2) : courseWithoutMiddleZero;
+                course = ('00000' + courseBeforePadding).slice(-6);
+            } else {
+                // Use an underscore to indicate that the course number is of an
+                // unknown format and needs to be fixed manually.
+                course = '_' + courseMatched;
+            }
+
+            return { ...x, courseMatched, course };
+        });
 
         return courses;
     }
@@ -215,8 +242,8 @@ let cheeseforkShareHistograms = function () {
         // Example:
         // בקורס - מבוא להסתברות ח' במשימה : ציון סופי במחשב המרכזי
         const match = /^בקורס - (.*?) במשימה : (.*)$/.exec(doc.querySelector('title').textContent.trim());
-        const courseName = match ? match[1] : null;
-        const categoryRaw = match ? match[2] : null;
+        const courseName = match ? match[1].trim() : null;
+        const categoryRaw = match ? match[2].trim() : null;
         const category = categoryRaw === 'ציון סופי במחשב המרכזי' ? 'Finals' : categoryRaw;
 
         const imgSrc = doc.querySelector('img#CourseChart').src;
@@ -260,7 +287,7 @@ let cheeseforkShareHistograms = function () {
         }
 
         async function getGitFileSha(path, filename, token) {
-            const url = 'https://api.github.com/repos/michael-maltsev/technion-histograms/git/trees/master:' +
+            const url = 'https://api.github.com/repos/michael-maltsev/technion-histograms/git/trees/main:' +
                 encodeURIComponent(path) +
                 '?t=' + Date.now();
 
@@ -314,10 +341,16 @@ let cheeseforkShareHistograms = function () {
         const url = 'https://api.github.com/repos/michael-maltsev/technion-histograms/contents/' +
             path + '/' + filename;
 
-        const messagePrefix = serverSha ? 'Updated' : 'Added';
+        const messagePrefix = serverSha ? 'Update' : 'Add';
+        let message = `${messagePrefix} ${path}/${filename}`;
+        if (Object.keys(options.commitMetadata ?? {}).length > 0) {
+            message += '\n\n' + Object.entries(options.commitMetadata).map(([k, v]) => `${k}: ${v}`).join('\n');
+        }
+
         let data = {
-            message: `${messagePrefix} ${path}/${filename}`,
-            content: arrayBufferToBase64(buffer)
+            message,
+            content: arrayBufferToBase64(buffer),
+            branch: 'main'
         };
         if (serverSha) {
             data.sha = serverSha;
@@ -383,23 +416,28 @@ let cheeseforkShareHistograms = function () {
     }
 
     async function submitHistograms() {
-        for (const {course, semester, url: courseUrl, name: courseName, histograms} of histogramUploadQueue) {
-            uiUpdateItemStatus(semester, course, 'Staff', '...');
+        for (const {courseMatched, course, semester, url: courseUrl, name: courseName, histograms} of histogramUploadQueue) {
+            const commitMetadata = {
+                course: courseMatched,
+                courseName
+            };
+
+            uiUpdateItemStatus(semester, course, 'Staff', '...', 'משתף מידע...');
 
             const coursePageHtml = await fetchValidResponseAsText(courseUrl, 'course page', 'windows-1255');
             const staffArray = getStaffFromHtml(coursePageHtml);
             const staff = new TextEncoder().encode(JSON.stringify(staffArray, null, 2)).buffer;
             const skipIfExists = staffArray.length === 0;
-            const staffResult = await submitToGithub(course, semester, 'Staff', '.json', staff, { skipIfExists });
+            const staffResult = await submitToGithub(course, semester, 'Staff', '.json', staff, { commitMetadata, skipIfExists });
 
             if (staffResult === 'exists') {
-                uiUpdateItemStatus(semester, course, 'Staff', '⚌');
+                uiUpdateItemStatus(semester, course, 'Staff', '⚌', 'המידע כבר קיים');
             } else {
-                uiUpdateItemStatus(semester, course, 'Staff', '✔');
+                uiUpdateItemStatus(semester, course, 'Staff', '✔', 'המידע שותף בהצלחה');
             }
 
             for (const {category, url: histogramUrl} of histograms) {
-                uiUpdateItemStatus(semester, course, category, '...');
+                uiUpdateItemStatus(semester, course, category, '...', 'משתף מידע...');
 
                 const histogramPageHtml = await fetchValidResponseAsText(histogramUrl, 'histogram page', 'windows-1255');
                 const histogram = getCourseHistogramFromHtml(histogramPageHtml);
@@ -414,28 +452,30 @@ let cheeseforkShareHistograms = function () {
                 // The image URL is unique for that histogram page, so there's no such problem with it, and the check that we do is enough.
                 // We allow an empty course name just in case it can happen (perhaps we don't detect all possible formats).
 
-                if ((!histogram.courseName || histogram.courseName === courseName) && (!histogram.category || histogram.category === category)) {
+                if ((!histogram.courseName || histogram.courseName === courseName) && (!histogram.category || histogram.category.toLowerCase() === category.toLowerCase())) {
                     // Don't override with empty data (might happen sometimes because of an error or tests)
                     const skipIfExists = Object.values(histogram.properties).every(x => !x);
 
                     const properties = new TextEncoder().encode(JSON.stringify(histogram.properties, null, 2)).buffer;
-                    propertiesResult = await submitToGithub(course, semester, category, '.json', properties, { skipIfExists });
+                    propertiesResult = await submitToGithub(course, semester, category, '.json', properties, { commitMetadata, skipIfExists });
 
                     // Don't upload test images (stop testing in production!)
                     // Example:
                     // https://github.com/michael-maltsev/technion-histograms/blob/f985c9133f4b5858e3b9605707fad6a913842e12/104013/201802/Final_B.png
+                    // The hash can be calculated with:
+                    // git hash-object image.png
                     const skipIfSha = '76b85c3ecefcb57e8856889dbb44b31c52b50fc3';
 
                     const image = await (await fetchValidResponse(histogram.imgSrc, 'histogram image')).arrayBuffer();
-                    imageResult = await submitToGithub(course, semester, category, '.png', image, { skipIfSha });
+                    imageResult = await submitToGithub(course, semester, category, '.png', image, { commitMetadata, skipIfSha });
                 }
 
                 if (propertiesResult === 'skipped' || imageResult === 'skipped') {
-                    uiUpdateItemStatus(semester, course, category, '⚠');
+                    uiUpdateItemStatus(semester, course, category, '⚠', 'שיתוף המידע נכשל');
                 } else if (propertiesResult === 'exists' && imageResult === 'exists') {
-                    uiUpdateItemStatus(semester, course, category, '⚌');
+                    uiUpdateItemStatus(semester, course, category, '⚌', 'המידע כבר קיים');
                 } else {
-                    uiUpdateItemStatus(semester, course, category, '✔');
+                    uiUpdateItemStatus(semester, course, category, '✔', 'המידע שותף בהצלחה');
                 }
             }
         }
@@ -447,11 +487,12 @@ let cheeseforkShareHistograms = function () {
         const courses = getCourses();
         uiCreateTable(courses);
 
-        for (const {course, semester, url, name} of courses) {
+        for (const {courseMatched, course, semester, url, name} of courses) {
             const html = await fetchValidResponseAsText(url, 'course page', 'windows-1255');
             const histograms = getCourseHistogramsFromHtml(html);
 
             histogramUploadQueue.push({
+                courseMatched,
                 course,
                 semester,
                 url,
