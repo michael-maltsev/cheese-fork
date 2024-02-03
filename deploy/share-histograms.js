@@ -136,31 +136,44 @@ let cheeseforkShareHistograms = function () {
             const semesterPretty = node.getAttribute('data-sem');
             const semesterArray = semesterPretty.split('/', 2);
             const semester = semesterArray[1] + semesterArray[0];
-            const match = /^\s*\d+\s+(\d{5,9})\s+(.*?)\s*$/.exec(node.textContent);
-            // For some reason, sometime between 20.11.2023 and 22.11.2023, the
-            // grades website started adding an additional zero digit to the
-            // course number. For example, 236363 became 2360363. This broke the
-            // upload. The following is a workaround for this issue.
-            const courseMatched = match[1];
-            if (courseMatched[courseMatched.length - 4] !== '0') {
-                throw new Error('Unsupported course number format: ' + courseMatched);
-            }
-            const courseWithoutMiddleZero = courseMatched.slice(0, -4) + courseMatched.slice(-3);
-            // For some reason, sometimes there are 8-digit course numbers, in
-            // which case the last two digits have an extra, unknown meaning.
-            const courseBeforePadding = courseWithoutMiddleZero.length > 6 ? courseWithoutMiddleZero.slice(0, -2) : courseWithoutMiddleZero;
-            const course = ('00000' + courseBeforePadding).slice(-6);
+            const match = /^\s*\d+\s+(\d+)\s+(.*?)\s*$/.exec(node.textContent);
+            const course = match[1];
             const name = match[2];
 
             courses.push({
                 url,
                 semesterPretty,
                 semester,
-                courseMatched,
                 course,
                 name
             });
         }
+
+        // For some reason, sometime between 20.11.2023 and 22.11.2023, the
+        // grades website started adding an additional zero digit to the course
+        // number. For example, 236363 became 2360363. This broke the upload.
+        // The following is a best-effort workaround for this issue.
+        const supportedCourseFormat = courses.every(x => x.course[x.course.length - 4] === '0');
+
+        courses = courses.map(x => {
+            const courseMatched = x.course;
+            let course;
+
+            if (supportedCourseFormat) {
+                const courseWithoutMiddleZero = courseMatched.slice(0, -4) + courseMatched.slice(-3);
+                // For some reason, sometimes there are 8-digit course numbers,
+                // in which case the last two digits have an extra, unknown
+                // meaning.
+                const courseBeforePadding = courseWithoutMiddleZero.length > 6 ? courseWithoutMiddleZero.slice(0, -2) : courseWithoutMiddleZero;
+                course = ('00000' + courseBeforePadding).slice(-6);
+            } else {
+                // Use an underscore to indicate that the course number is of an
+                // unknown format and needs to be fixed manually.
+                course = '_' + courseMatched;
+            }
+
+            return { ...x, courseMatched, course };
+        });
 
         return courses;
     }
