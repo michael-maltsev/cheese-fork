@@ -136,10 +136,19 @@ let cheeseforkShareHistograms = function () {
             const semesterPretty = node.getAttribute('data-sem');
             const semesterArray = semesterPretty.split('/', 2);
             const semester = semesterArray[1] + semesterArray[0];
-            const match = /^\s*\d+\s+(\d{5,8})\s+(.*?)\s*$/.exec(node.textContent);
-            // For some reason, sometimes there are 8-digit course numbers,
-            // in which case the last two digits have an extra, unknown meaning.
-            const courseBeforePadding = match[1].length > 6 ? match[1].slice(0, -2) : match[1];
+            const match = /^\s*\d+\s+(\d{5,9})\s+(.*?)\s*$/.exec(node.textContent);
+            // For some reason, sometime between 20.11.2023 and 22.11.2023, the
+            // grades website started adding an additional zero digit to the
+            // course number. For example, 236363 became 2360363. This broke the
+            // upload. The following is a workaround for this issue.
+            const courseMatched = match[1];
+            if (courseMatched[courseMatched.length - 4] !== '0') {
+                throw new Error('Unsupported course number format: ' + courseMatched);
+            }
+            const courseWithoutMiddleZero = courseMatched.slice(0, -4) + courseMatched.slice(-3);
+            // For some reason, sometimes there are 8-digit course numbers, in
+            // which case the last two digits have an extra, unknown meaning.
+            const courseBeforePadding = courseWithoutMiddleZero.length > 6 ? courseWithoutMiddleZero.slice(0, -2) : courseWithoutMiddleZero;
             const course = ('00000' + courseBeforePadding).slice(-6);
             const name = match[2];
 
@@ -147,6 +156,7 @@ let cheeseforkShareHistograms = function () {
                 url,
                 semesterPretty,
                 semester,
+                courseMatched,
                 course,
                 name
             });
@@ -318,9 +328,14 @@ let cheeseforkShareHistograms = function () {
         const url = 'https://api.github.com/repos/michael-maltsev/technion-histograms/contents/' +
             path + '/' + filename;
 
-        const messagePrefix = serverSha ? 'Updated' : 'Added';
+        const messagePrefix = serverSha ? 'Update' : 'Add';
+        let message = `${messagePrefix} ${path}/${filename}`;
+        if (Object.keys(options.commitMetadata ?? {}).length > 0) {
+            message += '\n\n' + Object.entries(options.commitMetadata).map(([k, v]) => `${k}: ${v}`).join('\n');
+        }
+
         let data = {
-            message: `${messagePrefix} ${path}/${filename}`,
+            message,
             content: arrayBufferToBase64(buffer)
         };
         if (serverSha) {
@@ -387,14 +402,19 @@ let cheeseforkShareHistograms = function () {
     }
 
     async function submitHistograms() {
-        for (const {course, semester, url: courseUrl, name: courseName, histograms} of histogramUploadQueue) {
+        for (const {courseMatched, course, semester, url: courseUrl, name: courseName, histograms} of histogramUploadQueue) {
+            const commitMetadata = {
+                course: courseMatched,
+                courseName
+            };
+
             uiUpdateItemStatus(semester, course, 'Staff', '...', 'משתף מידע...');
 
             const coursePageHtml = await fetchValidResponseAsText(courseUrl, 'course page', 'windows-1255');
             const staffArray = getStaffFromHtml(coursePageHtml);
             const staff = new TextEncoder().encode(JSON.stringify(staffArray, null, 2)).buffer;
             const skipIfExists = staffArray.length === 0;
-            const staffResult = await submitToGithub(course, semester, 'Staff', '.json', staff, { skipIfExists });
+            const staffResult = await submitToGithub(course, semester, 'Staff', '.json', staff, { commitMetadata, skipIfExists });
 
             if (staffResult === 'exists') {
                 uiUpdateItemStatus(semester, course, 'Staff', '⚌', 'המידע כבר קיים');
@@ -423,15 +443,17 @@ let cheeseforkShareHistograms = function () {
                     const skipIfExists = Object.values(histogram.properties).every(x => !x);
 
                     const properties = new TextEncoder().encode(JSON.stringify(histogram.properties, null, 2)).buffer;
-                    propertiesResult = await submitToGithub(course, semester, category, '.json', properties, { skipIfExists });
+                    propertiesResult = await submitToGithub(course, semester, category, '.json', properties, { commitMetadata, skipIfExists });
 
                     // Don't upload test images (stop testing in production!)
                     // Example:
                     // https://github.com/michael-maltsev/technion-histograms/blob/f985c9133f4b5858e3b9605707fad6a913842e12/104013/201802/Final_B.png
+                    // The hash can be calculated with:
+                    // git hash-object image.png
                     const skipIfSha = '76b85c3ecefcb57e8856889dbb44b31c52b50fc3';
 
                     const image = await (await fetchValidResponse(histogram.imgSrc, 'histogram image')).arrayBuffer();
-                    imageResult = await submitToGithub(course, semester, category, '.png', image, { skipIfSha });
+                    imageResult = await submitToGithub(course, semester, category, '.png', image, { commitMetadata, skipIfSha });
                 }
 
                 if (propertiesResult === 'skipped' || imageResult === 'skipped') {
@@ -451,11 +473,12 @@ let cheeseforkShareHistograms = function () {
         const courses = getCourses();
         uiCreateTable(courses);
 
-        for (const {course, semester, url, name} of courses) {
+        for (const {courseMatched, course, semester, url, name} of courses) {
             const html = await fetchValidResponseAsText(url, 'course page', 'windows-1255');
             const histograms = getCourseHistogramsFromHtml(html);
 
             histogramUploadQueue.push({
+                courseMatched,
                 course,
                 semester,
                 url,
