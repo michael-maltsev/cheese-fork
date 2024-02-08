@@ -428,7 +428,10 @@ let cheeseforkShareHistograms = function () {
             const staffArray = getStaffFromHtml(coursePageHtml);
             const staff = new TextEncoder().encode(JSON.stringify(staffArray, null, 2)).buffer;
             const skipIfExists = staffArray.length === 0;
-            const staffResult = await submitToGithub(course, semester, 'Staff', '.json', staff, { commitMetadata, skipIfExists });
+            const staffResult = await submitToGithub(course, semester, 'Staff', '.json', staff, {
+                commitMetadata,
+                skipIfExists
+            });
 
             if (staffResult === 'exists') {
                 uiUpdateItemStatus(semester, course, 'Staff', '⚌', 'המידע כבר קיים');
@@ -476,7 +479,10 @@ let cheeseforkShareHistograms = function () {
                 const skipIfExists = Object.values(histogram.properties).every(x => !x);
 
                 const properties = new TextEncoder().encode(JSON.stringify(histogram.properties, null, 2)).buffer;
-                const propertiesResult = await submitToGithub(courseToCommit, semester, category, '.json', properties, { histogramCommitMetadata, skipIfExists });
+                const propertiesResult = await submitToGithub(courseToCommit, semester, category, '.json', properties, {
+                    commitMetadata: histogramCommitMetadata,
+                    skipIfExists
+                });
 
                 // Don't upload test images (stop testing in production!)
                 // Example:
@@ -486,7 +492,10 @@ let cheeseforkShareHistograms = function () {
                 const skipIfSha = '76b85c3ecefcb57e8856889dbb44b31c52b50fc3';
 
                 const image = await (await fetchValidResponse(histogram.imgSrc, 'histogram image')).arrayBuffer();
-                const imageResult = await submitToGithub(courseToCommit, semester, category, '.png', image, { histogramCommitMetadata, skipIfSha });
+                const imageResult = await submitToGithub(courseToCommit, semester, category, '.png', image, {
+                    commitMetadata: histogramCommitMetadata,
+                    skipIfSha
+                });
 
                 if (propertiesResult === 'skipped' || imageResult === 'skipped') {
                     uiUpdateItemStatus(semester, course, category, '⚠', 'שיתוף המידע נכשל');
