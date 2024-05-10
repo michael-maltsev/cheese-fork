@@ -4097,9 +4097,7 @@ var courses_from_rishum = [
             "הרצאה": "2",
             "תרגיל": "2",
             "מעבדה": "3",
-            "אחראים": "דר. אבו-עקל ניזאר",
-            "מועד א": "10-05-2024 09:00 - 12:00\nאולמן 200. 206. 309.",
-            "מועד ב": "06-06-2024 17:00 - 20:00\nרבין 508."
+            "אחראים": "דר. אבו-עקל ניזאר"
         },
         "schedule": [
             {
@@ -19191,7 +19189,7 @@ var courses_from_rishum = [
                 "שעה": "17:30 - 20:30",
                 "בניין": "ה.אויר",
                 "חדר": "149",
-                "מרצה\/מתרגל": "פרופ. פרנקל יצחק",
+                "מרצה\/מתרגל": "הרשקו דפנה\nפרופ. פרנקל יצחק",
                 "מס.": "10"
             }
         ]
@@ -26424,7 +26422,7 @@ var courses_from_rishum = [
             "אחראים": "דר. צנזור אביב",
             "הערות": "מתרגל אחראי: בר תבור.",
             "מועד א": "01-05-2024 09:00 - 12:00\nאולמן 201. 202. 203. 205. 206. 304.",
-            "מועד ב": "28-05-2024"
+            "מועד ב": "28-05-2024 17:30 - 20:30\nהנד חדש 120.\nהנד.ראשי 602. 704."
         },
         "schedule": [
             {
@@ -40529,7 +40527,7 @@ var courses_from_rishum = [
             "תרגיל": "2",
             "אחראים": "אינגינר פולונסקי גיא",
             "מועד א": "10-05-2024 09:00 - 12:00\nאמדו 233. 234.",
-            "מועד ב": "28-05-2024 17:30 - 20:30"
+            "מועד ב": "28-05-2024 17:30 - 20:30\nאמדו 233."
         },
         "schedule": [
             {
@@ -41126,7 +41124,7 @@ var courses_from_rishum = [
             "אחראים": "אינגינר בן נון עדי",
             "הערות": "סטודנטים מהתואר המקצועי: הקורס\nמיועד לסטודנטים הלומדים סטודיו\nעירוני בלבד.",
             "מועד א": "07-05-2024 09:00 - 12:00\nאולמן 800. 803. 806.",
-            "מועד ב": "04-06-2024 17:30 - 20:30\nסגו 245."
+            "מועד ב": "04-06-2024 17:30 - 20:30\nפישבך 507.\nסגו 245."
         },
         "schedule": [
             {
@@ -48861,7 +48859,7 @@ var courses_from_rishum = [
             "אחראים": "פרופ. שילר ג'קי",
             "הערות": "הקורס נלמד למול קורס נוירואנטומיה\n274375. החלוקה בסילבוסים היא הקובעת.",
             "מועד א": "01-05-2024 09:00 - 12:00\nאולמן 305. 306. 307. 308.",
-            "מועד ב": "28-05-2024 17:30 - 20:30"
+            "מועד ב": "28-05-2024 16:00 - 19:00\nב.רפפורט 13."
         },
         "schedule": [
             {
@@ -58359,6 +58357,20 @@ var courses_from_rishum = [
             "מקצועות קדם": "014211 או 014214 או 016206 או 034013 או 084311 או 315039",
             "נקודות": "2",
             "הרצאה": "2"
+        },
+        "schedule": []
+    },
+    {
+        "general": {
+            "מספר מקצוע": "618063",
+            "שם מקצוע": "יישומים מעשיים במכונות לומדות",
+            "סילבוס": "This Course Provides Hands-on Experience Developing and Deploying Foundational Machine Learning Algorithms On Real-world Datasets For Practical Applications (e.g., Healthcare, Computer Vision). Students Will Learn About The Machine Learning Pipeline End-to-end Including Dataset Creation, Pre- and Post-processing, Annotation, Annotation Validation, Preparation For Machine Learning, Training and Testing A Model, and Evaluation. Students Will Focus On Real-world Challenges At Each Stage of The Ml Pipeline While Handling Bias in Models And Datasets. Lastly, Students Will Analyze The Strengths and Weaknesses Of Regression, Classification, Clustering and Deep Learning Algorithms. Learning Outcomes# at The End of The Course The Studetns Will Know#\n1. Collect a New Dataset and Prepare It For a Ml Task, Train a Model, And Evaluate It._\n2. Apply Regression, Classification, Clustering, and Deep Learning Algorithms to Practical Applications.\n3. Analyze and Identify Key Differences in Regression, Classification, Clustering, and Deep Learning Algorithms.\n4. Understand Core Challenges of Dataset Creation Including Handling Missing Data, Bias, Unlabeled Data, Among Others.\n5. Represent Features in Datasets to Be Used For Ml Tasks.__\n6. Evaluate Model Quality Using Appropriate Metrics of Performance.",
+            "פקולטה": "מדע יישומי",
+            "מסגרת לימודים": "תארים מתקדמים",
+            "נקודות": "3",
+            "הרצאה": "2",
+            "תרגיל": "1",
+            "סמינר\/פרויקט": "1"
         },
         "schedule": []
     },
