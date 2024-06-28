@@ -161,10 +161,11 @@ let cheeseforkShareHistograms = function () {
 
             if (supportedCourseFormat) {
                 const courseWithoutMiddleZero = courseMatched.slice(0, -4) + courseMatched.slice(-3);
-                // For some reason, sometimes there are 8-digit course numbers,
-                // in which case the last two digits have an extra, unknown
-                // meaning.
-                const courseBeforePadding = courseWithoutMiddleZero.length > 6 ? courseWithoutMiddleZero.slice(0, -2) : courseWithoutMiddleZero;
+
+                // Handle special cases:
+                // 97030xy -> 9730xy
+                const courseBeforePadding = courseWithoutMiddleZero.replace(/^97030(\d\d)$/, '9730$1');
+
                 course = ('00000' + courseBeforePadding).slice(-6);
             } else {
                 // Use an underscore to indicate that the course number is of an
@@ -454,7 +455,8 @@ let cheeseforkShareHistograms = function () {
                 const histogramCourseNameMissing = !histogram.courseName;
                 const histogramCourseNameMismatch = histogram.courseName !== courseName;
                 const histogramCategoryMissing = !histogram.category;
-                const histogramCategoryMismatch = histogram.category.toLowerCase() !== category.toLowerCase();
+                const histogramCategoryToCompare = (histogram.category === 'ציון סופי במערכת האקדמית במחשב המרכזי') ? 'Finals' : histogram.category;
+                const histogramCategoryMismatch = histogramCategoryToCompare.toLowerCase() !== category.toLowerCase();
 
                 // In case of a mismatch, we add a prefix to the course name to
                 // avoid overriding the correct data. We still upload the data
