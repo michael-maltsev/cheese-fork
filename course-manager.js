@@ -1,6 +1,6 @@
 'use strict';
 
-/* global moment, BooleanExpression */
+/* global moment, BooleanExpression, currentSemester */
 
 function CourseManager(allCourses) {
     var that = this;
@@ -17,6 +17,34 @@ function CourseManager(allCourses) {
 
 CourseManager.prototype.doesExist = function (course) {
     return course in this.coursesHashmap;
+};
+
+CourseManager.prototype.toOldCourseNumber = function (course) {
+    var match = /^970300(\d\d)$/.exec(course);
+    if (match) {
+        return '9730' + match[1];
+    }
+
+    match = /^0(\d\d\d)0(\d\d\d)$/.exec(course);
+    if (match) {
+        return match[1] + match[2];
+    }
+
+    return course;
+};
+
+CourseManager.prototype.toNewCourseNumber = function (course) {
+    var match = /^9730(\d\d)$/.exec(course);
+    if (match) {
+        return '970300' + match[1];
+    }
+
+    match = /^(\d\d\d)(\d\d\d)$/.exec(course);
+    if (match) {
+        return '0' + match[1] + '0' + match[2];
+    }
+
+    return course;
 };
 
 CourseManager.prototype.getAllCourses = function () {
@@ -248,11 +276,21 @@ CourseManager.prototype.getDescription = function (course, options) {
     var contentHtml = $('<div>').text(content).html().replace(/\n/g, '<br>');
 
     if (options.links) {
-        var loggingProps = options.logging ? ' onclick="gtag(\'event\', \'info-click-link-rishum\')"' : '';
-        linksHtml += '<br><br><a href="https://students.technion.ac.il/local/technionsearch/course/' + course + '" target="_blank" rel="noopener"' + loggingProps + '>' +
-            '<img src="assets/icon-students.png" alt="icon" width="16" height="16"> פורטל הסטודנטים</a>';
+        var loggingProps;
 
-        if (/^23\d\d\d\d$/.test(course)) {
+        if (currentSemester < '202401') {
+            loggingProps = options.logging ? ' onclick="gtag(\'event\', \'info-click-link-rishum\')"' : '';
+            linksHtml += '<br><br><a href="https://students.technion.ac.il/local/technionsearch/course/' + course + '" target="_blank" rel="noopener"' + loggingProps + '>' +
+                '<img src="assets/icon-students.png" alt="icon" width="16" height="16"> פורטל הסטודנטים</a>';
+        } else {
+            var currentSemesterYear = currentSemester.slice(0, 4);
+            var currentSemesterSapSemester = parseInt(currentSemester.slice(4), 10) - 1 + 200;
+            loggingProps = options.logging ? ' onclick="gtag(\'event\', \'info-click-link-sap\')"' : '';
+            linksHtml += '<br><br><a href="https://portalex.technion.ac.il/ovv/?sap-theme=sap_belize&sap-language=HE&sap-ui-language=HE#/details/' + currentSemesterYear + '/' + currentSemesterSapSemester + '/SM/' + course + '" target="_blank" rel="noopener"' + loggingProps + '>' +
+                '<img src="assets/icon-sap.png" alt="icon" width="16" height="16"> קטלוג מקצועות מקוון</a>';
+        }
+
+        if (/^(23\d\d\d\d|023\d\d\d\d\d)$/.test(course)) {
             // Only for computer science courses.
             loggingProps = options.logging ? ' onclick="gtag(\'event\', \'info-click-link-webcourse\')"' : '';
             linksHtml += '<br><a href="https://webcourse.cs.technion.ac.il/' + course + '/" target="_blank" rel="noopener"' + loggingProps + '>' +
@@ -260,11 +298,11 @@ CourseManager.prototype.getDescription = function (course, options) {
         }
 
         loggingProps = options.logging ? ' onclick="gtag(\'event\', \'info-click-link-facebook\')"' : '';
-        linksHtml += '<br><a href="https://www.facebook.com/search/groups/?q=' + course + '" target="_blank" rel="noopener"' + loggingProps + '>' +
+        linksHtml += '<br><a href="https://www.facebook.com/search/groups/?q=' + this.toOldCourseNumber(course) + '" target="_blank" rel="noopener"' + loggingProps + '>' +
             '<img src="assets/icon-facebook.png" alt="icon" width="16" height="16"> חיפוש קבוצה בפייסבוק</a>';
 
         loggingProps = options.logging ? ' onclick="gtag(\'event\', \'info-click-link-tscans\')"' : '';
-        linksHtml += '<br><a href="https://tscans.cf/?course=' + course + '" target="_blank" rel="noopener"' + loggingProps + '>' +
+        linksHtml += '<br><a href="https://tscans.cf/?course=' + this.toOldCourseNumber(course) + '" target="_blank" rel="noopener"' + loggingProps + '>' +
             '<img src="assets/icon-scans.png" alt="icon" width="16" height="16"> סריקות</a>';
 
         if (options.whatsappGroupLink) {

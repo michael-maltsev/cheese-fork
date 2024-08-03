@@ -245,7 +245,7 @@ var CourseCalendar = (function () {
 
     function getLessonType(courseNumber, lesson) {
         // Sport courses have a non-standard format, treat all of the lessons as the same type.
-        if (/^394[89]\d\d$/.test(courseNumber)) {
+        if (/^(394[89]\d\d|03940[89]\d\d)$/.test(courseNumber)) {
             return 'sport';
         } else {
             return stringHexEncode(lesson['סוג']);
@@ -426,7 +426,14 @@ var CourseCalendar = (function () {
             }
         }
         if (lesson['מרצה/מתרגל']) {
-            title += '\n' + lesson['מרצה/מתרגל'];
+            var staffLines = lesson['מרצה/מתרגל'].split('\n');
+            if (staffLines.length > 3) {
+                var staffLinesCount = staffLines.length;
+                staffLines = staffLines.slice(0, 2);
+                staffLines.push('ועוד ' + (staffLinesCount - 2) + ' אחרים');
+            }
+
+            title += '\n' + staffLines.join('\n');
         }
         title += '\n' + general['שם מקצוע'];
 

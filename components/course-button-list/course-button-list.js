@@ -1,6 +1,6 @@
 'use strict';
 
-/* global HistogramBrowser, CourseFeedback, BootstrapDialog, showBootstrapDialogWithModelessButton, firebase, gtag */
+/* global HistogramBrowser, CourseFeedback, BootstrapDialog, showBootstrapDialogWithModelessButton, firebase, gtag, currentSemester */
 
 // eslint-disable-next-line no-unused-vars
 var CourseButtonList = (function () {
@@ -383,7 +383,7 @@ var CourseButtonList = (function () {
         });
 
         courseInfo.find('.whatsapp-group-link').click(function () {
-            showWhatsappGroupLink(course);
+            showWhatsappGroupLink(courseManager.toOldCourseNumber(course));
             return false;
         });
 
@@ -393,21 +393,35 @@ var CourseButtonList = (function () {
             return this.nodeType === Node.TEXT_NODE;
         }).each(function () {
             var replaced = false;
-            var html = $('<div>').text(this.textContent).html().replace(/\b\d{6}\b/g, function (match) {
+            var html = $('<div>').text(this.textContent).html().replace(/\b(?:\d{6}|\d{8})\b/g, function (match) {
                 if (match === course) {
                     return match;
                 }
 
+                var matchCourse = match;
+                if (currentSemester >= '202401' && matchCourse.length === 6) {
+                    matchCourse = courseManager.toNewCourseNumber(matchCourse);
+                }
+
                 var tooltipTitle;
-                if (courseManager.doesExist(match)) {
-                    tooltipTitle = courseManager.getTitle(match);
+                if (courseManager.doesExist(matchCourse)) {
+                    tooltipTitle = courseManager.getTitle(matchCourse);
                 } else {
                     tooltipTitle = '(לא מועבר בסמסטר)';
                 }
 
+                var url;
+                if (currentSemester < '202401') {
+                    url = 'https://students.technion.ac.il/local/technionsearch/course/' + matchCourse;
+                } else {
+                    var currentSemesterYear = currentSemester.slice(0, 4);
+                    var currentSemesterSapSemester = parseInt(currentSemester.slice(4), 10) - 1 + 200;
+                    url = 'https://portalex.technion.ac.il/ovv/?sap-theme=sap_belize&sap-language=HE&sap-ui-language=HE#/details/' + currentSemesterYear + '/' + currentSemesterSapSemester + '/SM/' + matchCourse;
+                }
+
                 replaced = true;
                 return $('<a>', {
-                    href: 'https://students.technion.ac.il/local/technionsearch/course/' + match,
+                    href: url,
                     target: '_blank',
                     rel: 'noopener',
                     onclick: 'gtag(\'event\', \'info-click-dependency-link-rishum\')',
@@ -428,10 +442,10 @@ var CourseButtonList = (function () {
         modalBody.find('.course-information').html(courseInfo);
 
         var courseFeedback = new CourseFeedback(modalBody.find('.course-feedback'), {});
-        courseFeedback.loadFeedback(course);
+        courseFeedback.loadFeedback(courseManager.toOldCourseNumber(course));
 
         var histogramBrowser = new HistogramBrowser(modalBody.find('.inline-histograms'), {});
-        histogramBrowser.loadHistograms(course);
+        histogramBrowser.loadHistograms(courseManager.toOldCourseNumber(course));
     }
 
     CourseButtonList.prototype.setFloatingCourseInfo = function (course) {
