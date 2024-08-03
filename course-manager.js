@@ -237,7 +237,8 @@ CourseManager.prototype.getDescription = function (course, options) {
         'בוחן מועד ב',
         'בוחן מועד ג',
         'בוחן מועד ד',
-        'בוחן מועד ה'
+        'בוחן מועד ה',
+        'בוחן מועד ו'
     ].forEach(function (key) {
         if (general[key]) {
             pre_exam_content += '\n' + key + '\': ' + general[key].replace(/\n\n/g, '\n========\n');
