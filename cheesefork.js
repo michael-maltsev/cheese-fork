@@ -225,7 +225,7 @@
     }
 
     function courseColorGenerator(course) {
-        var str = course;
+        var str = courseManager.toOldCourseNumber(course);
         // Fixup: both 114036 and 114246 get a green color, and both are taken at the same semester.
         // So here we cause the color of 114246 to be different.
         // Similar fixup: pink 124503, 124708 and 134019.
