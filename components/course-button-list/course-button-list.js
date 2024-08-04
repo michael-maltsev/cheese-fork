@@ -394,13 +394,26 @@ var CourseButtonList = (function () {
         }).each(function () {
             var replaced = false;
             var html = $('<div>').text(this.textContent).html().replace(/\b(?:\d{6}|\d{8})\b/g, function (match) {
-                if (match === course) {
-                    return match;
+                var matchCourse = match;
+                var url;
+                if (currentSemester < '202401') {
+                    if (matchCourse.length === 8) {
+                        return match;
+                    }
+
+                    url = 'https://students.technion.ac.il/local/technionsearch/course/' + matchCourse;
+                } else {
+                    if (matchCourse.length === 6) {
+                        matchCourse = courseManager.toNewCourseNumber(matchCourse);
+                    }
+
+                    var currentSemesterYear = currentSemester.slice(0, 4);
+                    var currentSemesterSapSemester = parseInt(currentSemester.slice(4), 10) - 1 + 200;
+                    url = 'https://portalex.technion.ac.il/ovv/?sap-theme=sap_belize&sap-language=HE&sap-ui-language=HE#/details/' + currentSemesterYear + '/' + currentSemesterSapSemester + '/SM/' + matchCourse;
                 }
 
-                var matchCourse = match;
-                if (currentSemester >= '202401' && matchCourse.length === 6) {
-                    matchCourse = courseManager.toNewCourseNumber(matchCourse);
+                if (matchCourse === course) {
+                    return match;
                 }
 
                 var tooltipTitle;
@@ -408,15 +421,6 @@ var CourseButtonList = (function () {
                     tooltipTitle = courseManager.getTitle(matchCourse);
                 } else {
                     tooltipTitle = '(לא מועבר בסמסטר)';
-                }
-
-                var url;
-                if (currentSemester < '202401') {
-                    url = 'https://students.technion.ac.il/local/technionsearch/course/' + matchCourse;
-                } else {
-                    var currentSemesterYear = currentSemester.slice(0, 4);
-                    var currentSemesterSapSemester = parseInt(currentSemester.slice(4), 10) - 1 + 200;
-                    url = 'https://portalex.technion.ac.il/ovv/?sap-theme=sap_belize&sap-language=HE&sap-ui-language=HE#/details/' + currentSemesterYear + '/' + currentSemesterSapSemester + '/SM/' + matchCourse;
                 }
 
                 replaced = true;

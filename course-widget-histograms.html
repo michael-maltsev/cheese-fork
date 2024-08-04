@@ -56,9 +56,20 @@
         return decodeURIComponent(results[2].replace(/\+/g, " "));
     }
 
-    var course = getParameterByName('course');
-    if (course && /^[0-9]+$/.test(course)) {
-        course = ('00000' + course).slice(-6);
+    function stringToCourseNumber(str) {
+        if (!str || !/^[0-9]{1,8}$/.test(str)) {
+            return null;
+        }
+
+        if (str.length <= 6) {
+            return ('00000' + str).slice(-6);
+        } else {
+            return ('0000000' + str).slice(-8);
+        }
+    }
+
+    var course = stringToCourseNumber(getParameterByName('course'));
+    if (course) {
         var histogramBrowser = new HistogramBrowser($('.inline-histograms'), {
             selectColumnGrid: 'md',
             shareGuideInNewWindow: true

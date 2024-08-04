@@ -398,9 +398,10 @@ var CourseSelect = (function () {
         var coursesTaken = $('#filter-courses-taken-list').val().match(/\d+/g);
         if (coursesTaken) {
             filters.coursesTaken = coursesTaken.filter(function (num) {
-                return parseInt(num, 10) <= 999999;
+                return !!that.courseManager.stringToCourseNumber(num);
             }).map(function (num) {
-                return ('00000' + num).slice(-6);
+                return that.courseManager.toSemesterFormatCourseNumber(
+                    that.courseManager.stringToCourseNumber(num));
             });
         }
 
@@ -437,18 +438,20 @@ var CourseSelect = (function () {
         var coursesLimit = $('#filter-courses-limit').val().match(/\d+/g);
         if (coursesLimit) {
             filters.coursesLimit = coursesLimit.filter(function (num) {
-                return parseInt(num, 10) <= 999999;
+                return !!that.courseManager.stringToCourseNumber(num);
             }).map(function (num) {
-                return ('00000' + num).slice(-6);
+                return that.courseManager.toSemesterFormatCourseNumber(
+                    that.courseManager.stringToCourseNumber(num));
             });
         }
 
         var coursesExclude = $('#filter-courses-exclude').val().match(/\d+/g);
         if (coursesExclude) {
             filters.coursesExclude = coursesExclude.filter(function (num) {
-                return parseInt(num, 10) <= 999999;
+                return !!that.courseManager.stringToCourseNumber(num);
             }).map(function (num) {
-                return ('00000' + num).slice(-6);
+                return that.courseManager.toSemesterFormatCourseNumber(
+                    that.courseManager.stringToCourseNumber(num));
             });
         }
 

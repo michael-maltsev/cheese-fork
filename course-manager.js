@@ -25,6 +25,10 @@ CourseManager.prototype.toOldCourseNumber = function (course) {
         return '9730' + match[1];
     }
 
+    if (/^097300\d\d$/.exec(course)) {
+        return course;
+    }
+
     match = /^0(\d\d\d)0(\d\d\d)$/.exec(course);
     if (match) {
         return match[1] + match[2];
@@ -45,6 +49,30 @@ CourseManager.prototype.toNewCourseNumber = function (course) {
     }
 
     return course;
+};
+
+CourseManager.prototype.toSemesterFormatCourseNumber = function (course) {
+    if (currentSemester < '202401') {
+        return this.toOldCourseNumber(course);
+    } else {
+        return this.toNewCourseNumber(course);
+    }
+};
+
+CourseManager.prototype.isComputerScienceCourse = function (course) {
+    return /^(23\d\d\d\d|023\d\d\d\d\d)$/.test(course);
+};
+
+CourseManager.prototype.stringToCourseNumber = function (str) {
+    if (!str || !/^[0-9]{1,8}$/.test(str)) {
+        return null;
+    }
+
+    if (str.length <= 6) {
+        return ('00000' + str).slice(-6);
+    } else {
+        return ('0000000' + str).slice(-8);
+    }
 };
 
 CourseManager.prototype.getAllCourses = function () {
@@ -291,8 +319,7 @@ CourseManager.prototype.getDescription = function (course, options) {
                 '<img src="assets/icon-sap.png" alt="icon" width="16" height="16"> קטלוג מקצועות מקוון</a>';
         }
 
-        if (/^(23\d\d\d\d|023\d\d\d\d\d)$/.test(course)) {
-            // Only for computer science courses.
+        if (this.isComputerScienceCourse(course)) {
             loggingProps = options.logging ? ' onclick="gtag(\'event\', \'info-click-link-webcourse\')"' : '';
             linksHtml += '<br><a href="https://webcourse.cs.technion.ac.il/' + course + '/" target="_blank" rel="noopener"' + loggingProps + '>' +
                 '<img src="assets/icon-webcourse.png" alt="icon" width="16" height="16"> אתר ה-WebCourse</a>';
@@ -303,7 +330,7 @@ CourseManager.prototype.getDescription = function (course, options) {
             '<img src="assets/icon-facebook.png" alt="icon" width="16" height="16"> חיפוש קבוצה בפייסבוק</a>';
 
         loggingProps = options.logging ? ' onclick="gtag(\'event\', \'info-click-link-tscans\')"' : '';
-        linksHtml += '<br><a href="https://tscans.cf/?course=' + this.toOldCourseNumber(course) + '" target="_blank" rel="noopener"' + loggingProps + '>' +
+        linksHtml += '<br><a href="https://tscans.cf/?course=' + course + '" target="_blank" rel="noopener"' + loggingProps + '>' +
             '<img src="assets/icon-scans.png" alt="icon" width="16" height="16"> סריקות</a>';
 
         if (options.whatsappGroupLink) {
