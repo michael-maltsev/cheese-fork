@@ -76,7 +76,8 @@ var CourseSelect = (function () {
                 }
 
                 that.onDropdownItemDeactivate(course);
-            }
+            },
+            searchField: ['text', 'oldCourseNumber']
         }).data('selectize');
 
         that.courseSelect.$dropdown
@@ -133,7 +134,8 @@ var CourseSelect = (function () {
             var general = courseManager.getGeneralInfo(course);
             return {
                 value: course,
-                text: course + ' - ' + general['שם מקצוע']
+                text: course + ' - ' + general['שם מקצוע'],
+                oldCourseNumber: courseManager.toOldCourseNumber(course)
             };
         });
 
