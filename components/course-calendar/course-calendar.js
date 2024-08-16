@@ -226,7 +226,7 @@ var CourseCalendar = (function () {
             var styleElement = courseCalendar.printStyleHackStyleElement;
             if (!styleElement) {
                 styleElement = document.createElement('style');
-                document.head.append(styleElement);
+                document.head.appendChild(styleElement);
                 courseCalendar.printStyleHackStyleElement = styleElement;
             }
 
