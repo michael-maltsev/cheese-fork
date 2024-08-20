@@ -80,6 +80,10 @@ CourseManager.prototype.getAllCourses = function () {
 };
 
 CourseManager.prototype.getCourseData = function (course) {
+    if (!this.coursesScheduleProcessed[course]) {
+        this.getSchedule(course);
+    }
+
     return this.coursesHashmap[course];
 };
 
