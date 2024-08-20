@@ -359,9 +359,7 @@
         }
 
         function getUgCoursesUrl(semester) {
-            // For 202302, serve a combination of UG and SAP data.
-            var suffix = semester === '202302' ? '.enriched': '';
-            return 'https://michael-maltsev.github.io/technion-ug-info-fetcher/courses_' + semester + suffix + '.min.js';
+            return 'https://michael-maltsev.github.io/technion-ug-info-fetcher/courses_' + semester + '.min.js';
         }
 
         function getSapCoursesUrl(semester) {
