@@ -359,14 +359,14 @@
         }
 
         function getUgCoursesUrl(semester) {
-            return 'https://michael-maltsev.github.io/technion-ug-info-fetcher/courses_' + semester + '.min.js';
+            return 'https://ug.cheesefork.cf/courses_' + semester + '.min.js';
         }
 
         function getSapCoursesUrl(semester) {
             var year = semester.slice(0, 4);
             var semester = semester.slice(4);
             var sapSemester = parseInt(semester, 10) - 1 + 200;
-            return 'https://michael-maltsev.github.io/technion-sap-info-fetcher/courses_' + year + '_' + sapSemester + '.min.js';
+            return 'https://sap.cheesefork.cf/courses_' + year + '_' + sapSemester + '.min.js';
         }
 
         Object.keys(availableSemesters).forEach(function (key) {
