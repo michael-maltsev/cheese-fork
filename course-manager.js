@@ -63,10 +63,6 @@ CourseManager.prototype.isComputerScienceCourse = function (course) {
     return /^(23\d\d\d\d|023\d\d\d\d\d)$/.test(course);
 };
 
-CourseManager.prototype.isMathCourse = function (course) {
-    return /^(10[46]\d\d\d|010[46]\d\d\d\d)$/.test(course);
-};
-
 CourseManager.prototype.stringToCourseNumber = function (str) {
     if (!str || !/^[0-9]{1,8}$/.test(str)) {
         return null;
@@ -109,31 +105,6 @@ CourseManager.prototype.getSchedule = function (course) {
         var general = that.coursesHashmap[course].general;
         var schedule = that.coursesHashmap[course].schedule;
 
-        // Requested to be filtered by the faculty.
-        if (currentSemester === '202401' && that.isMathCourse(course)) {
-            schedule = schedule.filter(function (item) {
-                return [
-                    // סינים (סטודנטים סינים שלומדים בסין).
-                    77,
-
-                    // לימודי חוץ. זו קבוצה פיקטיבית.
-                    69,
-
-                    // יש את זה רק במושגי יסוד במתמטיקה, מדובר על תוכנית אודיסאה
-                    // של תלמידי תיכון שלומדים בטכניון.
-                    40,
-
-                    // בינלאומי.
-                    80,
-                    86
-                ].indexOf(parseInt(item['קבוצה'], 10)) === -1;
-            });
-        }
-
-        return processScheduleWorkshops(general, schedule);
-    }
-
-    function processScheduleWorkshops(general, schedule) {
         if (general['הערות']) {
             // Extract workshops from course comments.
             var comment = general['הערות'];
