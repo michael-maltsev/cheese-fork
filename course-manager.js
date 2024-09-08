@@ -121,7 +121,7 @@ CourseManager.prototype.getSchedule = function (course) {
             var commentLines = comment.split('\n');
             for (var i = 0; i < commentLines.length; i++) {
                 var line = commentLines[i];
-                if (line.match(/^סדנ(ת|ה|א|אות)[: ]/)) {
+                if (line.match(/^(\d+\.\s*)?סדנ(ת|ה|א|אות)[: ]/)) {
                     var workshopsTa = '';
                     var match = /(?:\n|^)מתרגל[ית]? ה?סדנ(?:א|ה|אות).*?:\s*([\s\S]*?)\s*(?:=|$)/.exec(comment);
                     if (match) {
