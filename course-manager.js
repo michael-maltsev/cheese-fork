@@ -123,7 +123,7 @@ CourseManager.prototype.getSchedule = function (course) {
                 var line = commentLines[i];
                 if (line.match(/^(\d+\.\s*)?סדנ(ת|ה|א|אות)[: ]/)) {
                     var workshopsTa = '';
-                    var match = /(?:\n|^)מתרגל[ית]? ה?סדנ(?:א|ה|אות).*?:\s*([\s\S]*?)\s*(?:=|$)/.exec(comment);
+                    var match = /(?:\n|^)מתרגל[ית]? ה?סדנ(?:א|ה|אות).*?:\s*([\s\S]*?)\s*(?:=|\n\d+\.|$)/.exec(comment);
                     if (match) {
                         workshopsTa = match[1].replace(/\s+/g, ' ').replace(/(\((גם אחראי[תם]?|\d+)\)\s*)+,?/g, ',').replace(/\s*,\s*/g, '\n').trim();
                     }
