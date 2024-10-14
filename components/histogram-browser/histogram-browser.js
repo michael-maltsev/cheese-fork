@@ -20,7 +20,9 @@ var HistogramBrowser = (function () {
         if (semesters.length > 0) {
             var semesterSelect = $('<select class="form-control"></select>');
 
-            semesters.forEach(function (semester, i) {
+            semesters.sort(function (a, b) {
+                return b.localeCompare(a, undefined, {numeric: true});
+            }).forEach(function (semester, i) {
                 var text = semesterFriendlyName(semester);
                 var props = [];
 
@@ -66,7 +68,7 @@ var HistogramBrowser = (function () {
                 semesterSelect.append($('<option>', {
                     value: semester,
                     text: text,
-                    selected: i === semesters.length - 1
+                    selected: i === 0
                 }));
             });
 
