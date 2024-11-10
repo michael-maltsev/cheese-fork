@@ -417,10 +417,21 @@ var CourseButtonList = (function () {
                 }
 
                 var tooltipTitle;
+                var onmouseover = undefined;
                 if (courseManager.doesExist(matchCourse)) {
                     tooltipTitle = courseManager.getTitle(matchCourse);
                 } else {
                     tooltipTitle = '(לא מועבר בסמסטר)';
+
+                    var courseNameUrl = 'https://michael-maltsev.github.io/technion-course-names/num/' + matchCourse;
+                    onmouseover = 'var that = this;' +
+                        'if (!$(that).attr("data-name-loading")) {' +
+                            '$(that).attr("data-name-loading", true);' +
+                            '$.get("' + courseNameUrl + '", function (name) {' +
+                                '$(that).attr("data-original-title", "' + matchCourse + ' - " + name + " (לא מועבר בסמסטר)");' +
+                                'if ($(that).is(":hover")) { $(that).tooltip("show"); }' +
+                            '});' +
+                        '}';
                 }
 
                 replaced = true;
@@ -429,6 +440,7 @@ var CourseButtonList = (function () {
                     target: '_blank',
                     rel: 'noopener',
                     onclick: 'gtag(\'event\', \'info-click-dependency-link-rishum\')',
+                    onmouseover: onmouseover,
                     title: tooltipTitle,
                     'data-toggle': 'tooltip',
                     'data-trigger': 'hover',
