@@ -37,7 +37,7 @@ def get_available_semesters(index_html_path: Path):
 def set_available_semesters(index_html_path: Path, available_semesters: dict):
     index_html = index_html_path.read_text(encoding="utf-8")
 
-    available_semesters_str = json.dumps(available_semesters)
+    available_semesters_str = json.dumps(available_semesters, sort_keys=True)
     available_semesters_str = re.sub(
         r'\s*("\d{6}_?":)', '\n' + ' ' * 8 + r'\g<1>', available_semesters_str
     )
