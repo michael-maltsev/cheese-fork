@@ -132,7 +132,7 @@ CourseManager.prototype.getSchedule = function (course) {
                     var workshopId = 101;
                     for (i++; i < commentLines.length; i++) {
                         line = commentLines[i];
-                        match = /^ב?(?:ימי|יום) ([א-ת]+)'?,?\s*(\d+)\.(\d+)-(\d+)\.(\d+)(?:\s*,\s*(.*?)(?:\s+(\d+))?(?:\s*,\s*(.*?))?)?$/.exec(line);
+                        match = /^ב?(?:ימי|יום) ([א-ת]+)'?,?\s*(\d+)[.:](\d+)-(\d+)[.:](\d+)(?:\s*,\s*(.*?)(?:\s+(\d+))?(?:\s*,\s*(.*?))?)?$/.exec(line);
                         if (!match) {
                             break;
                         }
