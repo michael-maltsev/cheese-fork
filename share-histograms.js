@@ -149,11 +149,14 @@ let cheeseforkShareHistograms = function () {
             });
         }
 
-        // For some reason, sometime between 20.11.2023 and 22.11.2023, the
-        // grades website started adding an additional zero digit to the course
-        // number. For example, 236363 became 2360363. This broke the upload.
-        // The following is a best-effort workaround for this issue.
-        const supportedCourseFormat = courses.every(x => x.course[x.course.length - 4] === '0');
+        // Currently, only 0xxx0xxx course numbers are supported. So far,
+        // histograms for other course numbers weren't submitted. Once that
+        // happens, we'll see how to handle it, perhaps by making a proper
+        // transition from 6-digit course numbers to the new 8-digit format.
+        const supportedCourseFormat = courses.every(x => (
+            x.course.length >= 5 &&
+            x.course[x.course.length - 4] === '0' &&
+            x.course.replace(/^0+/, '').length <= 7));
 
         courses = courses.map(x => {
             const courseMatched = x.course;
