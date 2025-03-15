@@ -61,13 +61,27 @@
         return decodeURIComponent(results[2].replace(/\+/g, " "));
     }
 
+    function toNewCourseNumber(course) {
+        var match = /^9730(\d\d)$/.exec(course);
+        if (match) {
+            return '970300' + match[1];
+        }
+
+        match = /^(\d\d\d)(\d\d\d)$/.exec(course);
+        if (match) {
+            return '0' + match[1] + '0' + match[2];
+        }
+
+        return course;
+    }
+
     function stringToCourseNumber(str) {
         if (!str || !/^[0-9]{1,8}$/.test(str)) {
             return null;
         }
 
         if (str.length <= 6) {
-            return ('00000' + str).slice(-6);
+            return toNewCourseNumber(('00000' + str).slice(-6));
         } else {
             return ('0000000' + str).slice(-8);
         }

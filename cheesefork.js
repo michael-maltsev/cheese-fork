@@ -399,7 +399,7 @@
 
         var courses = courseNumbers.map(function (course) {
             return {
-                course: course,
+                course: courseManager.toNewCourseNumber(course),
                 title: courseManager.getTitle(course)
             };
         });

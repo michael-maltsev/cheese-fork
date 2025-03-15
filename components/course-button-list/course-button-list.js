@@ -458,7 +458,7 @@ var CourseButtonList = (function () {
         modalBody.find('.course-information').html(courseInfo);
 
         var courseFeedback = new CourseFeedback(modalBody.find('.course-feedback'), {});
-        courseFeedback.loadFeedback(courseManager.toOldCourseNumber(course));
+        courseFeedback.loadFeedback(courseManager.toNewCourseNumber(course));
 
         var histogramBrowser = new HistogramBrowser(modalBody.find('.inline-histograms'), {});
         histogramBrowser.loadHistograms(courseManager.toOldCourseNumber(course));
