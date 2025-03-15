@@ -383,7 +383,7 @@ var CourseButtonList = (function () {
         });
 
         courseInfo.find('.whatsapp-group-link').click(function () {
-            showWhatsappGroupLink(courseManager.toOldCourseNumber(course));
+            showWhatsappGroupLink(courseManager.toNewCourseNumber(course));
             return false;
         });
 
