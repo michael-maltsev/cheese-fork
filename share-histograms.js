@@ -137,47 +137,19 @@ let cheeseforkShareHistograms = function () {
             const semesterArray = semesterPretty.split('/', 2);
             const semester = semesterArray[1] + semesterArray[0];
             const match = /^\s*\d+\s+(\d+)\s+(.*?)\s*$/.exec(node.textContent);
-            const course = match[1];
+            const courseMatched = match[1];
+            const course = ('0000000' + courseMatched).slice(-8);
             const name = match[2];
 
             courses.push({
                 url,
                 semesterPretty,
                 semester,
+                courseMatched,
                 course,
                 name
             });
         }
-
-        // Currently, only 0xxx0xxx course numbers are supported. So far,
-        // histograms for other course numbers weren't submitted. Once that
-        // happens, we'll see how to handle it, perhaps by making a proper
-        // transition from 6-digit course numbers to the new 8-digit format.
-        const supportedCourseFormat = courses.every(x => (
-            x.course.length >= 5 &&
-            x.course[x.course.length - 4] === '0' &&
-            x.course.replace(/^0+/, '').length <= 7));
-
-        courses = courses.map(x => {
-            const courseMatched = x.course;
-            let course;
-
-            if (supportedCourseFormat) {
-                const courseWithoutMiddleZero = courseMatched.slice(0, -4) + courseMatched.slice(-3);
-
-                // Handle special cases:
-                // 97030xy -> 9730xy
-                const courseBeforePadding = courseWithoutMiddleZero.replace(/^97030(\d\d)$/, '9730$1');
-
-                course = ('00000' + courseBeforePadding).slice(-6);
-            } else {
-                // Use an underscore to indicate that the course number is of an
-                // unknown format and needs to be fixed manually.
-                course = '_' + courseMatched;
-            }
-
-            return { ...x, courseMatched, course };
-        });
 
         return courses;
     }
@@ -251,8 +223,7 @@ let cheeseforkShareHistograms = function () {
         const category = categoryRaw === 'ציון סופי במחשב המרכזי' ? 'Finals' : categoryRaw;
 
         const imgSrc = doc.querySelector('img#CourseChart').src;
-        const propertyNodes = doc.querySelectorAll('table#gvChart tbody td');
-        const n = propertyNodes;
+        const n = doc.querySelectorAll('table#gvChart tbody td');
         const properties = {
             students: n[5] ? n[5].textContent : '',
             passFail: n[6] ? n[6].textContent : '',

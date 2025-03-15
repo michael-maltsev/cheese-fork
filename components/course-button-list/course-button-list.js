@@ -462,7 +462,7 @@ var CourseButtonList = (function () {
         courseFeedback.loadFeedback(courseManager.toNewCourseNumber(course));
 
         var histogramBrowser = new HistogramBrowser(modalBody.find('.inline-histograms'), {});
-        histogramBrowser.loadHistograms(courseManager.toOldCourseNumber(course));
+        histogramBrowser.loadHistograms(courseManager.toNewCourseNumber(course));
     }
 
     CourseButtonList.prototype.setFloatingCourseInfo = function (course) {
