@@ -30,3 +30,11 @@ jobs:
           git add .
           git diff-index --quiet --cached HEAD || git commit -m "Update semesters"
           git push
+
+  workflow-keepalive:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - uses: liskin/gh-workflow-keepalive@v1
