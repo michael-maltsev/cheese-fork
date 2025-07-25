@@ -10,6 +10,8 @@ var CourseFeedback = (function () {
     }
 
     function newFeedbackDialog(course, options) {
+        var authenticated = firebase.auth().currentUser !== null;
+
         var defaultText = 'שם המרצה: \n' +
             'חוות דעת - הרצאות: \n' +
             '\n' +
@@ -22,7 +24,8 @@ var CourseFeedback = (function () {
             '\n' +
             'השורה התחתונה: ';
 
-        var formHtml = '<form>' +
+        var formHtml = authenticated
+            ? ('<form>' +
                 '<div class="form-row">' +
                     '<div class="form-group col-md-6">' +
                         '<label for="feedback-form-author">שם או כינוי</label>' +
@@ -81,62 +84,69 @@ var CourseFeedback = (function () {
                         '</div>' +
                     '</div>' +
                 '</div>' +
-            '</form>';
+                '<div>' +
+                    '<strong>שימו לב:</strong> ' +
+                    'חוות הדעת אנונימיות, אך זהותכם תישמר במערכת לצרכי בקרה. ' +
+                    'חוות דעת שיכילו תוכן לא ראוי (כגון שפה בוטה, תוכן שאינו קשור לקורס, התייחסות אישית ולא עניינית לאיש סגל) יוסרו מהמערכת.' +
+                '</div>' +
+            '</form>')
+            : ('<div>' +
+                'כדי לפרסם חוות דעת יש להתחבר לחשבון שלכם במערכת.' +
+            '</div>');
 
         var messageElement = $('<div>').append(options.preHtml, formHtml, options.postHtml);
 
-        var buttons = [{
-            label: 'פרסם',
-            cssClass: 'btn-primary',
-            action: function (dialog) {
-                var body = dialog.getModalBody();
+        var buttons = [];
 
-                var form = body.find('form').get(0);
-                if (form.checkValidity() === false) {
-                    form.classList.add('was-validated');
-                    return;
+        if (authenticated) {
+            buttons.push({
+                label: 'פרסם',
+                cssClass: 'btn-primary',
+                action: function (dialog) {
+                    var body = dialog.getModalBody();
+
+                    var form = body.find('form').get(0);
+                    if (form.checkValidity() === false) {
+                        form.classList.add('was-validated');
+                        return;
+                    }
+                    form.classList.remove('was-validated');
+
+                    var feedbackDisplayName = body.find('#feedback-form-author').val().trim();
+                    try {
+                        localStorage.setItem('feedbackDisplayName', feedbackDisplayName);
+                    } catch (e) {
+                        // localStorage is not available in IE/Edge when running from a local file.
+                    }
+
+                    var data = {
+                        timestamp: Date.now(),
+                        author: feedbackDisplayName,
+                        semester: body.find('#feedback-form-semester').val(),
+                        text: body.find('#feedback-form-text').val().trim(),
+                        difficultyRank: parseInt(body.find('#feedback-form-difficulty').val(), 10),
+                        generalRank: parseInt(body.find('#feedback-form-general').val(), 10)
+                    };
+
+                    var update = {
+                        posts: firebase.firestore.FieldValue.arrayUnion(data)
+                    };
+
+                    firebase.firestore().collection('courseFeedback').doc(course)
+                        .set(update, {merge: true})
+                        .then(function () {
+                            options.onSubmit();
+                        }, function (error) {
+                            alert('Error writing document: ' + error);
+                        });
+
+                    dialog.close();
                 }
-                form.classList.remove('was-validated');
+            });
+        }
 
-                var feedbackDisplayName = body.find('#feedback-form-author').val().trim();
-                try {
-                    localStorage.setItem('feedbackDisplayName', feedbackDisplayName);
-                } catch (e) {
-                    // localStorage is not available in IE/Edge when running from a local file.
-                }
-
-                var data = {
-                    timestamp: Date.now(),
-                    author: feedbackDisplayName,
-                    semester: body.find('#feedback-form-semester').val(),
-                    text: body.find('#feedback-form-text').val().trim(),
-                    difficultyRank: parseInt(body.find('#feedback-form-difficulty').val(), 10),
-                    generalRank: parseInt(body.find('#feedback-form-general').val(), 10)
-                };
-
-                var update = {
-                    posts: firebase.firestore.FieldValue.arrayUnion(data)
-                };
-
-                firebase.firestore().collection('courseFeedback').doc(course)
-                    .set(update, {merge: true})
-                    .then(function () {
-                        options.onSubmit();
-                    }, function (error) {
-                        alert('Error writing document: ' + error);
-                    });
-
-                dialog.close();
-            }
-        }, {
-            label: 'סגור',
-            action: function (dialog) {
-                dialog.close();
-            }
-        }];
-
-        if (options.skipButton) {
-            buttons.splice(1, 0, {
+        if (authenticated && options.skipButton) {
+            buttons.push({
                 label: 'דלג על הקורס',
                 action: function (dialog) {
                     dialog.close();
@@ -145,11 +155,22 @@ var CourseFeedback = (function () {
             });
         }
 
+        buttons.push({
+            label: 'סגור',
+            action: function (dialog) {
+                dialog.close();
+            }
+        });
+
         BootstrapDialog.show({
             title: 'פרסום חוות דעת',
             message: messageElement,
             buttons: buttons,
             onshow: function (dialog) {
+                if (!authenticated) {
+                    return;
+                }
+
                 var body = dialog.getModalBody();
 
                 var selectSemester = body.find('#feedback-form-semester');
