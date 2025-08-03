@@ -344,6 +344,23 @@ var CourseCalendar = (function () {
             return false;
         });
 
+        // Round to the nearest half hour.
+        if (minTime.minute() >= 30) {
+            minTime.set({minute: 30, second: 0, millisecond: 0});
+        } else {
+            minTime.set({minute: 0, second: 0, millisecond: 0});
+        }
+
+        if (maxTime.hour() === 0) {
+            maxTime.set({minute: 0, second: 0, millisecond: 0});
+        } else if (maxTime.minute() > 30) {
+            maxTime.set({hour: maxTime.hour() + 1, minute: 0, second: 0, millisecond: 0});
+        } else if (maxTime.minute() > 0) {
+            maxTime.set({minute: 30, second: 0, millisecond: 0});
+        } else {
+            maxTime.set({minute: 0, second: 0, millisecond: 0});
+        }
+
         minTime = minTime.format('HH:mm:ss');
         maxTime = maxTime.format('kk:mm:ss');
         var hiddenDays = [];
