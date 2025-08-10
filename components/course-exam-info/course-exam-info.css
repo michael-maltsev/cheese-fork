@@ -34,6 +34,18 @@
     text-shadow: 0 0 10px black;
 }
 
+.exam-info-item-has-extra-dates {
+    outline: dotted;
+    outline-width: 2px;
+    outline-offset: -3px;
+    outline-color: white;
+}
+
+.exam-info-item-has-extra-dates.exam-info-item-hovered,
+.exam-info-item-has-extra-dates.exam-info-item-highlighted {
+    outline-color: #CCA0A0;
+}
+
 .exam-info-left-arrow {
     border: solid black;
     border-width: 0 3px 3px 0;

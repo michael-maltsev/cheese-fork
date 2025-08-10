@@ -38,6 +38,7 @@ CourseExamInfo.prototype.renderCourses = function (courses) {
         var moedNames = ['מועד א', 'מועד ב'];
         var moedName = moedNames[moed - 1];
         var moedDates = {};
+        var moedAmounts = {};
 
         courses.forEach(function (course) {
             var general = that.courseManager.getGeneralInfo(course);
@@ -46,6 +47,11 @@ CourseExamInfo.prototype.renderCourses = function (courses) {
                 if (parsedDate) {
                     moedDates[course] = moment.utc(parsedDate.start);
                 }
+
+                var lines = general[moedName].split('\n').filter(function (line) {
+                    return line.trim() !== '';
+                });
+                moedAmounts[course] = lines.length;
             }
         });
 
@@ -110,6 +116,17 @@ CourseExamInfo.prototype.renderCourses = function (courses) {
             var spanBoldHidden = $('<span class="content-bold-hidden"></span>').text(elementText);
 
             daysText.append(spanAbsolute, spanBoldHidden);
+
+            var extraDates = moedAmounts[course] - 1;
+            if (extraDates > 0) {
+                daysText.addClass('exam-info-item-has-extra-dates');
+                tooltipText = tooltipText ? (tooltipText + ' ') : '';
+                if (extraDates === 1) {
+                    tooltipText += 'ועוד מועד אחד נוסף';
+                } else {
+                    tooltipText += 'ועוד ' + extraDates + ' מועדים נוספים';
+                }
+            }
 
             if (tooltipText) {
                 daysText
