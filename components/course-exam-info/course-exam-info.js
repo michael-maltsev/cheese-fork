@@ -1,6 +1,6 @@
 'use strict';
 
-/* global moment */
+/* global moment, currentSemester */
 
 function CourseExamInfo(element, options) {
     this.element = element;
@@ -48,10 +48,16 @@ CourseExamInfo.prototype.renderCourses = function (courses) {
                     moedDates[course] = moment.utc(parsedDate.start);
                 }
 
-                var lines = general[moedName].split('\n').filter(function (line) {
-                    return line.trim() !== '';
-                });
-                moedAmounts[course] = lines.length;
+                // For SAP info, each line contains an exam date. Previous data
+                // is less structured.
+                if (currentSemester >= '202401') {
+                    var lines = general[moedName].split('\n').filter(function (line) {
+                        return line.trim() !== '';
+                    });
+                    moedAmounts[course] = lines.length;
+                } else {
+                    moedAmounts[course] = 1;
+                }
             }
         });
 
