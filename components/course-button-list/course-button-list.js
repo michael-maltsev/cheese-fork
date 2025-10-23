@@ -399,7 +399,7 @@ var CourseButtonList = (function () {
                 if (matchCourse === course) {
                     return match;
                 }
-    
+
                 var url;
                 if (currentSemester < '202401') {
                     if (matchCourse.length !== 6) {
