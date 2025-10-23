@@ -10,7 +10,8 @@ var CourseFeedback = (function () {
     }
 
     function newFeedbackDialog(course, options) {
-        var authenticated = firebase.auth().currentUser !== null;
+        var authenticated = firebase.auth &&
+            firebase.auth().currentUser !== null;
 
         var defaultText = 'שם המרצה: \n' +
             'חוות דעת - הרצאות: \n' +
@@ -196,17 +197,15 @@ var CourseFeedback = (function () {
                 }
                 selectSemester.prepend($('<option value="">לחצו לבחירת סמסטר...</option>')).val(selectValue);
 
-                try {
-                    var displayName = localStorage.getItem('feedbackDisplayName');
-                    if (!displayName) {
-                        displayName = firebase.auth().currentUser.displayName;
-                    }
+                var displayName = localStorage.getItem('feedbackDisplayName');
+                if (!displayName) {
+                    displayName = firebase.auth &&
+                        firebase.auth().currentUser !== null &&
+                        firebase.auth().currentUser.displayName;
+                }
 
-                    if (displayName) {
-                        body.find('#feedback-form-author').val(displayName);
-                    }
-                } catch (e) {
-                    // Can fail if no auth module is loaded, or if not authenticated.
+                if (displayName) {
+                    body.find('#feedback-form-author').val(displayName);
                 }
 
                 var validateFeedbackText = function () {
