@@ -198,12 +198,16 @@ var CourseButtonList = (function () {
             }]
         });
 
-        var onError = function () {
+        var onError = function (errorMessage) {
             whatsappGroupDialog.getModalBody().find('.whatsapp-group-link-content')
-                .text('טעינת הנתונים נכשלה. נסו שוב מאוחר יותר.');
+                .text(errorMessage);
         };
 
-        if (typeof firebase !== 'undefined') {
+        var authenticated = firebase.auth &&
+            firebase.auth().currentUser !== null;
+        if (!authenticated) {
+            onError('יש להתחבר לחשבון שלכם במערכת כדי לצפות בקישורים לקבוצות הקורס.');
+        } else if (typeof firebase !== 'undefined') {
             firebase.firestore().collection('courseExtraDetails').doc(course).get()
                 .then(function (doc) {
                     if (doc.exists) {
@@ -215,10 +219,10 @@ var CourseButtonList = (function () {
 
                     whatsappGroupDialog.getButton('update-link').enable();
                 }, function (error) {
-                    onError();
+                    onError('טעינת הנתונים נכשלה. נסו שוב מאוחר יותר.');
                 });
         } else {
-            onError();
+            onError('שירות Firebase אינו זמין כרגע.');
         }
     }
 
