@@ -169,7 +169,9 @@ var CourseButtonList = (function () {
                     Object.keys(newGroupLinksDataSelectors).forEach(function (key) {
                         var selector = newGroupLinksDataSelectors[key];
                         var url = content.find(selector).val()
-                            .trim().replace(/[?&]fbclid=[a-zA-Z0-9_-]+$/, '');
+                            .trim()
+                            .replace(/[?&]fbclid=[a-zA-Z0-9_-]+$/, '')
+                            .replace(/[?&]mode=\w+$/, '');
 
                         if (url !== '') {
                             newGroupLinksData[key] = url;
