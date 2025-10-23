@@ -894,7 +894,6 @@
         firebase.initializeApp(config);
 
         firestoreDb = firebase.firestore();
-        firestoreDb.settings({timestampsInSnapshots: true}); // silence a warning
 
         firebaseStorage = firebase.app().storage('gs://files.cheesefork.cf');
     }
