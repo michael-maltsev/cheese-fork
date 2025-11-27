@@ -13,8 +13,28 @@ var CourseButtonList = (function () {
         this.onHoverOut = options.onHoverOut;
         this.onEnableCourse = options.onEnableCourse;
         this.onDisableCourse = options.onDisableCourse;
+        this.onReorder = options.onReorder;
 
         var that = this;
+
+        that.sortableInitialized = false;
+
+        if (that.readonly) {
+            that.element.addClass('course-button-list-readonly');
+        }
+
+        // Create a wrapper container inside the element for the badges
+        that.badgeContainer = $('<ul class="course-button-list-badge-container list-group"></ul>');
+        that.element.append(that.badgeContainer);
+
+        // Create delete area for drag-to-delete functionality (only if not readonly)
+        if (!that.readonly) {
+            that.deleteArea = $('<div class="course-button-list-delete-area">' +
+                '<i class="fas fa-trash-alt"></i>' +
+                '</div>');
+            that.deleteArea.hide();
+            that.element.append(that.deleteArea);
+        }
 
         that.infoDialogs = [];
     }
@@ -237,6 +257,11 @@ var CourseButtonList = (function () {
         var spanAbsolute = $('<div class="content-wrapper"></div>').html($('<span class="content-absolute"></span>').text(courseTitle));
         var spanBoldHidden = $('<span class="content-bold-hidden"></span>').text(courseTitle);
 
+        // Create drag handle (only visible when not readonly)
+        var dragHandle = $('<span class="course-button-list-drag-handle">' +
+            '<i class="fas fa-grip-vertical"></i>' +
+            '</span>');
+
         var button = $('<li' +
             ' class="list-group-item active course-button-list-item"' +
             ' data-course-number="' + course + '">' +
@@ -259,7 +284,7 @@ var CourseButtonList = (function () {
                 $(this).removeClass('course-button-list-item-hovered');
                 that.onHoverOut(course);
             })
-            .append(spanAbsolute, spanBoldHidden, badge);
+            .append(dragHandle, spanAbsolute, spanBoldHidden, badge);
 
         // Add tooltip to badge.
         var courseDescriptionHtml = that.courseManager.getDescription(course, {html: true});
@@ -276,7 +301,7 @@ var CourseButtonList = (function () {
 
             gtag('event', 'course-button-list-info-click');
 
-            var firstTimeTooltipBadge = that.element.find('[data-special-tooltip="first-time"]');
+            var firstTimeTooltipBadge = that.badgeContainer.find('[data-special-tooltip="first-time"]');
             if (firstTimeTooltipBadge.length > 0) {
                 firstTimeTooltipBadge.tooltip('dispose');
                 addTooltipToBadge(firstTimeTooltipBadge, courseDescriptionHtml, false);
@@ -309,7 +334,7 @@ var CourseButtonList = (function () {
         });
 
         var showFirstTimeTooltip = false;
-        if (that.element.find('li.list-group-item:first').length === 0) {
+        if (that.badgeContainer.find('li.list-group-item:first').length === 0) {
             try {
                 showFirstTimeTooltip = !localStorage.getItem('dontShowHistogramsTip');
             } catch (e) {
@@ -324,7 +349,10 @@ var CourseButtonList = (function () {
 
         addTooltipToBadge(badge, tooltipHtml, showFirstTimeTooltip);
 
-        that.element.append(button);
+        that.badgeContainer.append(button);
+
+        // Initialize sortable after first course is added
+        that.initializeSortableIfNeeded();
 
         if (showFirstTimeTooltip) {
             // Without setTimeout, if the list is hidden, the tooltip won't
@@ -370,6 +398,134 @@ var CourseButtonList = (function () {
                 button.css('background-color', color);
                 that.onEnableCourse(course);
             }
+        }
+    };
+
+    CourseButtonList.prototype.initializeSortableIfNeeded = function () {
+        var that = this;
+
+        // Don't initialize if already done, or if readonly
+        if (that.sortableInitialized || that.readonly) {
+            return;
+        }
+
+        // Don't initialize if no courses yet
+        if (that.badgeContainer.find('li.list-group-item').length === 0) {
+            return;
+        }
+
+        that.sortableInitialized = true;
+
+        // Track if item should be deleted and original position
+        var shouldDelete = false;
+        var cachedHeight = 0;
+        var originalIndex = -1;
+
+        // Initialize jQuery UI sortable
+        that.badgeContainer.sortable({
+            handle: '.course-button-list-drag-handle',
+            placeholder: 'course-button-list-item ui-sortable-placeholder',
+            tolerance: 'pointer',
+            cursor: 'move',
+            opacity: 0.8,
+            delay: 100, // Helps distinguish between click and drag
+            distance: 5, // Minimum distance to start drag
+            connectWith: '.course-button-list-delete-area',
+
+            // Helper event - fires before start, get height while item is still visible
+            helper: function(event, item) {
+                // Cache the height before the item gets hidden
+                cachedHeight = item.outerHeight();
+                return item.clone();
+            },
+
+            // Start event - clean up UI and show delete area
+            start: function(event, ui) {
+                shouldDelete = false;
+
+                // Store the original index to detect if position changed
+                originalIndex = ui.item.index();
+
+                // Hide any visible tooltips
+                that.badgeContainer.find('[data-toggle="tooltip"]').tooltip('hide');
+
+                // Add helper class for additional styling
+                ui.helper.addClass('ui-sortable-helper');
+
+                // Set placeholder height using cached value (item is still visible when cached)
+                ui.placeholder.outerHeight(cachedHeight);
+
+                // Show delete area (if it exists)
+                if (that.deleteArea) {
+                    that.deleteArea.fadeIn(150);
+                }
+            },
+
+            // Stop event - save new order or delete course
+            stop: function(event, ui) {
+                // Hide delete area (if it exists)
+                if (that.deleteArea) {
+                    that.deleteArea.fadeOut(150);
+                }
+
+                if (shouldDelete) {
+                    // Get course number before removing the element
+                    var course = ui.item.attr('data-course-number');
+
+                    // Remove the item from DOM
+                    ui.item.remove();
+
+                    // Call onDisableCourse to handle the deletion
+                    if (course && that.onDisableCourse) {
+                        that.onDisableCourse(course);
+                    }
+                } else {
+                    // Only call onReorder if position actually changed
+                    var newIndex = ui.item.index();
+                    if (newIndex !== originalIndex && that.onReorder) {
+                        that.onReorder();
+                    }
+                }
+
+                shouldDelete = false;
+            }
+        });
+
+        // Make delete area droppable (only if it exists)
+        if (that.deleteArea) {
+            that.deleteArea.droppable({
+                accept: '.course-button-list-item',
+                tolerance: 'pointer',
+                hoverClass: 'ui-droppable-hover',
+                over: function(event, ui) {
+                    shouldDelete = true;
+                },
+                out: function(event, ui) {
+                    shouldDelete = false;
+                }
+            });
+        }
+    };
+
+    CourseButtonList.prototype.destroySortable = function () {
+        var that = this;
+
+        if (that.sortableInitialized) {
+            try {
+                that.badgeContainer.sortable('destroy');
+            } catch (e) {
+                // Sortable may not be initialized, ignore
+            }
+
+            if (that.deleteArea) {
+                try {
+                    that.deleteArea.droppable('destroy');
+                } catch (e) {
+                    // Droppable may not be initialized, ignore
+                }
+            }
+
+            that.sortableInitialized = false;
         }
     };
 
@@ -492,27 +648,27 @@ var CourseButtonList = (function () {
 
     CourseButtonList.prototype.setHovered = function (course) {
         var selector = 'li.list-group-item[data-course-number="' + course + '"]';
-        this.element.find(selector).addClass('course-button-list-item-hovered');
+        this.badgeContainer.find(selector).addClass('course-button-list-item-hovered');
     };
 
     CourseButtonList.prototype.removeHovered = function (course) {
         var selector = 'li.list-group-item[data-course-number="' + course + '"]';
-        this.element.find(selector).removeClass('course-button-list-item-hovered');
+        this.badgeContainer.find(selector).removeClass('course-button-list-item-hovered');
     };
 
     CourseButtonList.prototype.setConflicted = function (course) {
         var selector = 'li.list-group-item[data-course-number="' + course + '"]';
-        this.element.find(selector).addClass('course-button-list-item-conflicted');
+        this.badgeContainer.find(selector).addClass('course-button-list-item-conflicted');
     };
 
     CourseButtonList.prototype.removeConflicted = function (course) {
         var selector = 'li.list-group-item[data-course-number="' + course + '"]';
-        this.element.find(selector).removeClass('course-button-list-item-conflicted');
+        this.badgeContainer.find(selector).removeClass('course-button-list-item-conflicted');
     };
 
     CourseButtonList.prototype.setLessonTypesHidden = function (course, lessonTypesHidden) {
         var selector = 'li.list-group-item[data-course-number="' + course + '"] .content-absolute';
-        var listGroupTextItem = this.element.find(selector);
+        var listGroupTextItem = this.badgeContainer.find(selector);
 
         if (lessonTypesHidden.length > 0) {
             var title = 'אירועים מהסוגים הבאים הוסתרו מהמערכת:\n' + lessonTypesHidden.sort().join(', ');
@@ -534,7 +690,7 @@ var CourseButtonList = (function () {
 
     CourseButtonList.prototype.isCourseInList = function (course) {
         var selector = 'li.list-group-item[data-course-number="' + course + '"]';
-        return this.element.find(selector).length > 0;
+        return this.badgeContainer.find(selector).length > 0;
     };
 
     CourseButtonList.prototype.getCourseNumbers = function (onlySelected) {
@@ -546,7 +702,7 @@ var CourseButtonList = (function () {
         }
 
         var courseNumbers = [];
-        that.element.find(selector).each(function () {
+        that.badgeContainer.find(selector).each(function () {
             var course = $(this).attr('data-course-number');
             courseNumbers.push(course);
         });
@@ -555,8 +711,9 @@ var CourseButtonList = (function () {
     };
 
     CourseButtonList.prototype.clear = function () {
-        this.element.find('[data-toggle="tooltip"]').tooltip('hide');
-        this.element.empty();
+        this.badgeContainer.find('[data-toggle="tooltip"]').tooltip('hide');
+        this.destroySortable();
+        this.badgeContainer.empty();
     };
 
     return CourseButtonList;

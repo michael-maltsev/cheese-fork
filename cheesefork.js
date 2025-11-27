@@ -123,7 +123,8 @@
                 updateGeneralInfoLine();
                 courseExamInfo.renderCourses(courseButtonList.getCourseNumbers(true));
                 courseSelect.filterApply();
-            }
+            },
+            onReorder: coursesOrderSave
         });
 
         courseExamInfo = new CourseExamInfo($('#course-exam-info'), {
@@ -1087,6 +1088,29 @@
                 if (metadataUpdate) {
                     localStorage.setItem(metadataCourseKey, JSON.stringify(courseData));
                 }
+            } catch (e) {
+                // localStorage is not available in IE/Edge when running from a local file.
+            }
+        }
+
+        onSavedSessionChange();
+    }
+
+    function coursesOrderSave() {
+        // Save only the course order when reordering via drag-and-drop
+        var semesterCoursesKey = currentSemester + '_courses';
+        var courseNumbers = courseButtonList.getCourseNumbers(true);
+        currentSavedSession[semesterCoursesKey] = courseNumbers.concat(
+            $(currentSavedSession[semesterCoursesKey]).not(courseNumbers).get());
+
+        var doc = firestoreAuthenticatedUserDoc();
+        if (doc) {
+            var input = {};
+            input[semesterCoursesKey] = currentSavedSession[semesterCoursesKey];
+            doc.update(input);
+        } else {
+            try {
+                localStorage.setItem(semesterCoursesKey, JSON.stringify(currentSavedSession[semesterCoursesKey]));
             } catch (e) {
                 // localStorage is not available in IE/Edge when running from a local file.
             }

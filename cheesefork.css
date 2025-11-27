@@ -71,14 +71,6 @@
     text-align: center;
 }
 
-#course-button-list {
-    margin-top: 20px;
-}
-
-#course-button-list .list-group-item:last-child {
-    margin-bottom: 10px;
-}
-
 #course-exam-info-wrapper {
     /* A workaround to an Edge bug: https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/18883305/ */
     filter: brightness(1);
@@ -102,6 +94,11 @@
 .list-group-item {
     font-size: .8rem;
     cursor: default;
+
+    /* By default, all items have margin-bottom: -1px except for the last one,
+    but that causes problems with sortable because it adds a hovered item at the
+    end; just force the last item to have the margin too */
+    margin-bottom: -1px !important;
 }
 
 /* Fixes: Scroll and focus issue with multiple modals open */

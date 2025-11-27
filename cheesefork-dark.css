@@ -109,6 +109,21 @@ body {
     border-color: #495057;
 }
 
+/* Make grip icon more visible on inactive badges in dark mode */
+#course-button-list .list-group-item:not(.active) .course-button-list-drag-handle {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+#course-button-list .list-group-item:not(.active):hover .course-button-list-drag-handle {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Lighter placeholder for drag-and-drop in dark mode */
+.course-button-list-item.ui-sortable-placeholder {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    border: 2px dashed rgba(255, 255, 255, 0.2) !important;
+}
+
 #course-calendar th,
 #course-calendar td {
     border-color: #495057;
