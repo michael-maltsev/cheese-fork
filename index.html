@@ -21,8 +21,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>CheeseFork - Your Cheesy Scheduler</title>
     <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+    <script>
+        window.cheeseForkAlt = 0;
+        if ((function (d) { return d.getMonth() * 37 + d.getDate() - 112; })(new Date())) {
+            document.write('<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">');
+            document.write('<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">');
+        } else if (new Date().getFullYear() % 2) {
+            document.write('<link rel="icon" type="image/x-icon" href="assets/favicon-alt.ico">');
+            window.cheeseForkAlt = 1;
+        } else {
+            document.write('<link rel="icon" type="image/x-icon" href="assets/favicon-alt2.ico">');
+            window.cheeseForkAlt = 2;
+        }
+    </script>
     <link rel="manifest" href="icons/site.webmanifest">
     <link rel="mask-icon" href="icons/safari-pinned-tab.svg" color="#5bbad5">
     <meta name="msapplication-TileColor" content="#ffc40d">
@@ -129,7 +140,17 @@
             <h1 id="top-navbar-print-section-title"></h1>
         </div>
         <a class="navbar-brand" href=".">
-            <img src="logo.png" alt="logo" height="30">
+            <script>
+                (function (alt) {
+                    var path = 'logo.png';
+                    if (alt === 1) {
+                        path = 'assets/logo-alt.png';
+                    } else if (alt === 2) {
+                        path = 'assets/logo-alt2.png';
+                    }
+                    document.write('<img src="' + path + '" alt="logo" height="30">');
+                })(window.cheeseForkAlt);
+            </script>
             <span class="font-weight-bold">CheeseFork</span>
         </a>
     </nav>
