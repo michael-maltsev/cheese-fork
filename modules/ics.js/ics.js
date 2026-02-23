@@ -47,7 +47,7 @@ var ics = function(uidDomain, prodId, extraHeaders, eventTimezoneId) {
      * @param  {string} begin       Beginning date of event
      * @param  {string} stop        Ending date of event
      */
-    'addEvent': function(subject, description, location, begin, stop, rrule) {
+    'addEvent': function(subject, description, location, begin, stop, rrule, exdates) {
       // I'm not in the mood to make these optional... So they are all required
       if (typeof subject === 'undefined' ||
         typeof description === 'undefined' ||
@@ -181,6 +181,21 @@ var ics = function(uidDomain, prodId, extraHeaders, eventTimezoneId) {
         }
 
         calendarEvent.push(rruleString);
+      }
+
+      if (exdates && exdates.length > 0) {
+        for (var i = 0; i < exdates.length; i++) {
+          var exDate = new Date(exdates[i]);
+          var exYear = ("0000" + exDate.getFullYear().toString()).slice(-4);
+          var exMonth = ("00" + (exDate.getMonth() + 1).toString()).slice(-2);
+          var exDay = ("00" + exDate.getDate().toString()).slice(-2);
+          var exDateStr = exYear + exMonth + exDay + start_time;
+          if (eventTimezoneId) {
+            calendarEvent.push('EXDATE;TZID=' + eventTimezoneId + ':' + exDateStr);
+          } else {
+            calendarEvent.push('EXDATE:' + exDateStr);
+          }
+        }
       }
 
       calendarEvent.push('DTSTAMP:' + now);
