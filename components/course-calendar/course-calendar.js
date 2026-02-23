@@ -1083,7 +1083,7 @@ var CourseCalendar = (function () {
         });
     };
 
-    CourseCalendar.prototype.saveAsIcs = function (icsCal, dateFrom, dateTo) {
+    CourseCalendar.prototype.saveAsIcs = function (icsCal, dateFrom, dateTo, daysOff) {
         var that = this;
         var calendar = that.element;
 
@@ -1096,6 +1096,20 @@ var CourseCalendar = (function () {
 
         var until = moment.utc(dateTo + 'T00:00:00').add(1, 'days').format();
         var rrule = {freq: 'WEEKLY', until: until};
+
+        // Pre-group days off by day of week (0=Sunday, 6=Saturday).
+        var daysOffByDay = {};
+        if (daysOff) {
+            daysOff.forEach(function (dateStr) {
+                var parts = dateStr.split('-');
+                var d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+                var day = d.getDay();
+                if (!daysOffByDay[day]) {
+                    daysOffByDay[day] = [];
+                }
+                daysOffByDay[day].push(d);
+            });
+        }
 
         var count = 0;
 
@@ -1148,7 +1162,7 @@ var CourseCalendar = (function () {
                 begin.local();
                 end.local();
 
-                icsCal.addEvent(subject, description, location, begin.format(), end.format(), rrule);
+                icsCal.addEvent(subject, description, location, begin.format(), end.format(), rrule, daysOffByDay[eventDay]);
                 count++;
             }
 

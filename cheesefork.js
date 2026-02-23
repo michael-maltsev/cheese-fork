@@ -794,93 +794,113 @@
                 dateFrom = '2023-03-19';
             }
 
-            courseCalendar.saveAsIcs(icsCal, dateFrom, dateTo);
+            var calendarEventsUrl = 'https://michael-maltsev.github.io/technion-calendar-events/' + currentSemester + '.json';
 
-            // Exams.
-            courseButtonList.getCourseNumbers(true).forEach(function (course) {
-                var general = courseManager.getGeneralInfo(course);
-                ['מועד א', 'מועד ב'].forEach(function (moed) {
-                    if (general[moed]) {
-                        var parsedDate = courseManager.parseExamDateTime(general[moed]);
-                        if (parsedDate) {
-                            var title = moed + '\' - ' + general['שם מקצוע'];
-                            icsCal.addEvent(title, '', '', parsedDate.start, parsedDate.end);
+            function doExport(daysOff) {
+                courseCalendar.saveAsIcs(icsCal, dateFrom, dateTo, daysOff);
+
+                // Exams.
+                courseButtonList.getCourseNumbers(true).forEach(function (course) {
+                    var general = courseManager.getGeneralInfo(course);
+                    ['מועד א', 'מועד ב'].forEach(function (moed) {
+                        if (general[moed]) {
+                            var parsedDate = courseManager.parseExamDateTime(general[moed]);
+                            if (parsedDate) {
+                                var title = moed + '\' - ' + general['שם מקצוע'];
+                                icsCal.addEvent(title, '', '', parsedDate.start, parsedDate.end);
+                            }
                         }
+                    });
+                });
+
+                var errorEmptySchedule = function () {
+                    BootstrapDialog.show({
+                        title: 'אופס',
+                        message: 'המערכת ריקה',
+                        size: BootstrapDialog.SIZE_SMALL
+                    });
+                };
+
+                if (viewingSharedSchedule || typeof firebase === 'undefined' || firebase.auth().currentUser === null) {
+                    if (!icsCal.download(semesterFriendlyNameForFileName(currentSemester))) {
+                        errorEmptySchedule();
                     }
-                });
-            });
 
-            var errorEmptySchedule = function () {
-                BootstrapDialog.show({
-                    title: 'אופס',
-                    message: 'המערכת ריקה',
-                    size: BootstrapDialog.SIZE_SMALL
-                });
-            };
-
-            if (viewingSharedSchedule || typeof firebase === 'undefined' || firebase.auth().currentUser === null) {
-                if (!icsCal.download(semesterFriendlyNameForFileName(currentSemester))) {
-                    errorEmptySchedule();
+                    return;
                 }
 
-                return;
-            }
+                var calendar = icsCal.build();
+                if (!calendar) {
+                    errorEmptySchedule();
+                    return;
+                }
 
-            var calendar = icsCal.build();
-            if (!calendar) {
-                errorEmptySchedule();
-                return;
-            }
+                var calFilePath = firebase.auth().currentUser.uid + '/' + semesterFriendlyNameForFileName(currentSemester) + '.ics';
+                var calendarUrl = 'https://files.cheesefork.cf/' + calFilePath;
 
-            var calFilePath = firebase.auth().currentUser.uid + '/' + semesterFriendlyNameForFileName(currentSemester) + '.ics';
-            var calendarUrl = 'https://files.cheesefork.cf/' + calFilePath;
-
-            var exportCalendarDialog = BootstrapDialog.show({
-                title: ' ייצוא לקובץ iCalendar',
-                message: 'קובץ ה-iCalendar נשמר בשרת של CheeseFork ומסתנכרן אוטומטית עם המערכת שבניתם בכל פתיחה של חלון זה. ' +
-                    'הקישור קבוע פר משתמש וסמסטר, כך שניתן לייבא את הקישור עצמו לכלי שתומך בכך. ' +
-                    'עבור כל עדכון נוסף מספיק לפתוח את החלון פעם נוספת, במקום הורדה וייבוא בכל פעם של הקובץ. ' +
-                    'שימו לב שהעדכון לא מיידי, ברוב שירותי לוח השנה הסנכרון מתבצע אחת למספר שעות.<br>' +
-                    '<br>' +
-                    'הקישור לקובץ iCalendar: <span class="calendar-link-placeholder">מעדכן את הקובץ בשרת...</span>.',
-                onshow: function (dialog) {
-                    dialog.getButton('copy-link').disable();
-                },
-                buttons: [{
-                    id: 'copy-link',
-                    label: 'העתק קישור',
-                    cssClass: 'btn-primary',
-                    action: function (dialog) {
-                        copyToClipboard(calendarUrl, function () {
+                var exportCalendarDialog = BootstrapDialog.show({
+                    title: ' ייצוא לקובץ iCalendar',
+                    message: 'קובץ ה-iCalendar נשמר בשרת של CheeseFork ומסתנכרן אוטומטית עם המערכת שבניתם בכל פתיחה של חלון זה. ' +
+                        'הקישור קבוע פר משתמש וסמסטר, כך שניתן לייבא את הקישור עצמו לכלי שתומך בכך. ' +
+                        'עבור כל עדכון נוסף מספיק לפתוח את החלון פעם נוספת, במקום הורדה וייבוא בכל פעם של הקובץ. ' +
+                        'שימו לב שהעדכון לא מיידי, ברוב שירותי לוח השנה הסנכרון מתבצע אחת למספר שעות.<br>' +
+                        '<br>' +
+                        'הקישור לקובץ iCalendar: <span class="calendar-link-placeholder">מעדכן את הקובץ בשרת...</span>.',
+                    onshow: function (dialog) {
+                        dialog.getButton('copy-link').disable();
+                    },
+                    buttons: [{
+                        id: 'copy-link',
+                        label: 'העתק קישור',
+                        cssClass: 'btn-primary',
+                        action: function (dialog) {
+                            copyToClipboard(calendarUrl, function () {
+                                dialog.close();
+                            }, function () {
+                                alert('ההעתקה נכשלה');
+                            });
+                        }
+                    }, {
+                        label: 'סגור',
+                        action: function (dialog) {
                             dialog.close();
-                        }, function () {
-                            alert('ההעתקה נכשלה');
+                        }
+                    }]
+                });
+
+                var storageRef = firebaseStorage.ref();
+                var calFileRef = storageRef.child(calFilePath);
+
+                calFileRef.putString(calendar, 'raw', {
+                    // Ask browsers not to cache the request.
+                    // https://stackoverflow.com/q/42788488
+                    // https://stackoverflow.com/q/41938969
+                    cacheControl: 'public, max-age=0'
+                }).then(function (snapshot) {
+                    var urlElement = $('<a target="_blank" rel="noopener">לחצו כאן להורדה</a>').prop('href', calendarUrl);
+                    exportCalendarDialog.getModalBody().find('.calendar-link-placeholder').html(urlElement);
+
+                    exportCalendarDialog.getButton('copy-link').enable();
+                }, function (error) {
+                    alert('Error saving calendar to server: ' + error.message);
+                });
+            }
+
+            $.getJSON(calendarEventsUrl)
+                .done(function (data) {
+                    doExport(data.daysOff || []);
+                })
+                .fail(function (jqXHR) {
+                    if (jqXHR.status === 404) {
+                        doExport([]);
+                    } else {
+                        BootstrapDialog.show({
+                            title: 'שגיאה',
+                            message: 'לא ניתן לטעון את נתוני ימי החופשה עבור הסמסטר הנוכחי.',
+                            size: BootstrapDialog.SIZE_SMALL
                         });
                     }
-                }, {
-                    label: 'סגור',
-                    action: function (dialog) {
-                        dialog.close();
-                    }
-                }]
-            });
-
-            var storageRef = firebaseStorage.ref();
-            var calFileRef = storageRef.child(calFilePath);
-
-            calFileRef.putString(calendar, 'raw', {
-                // Ask browsers not to cache the request.
-                // https://stackoverflow.com/q/42788488
-                // https://stackoverflow.com/q/41938969
-                cacheControl: 'public, max-age=0'
-            }).then(function (snapshot) {
-                var urlElement = $('<a target="_blank" rel="noopener">לחצו כאן להורדה</a>').prop('href', calendarUrl);
-                exportCalendarDialog.getModalBody().find('.calendar-link-placeholder').html(urlElement);
-
-                exportCalendarDialog.getButton('copy-link').enable();
-            }, function (error) {
-                alert('Error saving calendar to server: ' + error.message);
-            });
+                });
         });
     }
 
