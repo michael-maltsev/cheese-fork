@@ -2229,7 +2229,23 @@
             } else if (!b.time) {
                 return -1;
             } else {
-                return a.time.localeCompare(b.time, undefined, {numeric: true});
+                var dayMapping = {
+                    'ראשון': 'א',
+                    'שני': 'ב',
+                    'שלישי': 'ג',
+                    'רביעי': 'ד',
+                    'חמישי': 'ה',
+                    'שישי': 'ו',
+                };
+
+                var aTimeForCompare = a.time.replace(/^יום (\S+)/, function (match, p1) {
+                    return dayMapping[p1] || p1;
+                });
+                var bTimeForCompare = b.time.replace(/^יום (\S+)/, function (match, p1) {
+                    return dayMapping[p1] || p1;
+                });
+
+                return aTimeForCompare.localeCompare(bTimeForCompare, undefined, { numeric: true });
             }
         }).forEach(function (item) {
             if (item.time) {
