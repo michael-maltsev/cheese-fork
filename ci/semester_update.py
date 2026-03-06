@@ -6,17 +6,41 @@ import requests
 
 
 def get_last_semesters():
-    last_semesters_url = "https://michael-maltsev.github.io/technion-sap-info-fetcher/last_semesters.json"
-    last_semesters_sap = requests.get(last_semesters_url).json()
+    latest_semesters_url = (
+        "https://michael-maltsev.github.io/technion-calendar-events/latest.json"
+    )
+    sap_semesters_url = (
+        "https://michael-maltsev.github.io/technion-sap-info-fetcher/last_semesters.json"
+    )
+
+    latest_semesters = requests.get(latest_semesters_url).json()
+    sap_semesters_response = requests.get(sap_semesters_url).json()
+
+    sap_semesters = {}
+    for sap_semester in sap_semesters_response:
+        semester = str(sap_semester["year"]) + str(
+            sap_semester["semester"] - 200 + 1
+        ).zfill(2)
+        sap_semesters[semester] = {
+            "start": sap_semester["start"],
+            "end": sap_semester["end"],
+        }
 
     last_semesters = {}
-    for last_semester in last_semesters_sap:
-        semester = str(last_semester["year"]) + str(
-            last_semester["semester"] - 200 + 1
-        ).zfill(2)
+    for semester in sorted(set(latest_semesters) | set(sap_semesters)):
+        latest_semester = latest_semesters.get(semester, {})
+        sap_semester = sap_semesters.get(semester, {})
+
+        start = latest_semester.get("startDate") or sap_semester.get("start")
+        end = latest_semester.get("endDate") or sap_semester.get("end")
+
+        if start is None or end is None:
+            continue
+
         last_semesters[semester] = {
-            "start": last_semester["start"],
-            "end": last_semester["end"],
+            "start": start,
+            "end": end,
+            "in_sap": semester in sap_semesters,
         }
 
     return last_semesters
@@ -59,21 +83,26 @@ def main():
     available_semesters = get_available_semesters(index_html_path)
     last_semesters = get_last_semesters()
 
-    available_semesters_updated = False
+    available_semesters_original = available_semesters.copy()
+
     for semester, semester_data in last_semesters.items():
         if semester in available_semesters:
-            continue
-
+            del available_semesters[semester]
+        
         if semester + "_" in available_semesters:
-            available_semesters[semester] = available_semesters[semester + "_"]
             del available_semesters[semester + "_"]
-            available_semesters_updated = True
-            continue
 
-        available_semesters[semester] = semester_data
-        available_semesters_updated = True
+        if semester_data["in_sap"]:
+            key = semester
+        else:
+            key = semester + "_"
 
-    if not available_semesters_updated:
+        available_semesters[key] = {
+            "start": semester_data["start"],
+            "end": semester_data["end"],
+        }
+
+    if available_semesters == available_semesters_original:
         print("Nothing to update")
         return
 
