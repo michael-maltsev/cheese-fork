@@ -198,12 +198,6 @@ var CourseFeedback = (function () {
                 selectSemester.prepend($('<option value="">לחצו לבחירת סמסטר...</option>')).val(selectValue);
 
                 var displayName = localStorage.getItem('feedbackDisplayName');
-                if (!displayName) {
-                    displayName = firebase.auth &&
-                        firebase.auth().currentUser !== null &&
-                        firebase.auth().currentUser.displayName;
-                }
-
                 if (displayName) {
                     body.find('#feedback-form-author').val(displayName);
                 }
