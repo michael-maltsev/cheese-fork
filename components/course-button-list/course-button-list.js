@@ -77,7 +77,7 @@ var CourseButtonList = (function () {
         });
 
         var url = data.telegramGroupLink;
-        if (url && url.match(/^https:\/\/t\.me\/joinchat\//)) {
+        if (url && url.match(/^https:\/\/t\.me\/.+/)) {
             linksFound++;
             result.append($('<div>', {
                 html: $('<a>', {
@@ -132,13 +132,13 @@ var CourseButtonList = (function () {
                     type: 'text',
                     value: data.telegramGroupLink || '',
                     class: 'form-control mt-2 telegram-group-link',
-                    placeholder: 'https://t.me/joinchat/...',
+                    placeholder: 'https://t.me/...',
                     style: 'direction: ltr;',
-                    pattern: 'https://t\\.me/joinchat/.+'
+                    pattern: 'https://t\\.me/.+'
                 }),
                 '<div class="invalid-feedback">' +
                     '<div>קישורים לקבוצות וואטסאפ חייבים להיות מהצורה: <span style="direction: ltr; unicode-bidi: embed;">https://chat.whatsapp.com/...</span></div>' +
-                    '<div>קישורים לקבוצות טלגרם חייבים להיות מהצורה: <span style="direction: ltr; unicode-bidi: embed;">https://t.me/joinchat/...</span></div>' +
+                    '<div>קישורים לקבוצות טלגרם חייבים להיות מהצורה: <span style="direction: ltr; unicode-bidi: embed;">https://t.me/...</span></div>' +
                 '</div>'
             ]
         });
