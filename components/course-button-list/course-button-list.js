@@ -90,12 +90,26 @@ var CourseButtonList = (function () {
             }));
         }
 
+        url = data.discordServerLink;
+        if (url && url.match(/^https:\/\/(discord\.gg|discord\.com\/invite)\/.+/)) {
+            linksFound++;
+            result.append($('<div>', {
+                html: $('<a>', {
+                    href: url,
+                    target: '_blank',
+                    rel: 'noopener',
+                    onclick: 'gtag(\'event\', \'info-click-group-link-discord\')',
+                    text: 'שרת דיסקורד'
+                })
+            }));
+        }
+
         if (linksFound > 1) {
             result.prepend('<div>באפשרותכם להצטרף לקבוצות בעזרת הלינקים הבאים:</div>');
         } else if (linksFound > 0) {
             result.prepend('<div>באפשרותכם להצטרף לקבוצה בעזרת הלינק הבא:</div>');
         } else {
-            result.text('לא קיימים קישורי הצטרפות לקבוצת וואטסאפ/טלגרם עבור קורס זה. אם יש ברשותכם קישור עדכני, אנא לחצו על כפתור העדכון והזינו אותו.');
+            result.text('לא קיימים קישורי הצטרפות לקבוצת וואטסאפ/טלגרם/דיסקורד עבור קורס זה. אם יש ברשותכם קישור עדכני, אנא לחצו על כפתור העדכון והזינו אותו.');
         }
 
         return result;
@@ -136,9 +150,18 @@ var CourseButtonList = (function () {
                     style: 'direction: ltr;',
                     pattern: 'https://t\\.me/.+'
                 }),
+                $('<input>', {
+                    type: 'text',
+                    value: data.discordServerLink || '',
+                    class: 'form-control mt-2 discord-server-link',
+                    placeholder: 'https://discord.gg/...',
+                    style: 'direction: ltr;',
+                    pattern: 'https://(discord\\.gg|discord\\.com/invite)/.+'
+                }),
                 '<div class="invalid-feedback">' +
                     '<div>קישורים לקבוצות וואטסאפ חייבים להיות מהצורה: <span style="direction: ltr; unicode-bidi: embed;">https://chat.whatsapp.com/...</span></div>' +
                     '<div>קישורים לקבוצות טלגרם חייבים להיות מהצורה: <span style="direction: ltr; unicode-bidi: embed;">https://t.me/...</span></div>' +
+                    '<div>קישורים לשרתי דיסקורד חייבים להיות מהצורה: <span style="direction: ltr; unicode-bidi: embed;">https://discord.gg/...</span> או <span style="direction: ltr; unicode-bidi: embed;">https://discord.com/invite/...</span></div>' +
                 '</div>'
             ]
         });
@@ -150,7 +173,7 @@ var CourseButtonList = (function () {
         var groupLinksData = {};
 
         var whatsappGroupDialog = BootstrapDialog.show({
-            title: 'קבוצת וואטסאפ/טלגרם',
+            title: 'קבוצת וואטסאפ/טלגרם/דיסקורד',
             message: '<div class="whatsapp-group-link-content">טוען נתונים...</div>',
             onshow: function (dialog) {
                 dialog.getButton('update-link').disable();
@@ -183,7 +206,8 @@ var CourseButtonList = (function () {
                         whatsappGroupLink: '.whatsapp-group-link',
                         whatsappGroupLink2: '.whatsapp-group-link2',
                         whatsappGroupLink3: '.whatsapp-group-link3',
-                        telegramGroupLink: '.telegram-group-link'
+                        telegramGroupLink: '.telegram-group-link',
+                        discordServerLink: '.discord-server-link'
                     };
 
                     Object.keys(newGroupLinksDataSelectors).forEach(function (key) {
