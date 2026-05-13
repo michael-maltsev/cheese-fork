@@ -103,3 +103,7 @@
 .calendar-item-last-choice .fc-content {
     color: #AA66CC;
 }
+
+.course-calendar .custom-event {
+    cursor: move;
+}
