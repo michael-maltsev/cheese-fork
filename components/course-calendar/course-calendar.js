@@ -558,6 +558,7 @@ var CourseCalendar = (function () {
     function makeCustomEvent(courseCalendar, eventId, eventTitle, start, end) {
         return {
             id: eventId,
+            className: 'custom-event',
             title: eventTitle,
             start: start,
             end: end,
