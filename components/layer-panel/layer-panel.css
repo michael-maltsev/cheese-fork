@@ -1,0 +1,252 @@
+.layer-panel-container {
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.layer-panel-header {
+    background-color: rgba(0, 0, 0, 0.05);
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.layer-panel-header .btn-add-layer {
+    padding: 0 5px;
+    cursor: pointer;
+}
+
+.layer-group {
+    margin-bottom: 10px;
+    border: 1px solid rgba(0,0,0,.125);
+    border-radius: .25rem;
+    background-color: #fff;
+}
+
+.layer-group-header {
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.03);
+    border-bottom: 1px solid rgba(0,0,0,.125);
+    cursor: pointer;
+    position: relative;
+    user-select: none;
+    min-height: 44px;
+}
+
+.layer-group-header.active-layer {
+    border-right: 3px solid #007bff; /* Right border for RTL */
+}
+
+.layer-collapse-toggle {
+    width: 20px;
+    text-align: center;
+    cursor: pointer;
+    margin-left: 5px;
+    transition: transform 0.2s;
+}
+
+.layer-group.collapsed .layer-collapse-toggle {
+    transform: rotate(90deg); /* Assuming RTL, left arrow becomes down arrow */
+}
+
+.layer-visibility-toggle {
+    margin-left: 10px;
+    cursor: pointer;
+}
+
+.layer-name {
+    flex-grow: 1;
+    font-weight: bold;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.layer-active-indicator {
+    color: #007bff;
+    font-size: 10px;
+    margin-right: 5px;
+    visibility: hidden;
+}
+
+.layer-group-header.active-layer .layer-active-indicator {
+    visibility: visible;
+}
+
+.layer-menu-toggle {
+    cursor: pointer;
+    padding: 0 5px;
+    margin-right: 5px;
+}
+
+.layer-children {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    min-height: 10px; /* Drop zone even when empty */
+    transition: max-height 0.3s ease-out;
+    overflow: hidden;
+}
+
+.layer-group.collapsed .layer-children {
+    max-height: 0 !important;
+}
+
+.layer-hidden-group .layer-group-header {
+    color: #6c757d;
+}
+
+.layer-hidden-group .layer-children {
+    opacity: 0.4;
+}
+
+/* Layer items (courses / events) */
+.layer-panel-item {
+    position: relative;
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(0,0,0,.125);
+    font-size: .8rem;
+    cursor: default;
+    background-color: #fff;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+}
+
+.layer-panel-item:last-child {
+    border-bottom: none;
+}
+
+.layer-panel-item.active {
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.1));
+    background-origin: border-box;
+    border-color: rgba(0, 0, 0, 0.2);
+}
+
+.layer-panel-item.active:active {
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.1));
+}
+
+.layer-panel-item-hovered {
+    -webkit-box-shadow: inset 0 0 0 2px #CC0000;
+    -moz-box-shadow: inset 0 0 0 2px #CC0000;
+    box-shadow: inset 0 0 0 2px #CC0000;
+    border-color: #CC0000 !important;
+    font-weight: bold;
+}
+
+.layer-panel-item-conflicted {
+    color: red !important;
+    font-weight: bold;
+    text-shadow: 0 0 10px black;
+}
+
+.layer-panel-content-wrapper {
+    flex-grow: 1;
+    position: relative;
+    padding-right: 5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.layer-panel-content-has-hidden {
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    cursor: help;
+}
+
+.layer-panel-badge {
+    position: relative;
+    user-select: none;
+    cursor: pointer;
+    margin-right: 5px;
+    z-index: 2; /* above the item click area */
+}
+
+.layer-panel-drag-handle {
+    cursor: move;
+    color: rgba(0, 0, 0, 0.5);
+    transition: opacity 0.2s;
+    font-size: 12px;
+    padding: 0 5px;
+    opacity: 0;
+    user-select: none;
+    z-index: 10;
+}
+
+.layer-panel-item:hover .layer-panel-drag-handle {
+    opacity: 1;
+}
+
+.ui-sortable-helper .layer-panel-drag-handle {
+    opacity: 1;
+}
+
+.layer-panel-readonly .layer-panel-drag-handle {
+    display: none;
+}
+
+.layer-panel-item.ui-sortable-helper {
+    opacity: 0.9;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    z-index: 1000 !important;
+    cursor: move !important;
+}
+
+.layer-panel-item.ui-sortable-placeholder {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+    border: 2px dashed rgba(0, 0, 0, 0.3) !important;
+    visibility: visible !important;
+    background-image: none !important;
+    height: 44px;
+}
+
+.layer-panel-readonly .layer-children {
+    cursor: default;
+}
+
+/* Delete drop zone */
+.layer-panel-delete-area {
+    background-color: rgba(220, 53, 69, 0.15);
+    color: rgba(220, 53, 69, 0.6);
+    padding: 12px;
+    text-align: center;
+    border-radius: 50%;
+    margin: 10px auto;
+    transition: all 0.2s;
+    cursor: pointer;
+    border: 2px dashed rgba(220, 53, 69, 0.3);
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.layer-panel-delete-area i {
+    font-size: 20px;
+}
+
+.layer-panel-delete-area.ui-droppable-hover {
+    background-color: rgba(220, 53, 69, 0.3);
+    border-color: rgba(220, 53, 69, 0.8);
+    color: rgba(220, 53, 69, 1);
+    transform: scale(1.1);
+}
+
+/* Drag target feedback */
+.layer-panel-drag-target {
+    box-shadow: inset 0 0 0 2px #007bff;
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .layer-panel-drag-handle {
+        opacity: 1; /* Always show on touch */
+        padding: 10px; /* Larger touch target */
+    }
+}
