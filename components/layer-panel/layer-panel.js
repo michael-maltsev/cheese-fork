@@ -235,7 +235,7 @@ var LayerPanel = (function () {
         var that = this;
         BootstrapDialog.show({
             title: 'שכבה חדשה',
-            message: '<input type="text" class="form-control" id="new-layer-name" placeholder="שם השכבה">',
+            message: '<input type="text" class="form-control" id="new-layer-name" placeholder="שם השכבה" maxlength="20">',
             onshown: function(dialog) {
                 $('#new-layer-name').focus().keypress(function(e) {
                     if (e.which === 13) {
@@ -277,7 +277,7 @@ var LayerPanel = (function () {
 
     LayerPanel.prototype.showRenameLayerDialog = function(layer) {
         var that = this;
-        var renameInput = $('<input type="text" class="form-control" id="rename-layer-name">').val(layer.name);
+        var renameInput = $('<input type="text" class="form-control" id="rename-layer-name" maxlength="20">').val(layer.name);
 
         BootstrapDialog.show({
             title: 'שינוי שם שכבה',
