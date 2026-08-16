@@ -151,6 +151,8 @@
                 if (itemType === 'course') {
                     setScheduleFromSavedSession(currentSavedSession, true);
                     courseCalendar.previewCourse(itemId, newLayerId);
+                } else if (itemType === 'customEvent') {
+                    setScheduleFromSavedSession(currentSavedSession, true);
                 }
             }
         });
@@ -1637,14 +1639,27 @@
         
         if (!currentSavedSession[semesterLayerContentsKey]) return;
         
-        // Migrate custom color to new layer if it exists
-        var oldColorKey = 'courseColor_' + itemId + '_' + oldLayerId;
-        var newColorKey = 'courseColor_' + itemId + '_' + newLayerId;
+        var colorIdentifier = itemId;
+        if (itemType === 'customEvent') {
+            if (currentSavedSession[semesterLayerContentsKey][oldLayerId] && 
+                currentSavedSession[semesterLayerContentsKey][oldLayerId].customEvents &&
+                currentSavedSession[semesterLayerContentsKey][oldLayerId].customEvents[itemId]) {
+                colorIdentifier = currentSavedSession[semesterLayerContentsKey][oldLayerId].customEvents[itemId].title;
+            }
+        }
+        
+        // Migrate custom color to new layer if it exists, otherwise freeze the auto-generated color
+        var oldColorKey = getCourseColorStorageKey(colorIdentifier, oldLayerId);
+        var newColorKey = getCourseColorStorageKey(colorIdentifier, newLayerId);
         try {
-            var existingColor = localStorage.getItem(oldColorKey);
+            var existingColor = localStorage.getItem(oldColorKey) || localStorage.getItem('courseColor_' + colorIdentifier + '_' + oldLayerId);
             if (existingColor) {
                 localStorage.setItem(newColorKey, existingColor);
                 localStorage.removeItem(oldColorKey);
+                localStorage.removeItem('courseColor_' + colorIdentifier + '_' + oldLayerId);
+            } else {
+                var autoColor = courseColorGenerator(colorIdentifier, oldLayerId);
+                localStorage.setItem(newColorKey, autoColor);
             }
         } catch (e) {}
         
