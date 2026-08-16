@@ -166,7 +166,7 @@ var LayerPanel = (function () {
         header.append(visibilityToggle);
 
         // Name
-        var nameSpan = $('<div class="layer-name" title="' + layer.name + '">' + layer.name + '</div>');
+        var nameSpan = $('<div class="layer-name"></div>').text(layer.name).attr('title', layer.name);
         header.append(nameSpan);
 
         // Menu
