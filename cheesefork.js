@@ -1,7 +1,7 @@
 'use strict';
 
 /* global introJs, ColorHash, BootstrapDialog, ics, JsDiff, firebase, firebaseui, gtag */
-/* global CourseManager, CourseSelect, CourseButtonList, CourseExamInfo, CourseCalendar, CourseFeedback */
+/* global CourseManager, CourseSelect, LayerPanel, CourseExamInfo, CourseCalendar, CourseFeedback */
 /* global courses_from_rishum, availableSemesters, currentSemester, scheduleSharingUserId */
 
 (function () {
@@ -392,7 +392,7 @@
             // localStorage is not available in IE/Edge when running from a local file.
         }
 
-        if (courseButtonList.getCourseNumbers(true).length > 0) {
+        if (layerPanel.getCourseNumbers(true).length > 0) {
             try {
                 localStorage.setItem('dontShowIntro', Date.now().toString());
             } catch (e) {
@@ -526,7 +526,7 @@
             // localStorage is not available in IE/Edge when running from a local file.
         }
 
-        var courseNumbers = courseButtonList.getCourseNumbers(true);
+        var courseNumbers = layerPanel.getCourseNumbers(true);
         if (courseNumbers.length === 0) {
             return false;
         }
@@ -933,7 +933,7 @@
                 courseCalendar.saveAsIcs(icsCal, dateFrom, dateTo, daysOff);
 
                 // Exams.
-                courseButtonList.getCourseNumbers(true).forEach(function (course) {
+                layerPanel.getCourseNumbers(true).forEach(function (course) {
                     var general = courseManager.getGeneralInfo(course);
                     ['מועד א', 'מועד ב'].forEach(function (moed) {
                         if (general[moed]) {
@@ -2342,7 +2342,7 @@
             delete currentSavedSession[courseKey];
         });
 
-        var courseNumbers = courseButtonList.getCourseNumbers(true);
+        var courseNumbers = layerPanel.getCourseNumbers(true);
 
         var doc = firestoreAuthenticatedUserDoc();
         if (doc) {
