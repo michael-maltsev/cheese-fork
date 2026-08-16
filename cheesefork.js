@@ -1981,8 +1981,14 @@
             doc.set(sessionToRestore);
         } else {
             try {
-                localStorage.clear(); // This is dangerous if we have other semesters!
-                // Safer: Just iterate all keys in sessionToRestore
+                var key;
+                for (var i = localStorage.length - 1; i >= 0; i--) {
+                    key = localStorage.key(i);
+                    if (key && key.indexOf(currentSemester + '_') === 0) {
+                        localStorage.removeItem(key);
+                    }
+                }
+
                 Object.keys(sessionToRestore).forEach(function(key) {
                     localStorage.setItem(key, JSON.stringify(sessionToRestore[key]));
                 });
