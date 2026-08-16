@@ -317,7 +317,10 @@ var LayerPanel = (function () {
 
     LayerPanel.prototype.showDeleteLayerDialog = function(layer) {
         var that = this;
-        var message = $('<div></div>').text('האם אתם בטוחים שברצונכם למחוק את השכבה "' + layer.name + '"? הקורסים והאירועים שבה יועברו לשכבה הראשונה.');
+        var message = $('<div></div>');
+        message.append(document.createTextNode('האם אתם בטוחים שברצונכם למחוק את השכבה "'));
+        message.append($('<span></span>').text(layer.name));
+        message.append(document.createTextNode('"? הקורסים והאירועים שבה יועברו לשכבה הראשונה.'));
 
         BootstrapDialog.show({
             title: 'מחיקת שכבה',
