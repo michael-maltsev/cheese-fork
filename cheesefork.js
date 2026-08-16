@@ -379,7 +379,7 @@
     }
 
     function showExtraContentOnLoad() {
-        return showIntro() || showCourseFeedbackPopup() || showThursdayGraphPopup() || showTechnionScansPopup();
+        return showIntro() || showNewLayersSystemPopup() || showCourseFeedbackPopup() || showThursdayGraphPopup() || showTechnionScansPopup();
     }
 
     function showIntro() {
@@ -418,6 +418,48 @@
                 // localStorage is not available in IE/Edge when running from a local file.
             }
         }).start();
+
+        return true;
+    }
+
+    function showNewLayersSystemPopup() {
+        try {
+            var dontShowDate = localStorage.getItem('dontShowNewLayersPopup');
+            if (dontShowDate) {
+                return false;
+            }
+        } catch (e) {
+            // localStorage is not available in IE/Edge when running from a local file.
+        }
+
+        var $content = $('<div></div>');
+        $content.append('<p>הוספנו למערכת השעות תמיכה ב<strong>שכבות</strong>!</p>');
+        $content.append('<p>מעכשיו אפשר ליצור שכבות נפרדות (או לשלב אותן) בקלות, בעזרת תפריט השכבות החדש מצד ימין.</p>');
+        $content.append('<p>לחיצה על תיבת הסימון לצד שם השכבה תציג או תסתיר אותה, ניתן לשנות שם או למחוק אותה.</p>');
+        $content.append('<p>השכבה שמסומנת עם <strong style="color: #007bff;">קו כחול</strong> הינה השכבה הפעילה, אליה קורסים או אירועים מותאמים אישית חדשים יתווספו. ניתן לשנות את השכבה הפעילה על ידי לחיצה על שם של שכבה אחרת.</p>');
+        $content.append('<p>קורסים יכולים להיות בכמה שכבות במקביל, וניתן לשנות את השכבה אליהם הם שייכים על ידי גרירה של הקורס בתפריט השכבות משכבה אחת לאחרת.</p>');
+        $content.append('<p><strong>ובנוסף,</strong> ניתן לשנות <strong><span style="color:#ff0000">צ</span><span style="color:#ccff00">ב</span><span style="color:#00ff66">ע</span><span style="color:#0066ff">י</span><span style="color:#cc00ff">ם</span></strong> של קורסים ואירועים מותאמים אישית על ידי לחיצה על כפתור פלטת הצבעים המופיע במשבצת שלו במערכת השעות.</p><br>');
+        $content.append('<p>תודה רבה ל<a href="https://github.com/talisraeli" target="_blank" rel="noopener noreferrer">טל ישראלי</a> על המימוש של מערכת השכבות החדשה! 😎</p>');
+
+        BootstrapDialog.show({
+            title: 'מערכת שכבות חדשה!',
+            message: $content,
+            buttons: [{
+                label: 'אשר שינויים',
+                cssClass: 'btn-primary',
+                action: function (dialog) {
+                    try {
+                        localStorage.setItem('dontShowNewLayersPopup', Date.now().toString());
+                    } catch (e) { }
+                    dialog.close();
+                }
+            }, {
+                label: 'סגור',
+                action: function (dialog) {
+                    dialog.close();
+                }
+            }]
+        });
 
         return true;
     }
