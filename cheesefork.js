@@ -2102,7 +2102,12 @@
         // Only enable the feature for last four semesters.
         // Only the last three are updated, and extra semester to give time to see the most recent changes.
         var lastFourSemesters = Object.keys(availableSemesters).sort().reverse().slice(0, 4);
-        return lastFourSemesters.indexOf(currentSemester) !== -1;
+        if (lastFourSemesters.indexOf(currentSemester) === -1) {
+            return false;
+        }
+
+        if (typeof layerPanel === 'undefined' || !layerPanel) return false;
+        return layerPanel.getCourseNumbers(true).length > 0;
     }
 
     function computeMetadataDiff(metadata) {
@@ -2366,7 +2371,9 @@
                 input[metadataCourseKey] = firebase.firestore.FieldValue.delete();
             });
 
-            doc.update(input);
+            if (Object.keys(input).length > 0) {
+                doc.update(input);
+            }
         } else {
             try {
                 courseNumbers.forEach(function (course) {
@@ -2398,7 +2405,9 @@
     function onMetadataDiffChange() {
         var badgeCount = 0;
 
-        if (metadataDiff) {
+        if (!shouldEnableMetadataDiff()) {
+            badgeCount = 0;
+        } else if (metadataDiff) {
             var diffCourses = Object.keys(metadataDiff);
             if (diffCourses.length > 0) {
                 badgeCount = diffCourses.reduce(function (accumulator, course) {
