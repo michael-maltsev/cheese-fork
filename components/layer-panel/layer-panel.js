@@ -128,8 +128,6 @@ var LayerPanel = (function () {
         var header = $('<div class="layer-group-header"></div>');
         if (layer.id === this.activeLayerId) header.addClass('active-layer');
 
-        // Active indicator
-        header.append($('<i class="fas fa-circle layer-active-indicator" title="שכבה פעילה"></i>'));
 
         // Collapse toggle
         var collapseToggle = $('<div class="layer-collapse-toggle"><i class="fas fa-chevron-down"></i></div>');

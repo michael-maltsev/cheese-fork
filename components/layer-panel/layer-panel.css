@@ -33,6 +33,7 @@
     position: relative;
     user-select: none;
     min-height: 44px;
+    border-right: 3px solid transparent;
 }
 
 .layer-group-header.active-layer {
@@ -91,7 +92,7 @@
 }
 
 .layer-group.collapsed .layer-children {
-    max-height: 0 !important;
+    display: none;
 }
 
 .layer-hidden-group .layer-group-header {
