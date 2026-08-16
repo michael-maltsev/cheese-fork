@@ -277,11 +277,13 @@ var LayerPanel = (function () {
 
     LayerPanel.prototype.showRenameLayerDialog = function(layer) {
         var that = this;
+        var renameInput = $('<input type="text" class="form-control" id="rename-layer-name">').val(layer.name);
+
         BootstrapDialog.show({
             title: 'שינוי שם שכבה',
-            message: '<input type="text" class="form-control" id="rename-layer-name" value="' + layer.name + '">',
+            message: renameInput,
             onshown: function(dialog) {
-                $('#rename-layer-name').focus().select().keypress(function(e) {
+                dialog.getModalBody().find('#rename-layer-name').focus().select().keypress(function(e) {
                     if (e.which === 13) {
                         dialog.getButton('btn-ok').click();
                     }
@@ -292,7 +294,7 @@ var LayerPanel = (function () {
                 label: 'שמור',
                 cssClass: 'btn-primary',
                 action: function(dialog) {
-                    var name = $('#rename-layer-name').val().trim();
+                    var name = dialog.getModalBody().find('#rename-layer-name').val().trim();
                     if (name && name !== layer.name) {
                         layer.name = name;
                         that.layersContainer.find('.layer-group[data-layer-id="' + layer.id + '"] .layer-name')
@@ -315,9 +317,11 @@ var LayerPanel = (function () {
 
     LayerPanel.prototype.showDeleteLayerDialog = function(layer) {
         var that = this;
+        var message = $('<div></div>').text('האם אתם בטוחים שברצונכם למחוק את השכבה "' + layer.name + '"? הקורסים והאירועים שבה יועברו לשכבה הראשונה.');
+
         BootstrapDialog.show({
             title: 'מחיקת שכבה',
-            message: 'האם אתם בטוחים שברצונכם למחוק את השכבה "' + layer.name + '"? הקורסים והאירועים שבה יועברו לשכבה הראשונה.',
+            message: message,
             type: BootstrapDialog.TYPE_WARNING,
             buttons: [{
                 label: 'מחק',
