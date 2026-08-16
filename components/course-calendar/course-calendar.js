@@ -890,7 +890,7 @@ var CourseCalendar = (function () {
         }
 
         if (!this.readonly && !event.temporary) {
-            element.append('<div class="calendar-item-color-picker-button" title="בחר צבע"><i class="fas fa-palette"></i></div>');
+            element.append('<button type="button" class="calendar-item-color-picker-button" title="בחר צבע" aria-label="בחר צבע"><i class="fas fa-palette"></i></button>');
         }
     }
 
