@@ -262,16 +262,29 @@
 
     function courseColorGenerator(course, layerId) {
         if (!layerId && typeof layerPanel !== 'undefined' && layerPanel) {
-            if (layerPanel.isCourseInLayer(course, layerPanel.activeLayerId)) {
-                layerId = layerPanel.activeLayerId;
-            } else {
+            var foundLayerId = null;
+            if (typeof layerPanel.isCourseActiveInLayer === 'function') {
                 for (var i = 0; i < layerPanel.layers.length; i++) {
-                    if (layerPanel.isCourseInLayer(course, layerPanel.layers[i].id)) {
-                        layerId = layerPanel.layers[i].id;
+                    if (layerPanel.layers[i].visible && layerPanel.isCourseActiveInLayer(course, layerPanel.layers[i].id)) {
+                        foundLayerId = layerPanel.layers[i].id;
                         break;
                     }
                 }
-                if (!layerId) layerId = layerPanel.activeLayerId;
+            }
+            if (foundLayerId) {
+                layerId = foundLayerId;
+            } else {
+                if (layerPanel.isCourseInLayer(course, layerPanel.activeLayerId)) {
+                    layerId = layerPanel.activeLayerId;
+                } else {
+                    for (var i = 0; i < layerPanel.layers.length; i++) {
+                        if (layerPanel.isCourseInLayer(course, layerPanel.layers[i].id)) {
+                            layerId = layerPanel.layers[i].id;
+                            break;
+                        }
+                    }
+                    if (!layerId) layerId = layerPanel.activeLayerId;
+                }
             }
         }
         if (layerId) {

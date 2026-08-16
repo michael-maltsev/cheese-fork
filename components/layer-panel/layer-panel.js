@@ -659,6 +659,11 @@ var LayerPanel = (function () {
         return this.layersContainer.find(selector).length > 0;
     };
 
+    LayerPanel.prototype.isCourseActiveInLayer = function (course, layerId) {
+        var selector = '.layer-group[data-layer-id="' + layerId + '"] .layer-panel-item.active[data-item-type="course"][data-item-id="' + course + '"]';
+        return this.layersContainer.find(selector).length > 0;
+    };
+
     LayerPanel.prototype.getCourseNumbers = function (onlySelected, layerId, onlyVisibleLayers) {
         var selector = '.layer-panel-item[data-item-type="course"]';
         if (onlySelected) selector += '.active';
