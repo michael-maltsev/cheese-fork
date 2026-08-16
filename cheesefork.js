@@ -1603,10 +1603,28 @@
             doc.set(currentSavedSession);
         } else {
             try {
-                // Similarly for local storage, just rewrite everything
-                localStorage.clear();
+                // For localStorage, rewrite only current-semester schedule keys and deleted-layer custom colors.
+                // Do not clear unrelated app/user data.
+                var semesterPrefix = currentSemester + '_';
+                var deletedLayerColorSuffix = '_' + layerId;
+                var keysToRemove = [];
+                for (var i = 0; i < localStorage.length; i++) {
+                    var key = localStorage.key(i);
+                    if (!key) continue;
+                    if (key.indexOf(semesterPrefix) === 0) {
+                        keysToRemove.push(key);
+                    } else if (key.indexOf('courseColor_') === 0 && key.lastIndexOf(deletedLayerColorSuffix) === key.length - deletedLayerColorSuffix.length) {
+                        keysToRemove.push(key);
+                    }
+                }
+                keysToRemove.forEach(function(key) {
+                    localStorage.removeItem(key);
+                });
+
                 Object.keys(currentSavedSession).forEach(function(key) {
-                    localStorage.setItem(key, JSON.stringify(currentSavedSession[key]));
+                    if (key.indexOf(semesterPrefix) === 0) {
+                        localStorage.setItem(key, JSON.stringify(currentSavedSession[key]));
+                    }
                 });
             } catch (e) {}
         }
