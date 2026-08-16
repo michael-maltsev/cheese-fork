@@ -274,7 +274,7 @@
         }
         if (layerId) {
             try {
-                var customColor = localStorage.getItem('courseColor_' + course + '_' + layerId);
+                var customColor = localStorage.getItem(getCourseColorStorageKey(course, layerId));
                 if (customColor) return customColor;
             } catch (e) {}
         }
@@ -324,9 +324,20 @@
         }
     }
 
+    function getCourseColorStorageKey(course, layerId) {
+        var normalizedCourse = String(course || '');
+        var normalizedLayerId = String(layerId || 'default');
+        if (typeof course === 'number' || /^\d+$/.test(normalizedCourse)) {
+            return 'courseColor_' + normalizedCourse + '_' + normalizedLayerId;
+        }
+
+        return 'courseColor_' + encodeURIComponent(normalizedCourse) + '_' + normalizedLayerId;
+    }
+
     function onColorPickerClick(course, layerId) {
         if (!layerId && typeof layerPanel !== 'undefined' && layerPanel) layerId = layerPanel.activeLayerId;
 
+        var storageKey = getCourseColorStorageKey(course, layerId);
         var colors = [];
         for (var i = 1; i <= 21; i++) {
             colors.push(colorHash.hex(String(i * 1000 + 100)));
@@ -350,7 +361,7 @@
                 margin: '5px'
             }).click(function() {
                 try {
-                    localStorage.setItem('courseColor_' + course + '_' + layerId, color);
+                    localStorage.setItem(storageKey, color);
                 } catch (e) {}
                 dialog.close();
                 refreshColors();
@@ -360,7 +371,7 @@
 
         var $clearButton = $('<button class="btn btn-secondary btn-block mt-3">אפס צבע (חזור לברירת מחדל)</button>').click(function() {
             try {
-                localStorage.removeItem('courseColor_' + course + '_' + layerId);
+                localStorage.removeItem(storageKey);
             } catch (e) {}
             dialog.close();
             refreshColors();
