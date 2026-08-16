@@ -350,7 +350,7 @@ var LayerPanel = (function () {
         var courseTitle = that.courseManager.getTitle(course);
 
         // A wrapper div for proper word wrapping of the content text.
-        var spanAbsolute = $('<div class="layer-panel-content-wrapper"></div>').html($('<span class="content-absolute"></span>').text(courseTitle));
+        var spanAbsolute = $('<div class="layer-panel-content-wrapper"></div>').attr('title', courseTitle).html($('<span class="content-absolute"></span>').text(courseTitle));
         
         // Create drag handle (only visible when not readonly)
         var dragHandle = $('<span class="layer-panel-drag-handle">' +
@@ -435,19 +435,22 @@ var LayerPanel = (function () {
     LayerPanel.prototype.renderCustomEventItem = function (eventId, title, layerId, container) {
         var that = this;
         
-        var spanAbsolute = $('<div class="layer-panel-content-wrapper"></div>').html($('<span class="content-absolute"></span>').text('✦ ' + title));
+        var spanAbsolute = $('<div class="layer-panel-content-wrapper"></div>').attr('title', title).html($('<span class="content-absolute"></span>').text('✦ ' + title));
         var dragHandle = $('<span class="layer-panel-drag-handle"><i class="fas fa-grip-vertical"></i></span>');
 
-        var button = $('<li class="layer-panel-item active" data-item-type="custom" data-item-id="' + eventId + '"></li>');
+        var button = $('<li class="layer-panel-item active" data-item-type="custom" data-item-id="' + eventId + '" data-item-title="' + title.replace(/"/g, '&quot;') + '"></li>');
         
-        // Custom events don't have a specific color generator in the button list, they just use the active style
-        button.click(function () {
+        var color = that.colorGenerator(title, layerId);
+        button.css('background-color', color)
+            .click(function () {
                 if (!that.readonly) {
                     if (button.hasClass('active')) {
                         button.removeClass('active');
+                        button.css('background-color', '');
                         // Custom events don't have disable callback yet, but could be added
                     } else {
                         button.addClass('active');
+                        button.css('background-color', color);
                     }
                 }
             })
@@ -706,6 +709,26 @@ var LayerPanel = (function () {
         } else {
             listGroupTextItem.removeClass('layer-panel-content-has-hidden').tooltip('dispose');
         }
+    };
+
+    LayerPanel.prototype.updateColors = function () {
+        var that = this;
+        this.layersContainer.find('.layer-panel-item').each(function () {
+            var item = $(this);
+            var layerId = item.closest('.layer-group').attr('data-layer-id');
+            var itemType = item.attr('data-item-type');
+            if (itemType === 'course') {
+                var course = item.attr('data-item-id');
+                if (item.hasClass('active')) {
+                    item.css('background-color', that.colorGenerator(course, layerId));
+                }
+            } else if (itemType === 'custom') {
+                var title = item.attr('data-item-title');
+                if (title && item.hasClass('active')) {
+                    item.css('background-color', that.colorGenerator(title, layerId));
+                }
+            }
+        });
     };
 
     LayerPanel.prototype.clear = function () {

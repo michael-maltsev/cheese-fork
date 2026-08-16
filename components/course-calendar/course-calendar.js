@@ -19,6 +19,7 @@ var CourseCalendar = (function () {
         this.onCustomEventUpdated = options.onCustomEventUpdated;
         this.onCustomEventRemoved = options.onCustomEventRemoved;
         this.getActiveLayerId = options.getActiveLayerId;
+        this.onColorPickerClick = options.onColorPickerClick;
 
         var that = this;
 
@@ -557,7 +558,7 @@ var CourseCalendar = (function () {
                     return;
                 }
 
-                if (areEventsOverlapping(cbEvent, event)) {
+                if (cbEvent.layerId === event.layerId && areEventsOverlapping(cbEvent, event)) {
                     if (!conflictedIds[cbEvent.id]) {
                         conflictedIds[cbEvent.id] = 0;
                     }
@@ -711,6 +712,13 @@ var CourseCalendar = (function () {
             });
 
             return;
+        } else if (($(jsEvent.target).hasClass('calendar-item-color-picker-button') || $(jsEvent.target).closest('.calendar-item-color-picker-button').length > 0) && $(jsEvent.target).closest('.calendar-item-color-picker-button').is(':hover')) {
+            gtag('event', 'calendar-color-picker-click');
+            if (that.onColorPickerClick) {
+                var colorStr = event.courseNumber !== null ? event.courseNumber : event.title;
+                that.onColorPickerClick(colorStr, event.layerId);
+            }
+            return;
         }
 
         if (event.courseNumber === null) {
@@ -812,7 +820,7 @@ var CourseCalendar = (function () {
                     return false;
                 }
 
-                if (areEventsOverlapping(cbEvent, event)) {
+                if (cbEvent.layerId === event.layerId && areEventsOverlapping(cbEvent, event)) {
                     if (!conflictedIds[cbEvent.id]) {
                         conflictedIds[cbEvent.id] = 1;
                         return true;
@@ -880,6 +888,10 @@ var CourseCalendar = (function () {
                 }
             }
         }
+
+        if (!this.readonly && !event.temporary) {
+            element.append('<div class="calendar-item-color-picker-button" title="בחר צבע"><i class="fas fa-palette"></i></div>');
+        }
     }
 
     function onWindowResize() {
@@ -942,7 +954,7 @@ var CourseCalendar = (function () {
         function countEventConflicts(event) {
             var count = 0;
             calendar.fullCalendar('clientEvents', function (cbEvent) {
-                if (cbEvent.courseNumber !== null && cbEvent.selected && isEventVisible(cbEvent) && areEventsOverlapping(cbEvent, event)) {
+                if (cbEvent.courseNumber !== null && cbEvent.layerId === event.layerId && cbEvent.selected && isEventVisible(cbEvent) && areEventsOverlapping(cbEvent, event)) {
                     count++;
                 }
                 return false;
@@ -994,6 +1006,8 @@ var CourseCalendar = (function () {
 
         // True if the event cannot be selected because of the given course.
         function isConflicted(event, course, layerId) {
+            if (event.layerId !== layerId) return false;
+
             var conflictingEvent = calendar.fullCalendar('clientEvents', function (cbEvent) {
                 return cbEvent.courseNumber === course && cbEvent.layerId === layerId && cbEvent.selected && areEventsOverlapping(cbEvent, event);
             });
@@ -1002,12 +1016,20 @@ var CourseCalendar = (function () {
         }
     };
 
-    CourseCalendar.prototype.previewCourse = function (course) {
+    CourseCalendar.prototype.previewCourse = function (course, layerId) {
         var that = this;
         var calendar = that.element;
 
+        var targetLayerId = layerId;
+
         var conflictedEvents = calendar.fullCalendar('clientEvents', function (event) {
-            return event.courseNumber === course && isEventVisible(event) && event.start.week() > 1;
+            if (event.courseNumber !== course || !isEventVisible(event) || event.start.week() <= 1) {
+                return false;
+            }
+            if (!targetLayerId) {
+                targetLayerId = event.layerId;
+            }
+            return event.layerId === targetLayerId;
         });
 
         var temporaryEvents = [];

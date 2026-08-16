@@ -60,25 +60,18 @@
                 onDropdownItemActivate: function (course) {
                     previewingFromSelectControl = course;
 
-                    if (!layerPanel.isCourseInLayer(course, layerPanel.activeLayerId)) {
-                        courseCalendar.addCourse(course, layerPanel.activeLayerId);
-                        courseExamInfo.renderCourses(layerPanel.getCourseNumbers(true, null, true).concat([course]));
-                    }
+                    courseCalendar.addCourse(course, 'system_preview');
+                    courseExamInfo.renderCourses(layerPanel.getCourseNumbers(true, null, true).concat([course]));
+                    
                     courseExamInfo.setHighlighted(course);
-                    courseCalendar.previewCourse(course);
-                    // For layer panel floating info isn't available yet or needs a different target, but we'll leave it as is if we port it.
-                    // Actually, layerPanel doesn't have setFloatingCourseInfo implemented. We will just comment it out.
-                    // layerPanel.setFloatingCourseInfo(course);
+                    courseCalendar.previewCourse(course, 'system_preview');
                 },
                 onDropdownItemDeactivate: function (course) {
-                    if (!layerPanel.isCourseInLayer(course, layerPanel.activeLayerId)) {
-                        courseCalendar.removeCourse(course, layerPanel.activeLayerId);
-                        courseExamInfo.renderCourses(layerPanel.getCourseNumbers(true, null, true));
-                    } else {
-                        // Remove highlight
-                        courseExamInfo.removeHighlighted(course);
-                        courseCalendar.unpreviewCourse(course);
-                    }
+                    courseCalendar.unpreviewCourse(course);
+                    courseCalendar.removeCourse(course, 'system_preview');
+                    
+                    courseExamInfo.removeHighlighted(course);
+                    courseExamInfo.renderCourses(layerPanel.getCourseNumbers(true, null, true));
 
                     previewingFromSelectControl = null;
                 },
@@ -102,7 +95,7 @@
                 if (previewingFromSelectControl) {
                     courseCalendar.unpreviewCourse(previewingFromSelectControl);
                 }
-                courseCalendar.previewCourse(course);
+                courseCalendar.previewCourse(course, layerId);
             },
             onHoverOut: function (course, layerId) {
                 courseExamInfo.removeHovered(course);
@@ -153,12 +146,12 @@
                 // Keep track of active layer if needed, or layerPanel.activeLayerId is sufficient
             },
             onItemMovedToLayer: function (itemType, itemId, oldLayerId, newLayerId) {
-                if (itemType === 'course') {
-                    courseCalendar.removeCourse(itemId, oldLayerId);
-                    courseCalendar.addCourse(itemId, newLayerId);
-                    courseCalendar.previewCourse(itemId);
-                }
                 itemMovedSave(itemType, itemId, oldLayerId, newLayerId);
+                
+                if (itemType === 'course') {
+                    setScheduleFromSavedSession(currentSavedSession, true);
+                    courseCalendar.previewCourse(itemId, newLayerId);
+                }
             }
         });
 
@@ -221,7 +214,8 @@
             onCustomEventRemoved: function (eventId, layerId) {
                 layerPanel.removeCustomEvent(eventId, layerId);
                 customEventUnsave(eventId, layerId);
-            }
+            },
+            onColorPickerClick: onColorPickerClick
         });
 
         $('#top-navbar-supported-content').removeClass('top-navbar-content-uninitialized');
@@ -265,6 +259,26 @@
     }
 
     function courseColorGenerator(course, layerId) {
+        if (!layerId && typeof layerPanel !== 'undefined' && layerPanel) {
+            if (layerPanel.isCourseInLayer(course, layerPanel.activeLayerId)) {
+                layerId = layerPanel.activeLayerId;
+            } else {
+                for (var i = 0; i < layerPanel.layers.length; i++) {
+                    if (layerPanel.isCourseInLayer(course, layerPanel.layers[i].id)) {
+                        layerId = layerPanel.layers[i].id;
+                        break;
+                    }
+                }
+                if (!layerId) layerId = layerPanel.activeLayerId;
+            }
+        }
+        if (layerId) {
+            try {
+                var customColor = localStorage.getItem('courseColor_' + course + '_' + layerId);
+                if (customColor) return customColor;
+            } catch (e) {}
+        }
+
         var str = courseManager.toOldCourseNumber(course);
         // Fixup: both 114036 and 114246 get a green color, and both are taken at the same semester.
         // So here we cause the color of 114246 to be different.
@@ -291,6 +305,77 @@
             str = String.fromCharCode(str.charCodeAt(0) + shift) + str.substring(1);
         }
         return colorHash.hex(str);
+    }
+
+    function refreshColors() {
+        if (typeof courseCalendar !== 'undefined' && courseCalendar) {
+            var events = courseCalendar.element.fullCalendar('clientEvents');
+            events.forEach(function(event) {
+                var colorStr = event.courseNumber !== null ? event.courseNumber : event.title;
+                event.backgroundColor = courseColorGenerator(colorStr, event.layerId);
+                courseCalendar.element.fullCalendar('updateEvent', event);
+            });
+        }
+        if (typeof layerPanel !== 'undefined' && layerPanel) {
+            layerPanel.updateColors();
+        }
+        if (typeof courseExamInfo !== 'undefined' && courseExamInfo && typeof layerPanel !== 'undefined' && layerPanel) {
+            courseExamInfo.renderCourses(layerPanel.getCourseNumbers(true, null, true));
+        }
+    }
+
+    function onColorPickerClick(course, layerId) {
+        if (!layerId && typeof layerPanel !== 'undefined' && layerPanel) layerId = layerPanel.activeLayerId;
+
+        var colors = [];
+        for (var i = 1; i <= 21; i++) {
+            colors.push(colorHash.hex(String(i * 1000 + 100)));
+        }
+
+        var $content = $('<div></div>').css({
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '10px',
+            justifyContent: 'center',
+            padding: '10px'
+        });
+
+        colors.forEach(function(color) {
+            var $colorDiv = $('<div></div>').css({
+                width: '40px',
+                height: '40px',
+                backgroundColor: color,
+                borderRadius: '4px',
+                cursor: 'pointer',
+                margin: '5px'
+            }).click(function() {
+                try {
+                    localStorage.setItem('courseColor_' + course + '_' + layerId, color);
+                } catch (e) {}
+                dialog.close();
+                refreshColors();
+            });
+            $content.append($colorDiv);
+        });
+
+        var $clearButton = $('<button class="btn btn-secondary btn-block mt-3">אפס צבע (חזור לברירת מחדל)</button>').click(function() {
+            try {
+                localStorage.removeItem('courseColor_' + course + '_' + layerId);
+            } catch (e) {}
+            dialog.close();
+            refreshColors();
+        });
+
+        $content.append($clearButton);
+
+        var dialog = BootstrapDialog.show({
+            title: 'בחר צבע לשכבה',
+            message: $content,
+            buttons: [{
+                label: 'סגור',
+                action: function(d) { d.close(); }
+            }]
+        });
     }
 
     function showExtraContentOnLoad() {
@@ -1480,6 +1565,15 @@
         var semesterLayerContentsKey = currentSemester + '_layer_contents';
         
         if (!currentSavedSession[semesterLayerContentsKey]) return;
+        
+        // Migrate custom color to new layer if it exists
+        var oldColorKey = 'courseColor_' + itemId + '_' + oldLayerId;
+        var newColorKey = 'courseColor_' + itemId + '_' + newLayerId;
+        var existingColor = localStorage.getItem(oldColorKey);
+        if (existingColor) {
+            localStorage.setItem(newColorKey, existingColor);
+            localStorage.removeItem(oldColorKey);
+        }
         
         if (itemType === 'course') {
             // Unsave old

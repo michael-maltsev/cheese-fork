@@ -107,3 +107,27 @@
 .course-calendar .custom-event {
     cursor: move;
 }
+
+.calendar-item-color-picker-button {
+    display: none;
+    position: absolute;
+    z-index: 3;
+    top: 5px;
+    left: 5px;
+    padding: 0 4px;
+    color: black;
+    background-color: white;
+    border: 1px solid black;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.fc-event:hover .calendar-item-color-picker-button {
+    display: block;
+}
+
+.calendar-item-color-picker-button:hover {
+    color: white;
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+}
