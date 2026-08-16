@@ -171,7 +171,6 @@
     color: rgba(0, 0, 0, 0.5);
     transition: opacity 0.2s;
     font-size: 12px;
-    padding: 0 5px;
     opacity: 0;
     user-select: none;
     z-index: 10;
