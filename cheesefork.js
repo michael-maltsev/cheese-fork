@@ -1640,11 +1640,13 @@
         // Migrate custom color to new layer if it exists
         var oldColorKey = 'courseColor_' + itemId + '_' + oldLayerId;
         var newColorKey = 'courseColor_' + itemId + '_' + newLayerId;
-        var existingColor = localStorage.getItem(oldColorKey);
-        if (existingColor) {
-            localStorage.setItem(newColorKey, existingColor);
-            localStorage.removeItem(oldColorKey);
-        }
+        try {
+            var existingColor = localStorage.getItem(oldColorKey);
+            if (existingColor) {
+                localStorage.setItem(newColorKey, existingColor);
+                localStorage.removeItem(oldColorKey);
+            }
+        } catch (e) {}
         
         if (itemType === 'course') {
             // Unsave old
