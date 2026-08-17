@@ -146,9 +146,6 @@
     flex-grow: 1;
     position: relative;
     padding-right: 5px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 .layer-panel-content-has-hidden {
