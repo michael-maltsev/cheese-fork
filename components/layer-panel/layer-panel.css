@@ -4,6 +4,7 @@
 }
 
 .layer-panel-header {
+    padding: 4px 10px !important;
     background-color: rgba(0, 0, 0, 0.05);
     font-weight: bold;
     display: flex;
@@ -23,7 +24,7 @@
 }
 
 .layer-group-header {
-    padding: 8px 10px;
+    padding: 4px 10px;
     display: flex;
     align-items: center;
     background-color: rgba(0, 0, 0, 0.03);
@@ -31,7 +32,6 @@
     cursor: pointer;
     position: relative;
     user-select: none;
-    min-height: 44px;
     border-right: 3px solid transparent;
 }
 
@@ -105,12 +105,11 @@
 /* Layer items (courses / events) */
 .layer-panel-item {
     position: relative;
-    padding: 8px 10px;
+    padding: 8px;
     border-bottom: 1px solid rgba(0,0,0,.125);
     font-size: .8rem;
     cursor: default;
     background-color: #fff;
-    min-height: 44px;
     display: flex;
     align-items: center;
 }
@@ -162,6 +161,10 @@
     position: relative;
     user-select: none;
     cursor: pointer;
+    padding: .1rem .5rem;
+    font-size: 100%;
+    font-weight: 500;
+    font-style: italic;
     margin-right: 5px;
     z-index: 2; /* above the item click area */
 }
@@ -174,10 +177,12 @@
     opacity: 0;
     user-select: none;
     z-index: 10;
+    display: none;
 }
 
 .layer-panel-item:hover .layer-panel-drag-handle {
     opacity: 1;
+    display: block;
 }
 
 .ui-sortable-helper .layer-panel-drag-handle {
@@ -247,5 +252,6 @@
     .layer-panel-drag-handle {
         opacity: 1; /* Always show on touch */
         padding: 10px; /* Larger touch target */
+        display: block;
     }
 }
