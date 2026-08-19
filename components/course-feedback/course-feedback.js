@@ -7,6 +7,7 @@ var CourseFeedback = (function () {
     function CourseFeedback(element, options) {
         this.element = element;
         this.columnGrid = options.columnGrid;
+        this.openNewFeedbackDialog = options.openNewFeedbackDialog;
     }
 
     var authReady = false;
@@ -625,6 +626,12 @@ var CourseFeedback = (function () {
         content.append($('<div class="text-center"></div>').append(newFeedbackButton));
 
         element.html(content);
+
+        // Only on the first render, so that the dialog doesn't reopen after submitting.
+        if (courseFeedback.openNewFeedbackDialog) {
+            courseFeedback.openNewFeedbackDialog = false;
+            newFeedbackButton.click();
+        }
     }
 
     function semesterFriendlyName(semester) {

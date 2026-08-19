@@ -104,7 +104,8 @@
     if (course) {
         firebaseInit();
         var courseFeedback = new CourseFeedback($('.course-feedback'), {
-            columnGrid: 'md'
+            columnGrid: 'md',
+            openNewFeedbackDialog: getParameterByName('publish') !== null
         });
         courseFeedback.loadFeedback(course);
     }
