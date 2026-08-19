@@ -8,6 +8,7 @@ var CourseFeedback = (function () {
         this.element = element;
         this.columnGrid = options.columnGrid;
         this.openNewFeedbackDialog = options.openNewFeedbackDialog;
+        this.loginUrl = options.loginUrl;
     }
 
     var authReady = false;
@@ -133,6 +134,12 @@ var CourseFeedback = (function () {
             '</form>')
             : ('<div>' +
                 'כדי לפרסם חוות דעת יש להתחבר לחשבון שלכם במערכת.' +
+                // Pages without a login flow of their own point at one that has it.
+                (options.loginUrl
+                    ? '<br>' +
+                        '<a href="' + options.loginUrl + '" target="_blank">התחברו באתר CheeseFork</a>' +
+                        ' ולאחר מכן רעננו עמוד זה.'
+                    : '') +
             '</div>');
 
         var messageElement = $('<div>').append(options.preHtml, formHtml, options.postHtml);
@@ -618,7 +625,8 @@ var CourseFeedback = (function () {
                     newFeedbackDialog(course, {
                         onSubmit: function () {
                             courseFeedback.loadFeedback(course, false);
-                        }
+                        },
+                        loginUrl: courseFeedback.loginUrl
                     });
                 });
             });
