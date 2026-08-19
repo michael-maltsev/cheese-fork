@@ -9,6 +9,45 @@ var CourseFeedback = (function () {
         this.columnGrid = options.columnGrid;
     }
 
+    var authReady = false;
+    var authReadyCallbacks = null;
+
+    // currentUser is null both when signed out and before the initial auth state is
+    // restored, and the compat SDK doesn't expose authStateReady, so tell the two apart
+    // by the first onAuthStateChanged call.
+    function whenAuthReady(callback) {
+        if (authReady || typeof firebase === 'undefined' || !firebase.auth) {
+            callback();
+            return;
+        }
+
+        var registerListener = authReadyCallbacks === null;
+        if (registerListener) {
+            authReadyCallbacks = [];
+        }
+
+        authReadyCallbacks.push(callback);
+
+        if (registerListener) {
+            var onReady = function () {
+                authReady = true;
+
+                var callbacks = authReadyCallbacks;
+                authReadyCallbacks = [];
+                callbacks.forEach(function (queuedCallback) {
+                    queuedCallback();
+                });
+            };
+
+            try {
+                firebase.auth().onAuthStateChanged(onReady, onReady);
+            } catch (e) {
+                // Firebase auth doesn't work on Edge/IE in private mode.
+                onReady();
+            }
+        }
+    }
+
     function newFeedbackDialog(course, options) {
         var authenticated = firebase.auth &&
             firebase.auth().currentUser !== null;
@@ -570,10 +609,16 @@ var CourseFeedback = (function () {
 
         var newFeedbackButton = $('<button type="button" class="btn btn-primary">פרסום חוות דעת</button>')
             .click(function (event) {
-                newFeedbackDialog(course, {
-                    onSubmit: function () {
-                        courseFeedback.loadFeedback(course, false);
-                    }
+                var button = $(this).prop('disabled', true);
+
+                whenAuthReady(function () {
+                    button.prop('disabled', false);
+
+                    newFeedbackDialog(course, {
+                        onSubmit: function () {
+                            courseFeedback.loadFeedback(course, false);
+                        }
+                    });
                 });
             });
 
