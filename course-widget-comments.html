@@ -48,6 +48,7 @@
 <script src="modules/bootstrap4-dialog/js/bootstrap-dialog.min.js"></script>
 <script src="components/course-feedback/course-feedback.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.4.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.4.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore-compat.js"></script>
 <script>
     // https://stackoverflow.com/a/901144
@@ -103,7 +104,9 @@
     if (course) {
         firebaseInit();
         var courseFeedback = new CourseFeedback($('.course-feedback'), {
-            columnGrid: 'md'
+            columnGrid: 'md',
+            openNewFeedbackDialog: getParameterByName('publish') !== null,
+            loginUrl: '.'
         });
         courseFeedback.loadFeedback(course);
     }

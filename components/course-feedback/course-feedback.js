@@ -7,6 +7,47 @@ var CourseFeedback = (function () {
     function CourseFeedback(element, options) {
         this.element = element;
         this.columnGrid = options.columnGrid;
+        this.openNewFeedbackDialog = options.openNewFeedbackDialog;
+        this.loginUrl = options.loginUrl;
+    }
+
+    var authReady = false;
+    var authReadyCallbacks = null;
+
+    // currentUser is null both when signed out and before the initial auth state is
+    // restored, and the compat SDK doesn't expose authStateReady, so tell the two apart
+    // by the first onAuthStateChanged call.
+    function whenAuthReady(callback) {
+        if (authReady || typeof firebase === 'undefined' || !firebase.auth) {
+            callback();
+            return;
+        }
+
+        var registerListener = authReadyCallbacks === null;
+        if (registerListener) {
+            authReadyCallbacks = [];
+        }
+
+        authReadyCallbacks.push(callback);
+
+        if (registerListener) {
+            var onReady = function () {
+                authReady = true;
+
+                var callbacks = authReadyCallbacks;
+                authReadyCallbacks = [];
+                callbacks.forEach(function (queuedCallback) {
+                    queuedCallback();
+                });
+            };
+
+            try {
+                firebase.auth().onAuthStateChanged(onReady, onReady);
+            } catch (e) {
+                // Firebase auth doesn't work on Edge/IE in private mode.
+                onReady();
+            }
+        }
     }
 
     function newFeedbackDialog(course, options) {
@@ -93,6 +134,12 @@ var CourseFeedback = (function () {
             '</form>')
             : ('<div>' +
                 'כדי לפרסם חוות דעת יש להתחבר לחשבון שלכם במערכת.' +
+                // Pages without a login flow of their own point at one that has it.
+                (options.loginUrl
+                    ? '<br>' +
+                        '<a href="' + options.loginUrl + '" target="_blank">התחברו באתר CheeseFork</a>' +
+                        ' ולאחר מכן רעננו עמוד זה.'
+                    : '') +
             '</div>');
 
         var messageElement = $('<div>').append(options.preHtml, formHtml, options.postHtml);
@@ -570,16 +617,29 @@ var CourseFeedback = (function () {
 
         var newFeedbackButton = $('<button type="button" class="btn btn-primary">פרסום חוות דעת</button>')
             .click(function (event) {
-                newFeedbackDialog(course, {
-                    onSubmit: function () {
-                        courseFeedback.loadFeedback(course, false);
-                    }
+                var button = $(this).prop('disabled', true);
+
+                whenAuthReady(function () {
+                    button.prop('disabled', false);
+
+                    newFeedbackDialog(course, {
+                        onSubmit: function () {
+                            courseFeedback.loadFeedback(course, false);
+                        },
+                        loginUrl: courseFeedback.loginUrl
+                    });
                 });
             });
 
         content.append($('<div class="text-center"></div>').append(newFeedbackButton));
 
         element.html(content);
+
+        // Only on the first render, so that the dialog doesn't reopen after submitting.
+        if (courseFeedback.openNewFeedbackDialog) {
+            courseFeedback.openNewFeedbackDialog = false;
+            newFeedbackButton.click();
+        }
     }
 
     function semesterFriendlyName(semester) {
