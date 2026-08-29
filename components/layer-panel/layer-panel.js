@@ -410,8 +410,7 @@ var LayerPanel = (function () {
             '<span class="course-button-list-badge-text">i</span>' +
             '</span>');
             
-        var color = that.colorGenerator(course, layerId);
-        button.css('background-color', color)
+        button.css('background-color', that.colorGenerator(course, layerId))
             .click(function () {
                 if (!that.readonly) {
                     if (button.hasClass('active')) {
@@ -422,7 +421,7 @@ var LayerPanel = (function () {
                         if (that.onDisableCourse) that.onDisableCourse(course, layerId);
                     } else {
                         button.addClass('active');
-                        button.css('background-color', color);
+                        button.css('background-color', that.colorGenerator(course, layerId));
                         if (that.onEnableCourse) that.onEnableCourse(course, layerId);
                     }
                 }
@@ -483,8 +482,7 @@ var LayerPanel = (function () {
 
         var button = $('<li class="layer-panel-item active" data-item-type="custom" data-item-id="' + eventId + '" data-item-title="' + title.replace(/"/g, '&quot;') + '"></li>');
         
-        var color = that.colorGenerator(title, layerId);
-        button.css('background-color', color)
+        button.css('background-color', that.colorGenerator(title, layerId))
             .click(function () {
                 if (!that.readonly) {
                     if (button.hasClass('active')) {
@@ -493,7 +491,7 @@ var LayerPanel = (function () {
                         if (that.onDisableCustomEvent) that.onDisableCustomEvent(eventId, layerId);
                     } else {
                         button.addClass('active');
-                        button.css('background-color', color);
+                        button.css('background-color', that.colorGenerator(title, layerId));
                         if (that.onEnableCustomEvent) that.onEnableCustomEvent(eventId, layerId);
                     }
                 }
