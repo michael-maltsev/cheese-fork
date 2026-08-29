@@ -1,5 +1,5 @@
 .layer-panel-container {
-    margin-top: 20px;
+    margin-top: 15px;
     margin-bottom: 10px;
 }
 
@@ -12,9 +12,18 @@
     align-items: center;
 }
 
-.layer-panel-header .btn-add-layer {
-    padding: 0 5px;
+.btn-add-layer {
+    user-select: none;
     cursor: pointer;
+    padding: .25rem .5rem;
+    font-size: 100%;
+    font-weight: 500;
+    transition: background-color 0.15s ease-in-out;
+}
+
+.btn-add-layer:hover {
+    background-color: #007bff;
+    color: #fff;
 }
 
 .layer-group {
@@ -174,12 +183,10 @@
     opacity: 0;
     user-select: none;
     z-index: 10;
-    display: none;
 }
 
 .layer-panel-item:hover .layer-panel-drag-handle {
     opacity: 1;
-    display: block;
 }
 
 .ui-sortable-helper .layer-panel-drag-handle {
@@ -249,6 +256,5 @@
     .layer-panel-drag-handle {
         opacity: 1; /* Always show on touch */
         padding: 10px; /* Larger touch target */
-        display: block;
     }
 }

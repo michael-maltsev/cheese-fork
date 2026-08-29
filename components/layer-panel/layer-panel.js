@@ -40,17 +40,13 @@ var LayerPanel = (function () {
         this.container = $('<div class="layer-panel-container"></div>');
         this.element.append(this.container);
 
-        // Header
-        this.header = $('<div class="layer-panel-header p-2">' +
-            '<span>שכבות</span>' +
-            (this.readonly ? '' : '<span class="btn-add-layer" title="הוסף שכבה"><i class="fas fa-plus"></i></span>') +
-            '</div>');
-        this.container.append(this.header);
-
+        // Add layer button (moved to index.html next to general-info)
         if (!this.readonly) {
-            this.header.find('.btn-add-layer').click(function () {
+            $('#btn-add-layer').removeClass('d-none').off('click').on('click', function () {
                 that.showAddLayerDialog();
             });
+        } else {
+            $('#btn-add-layer').addClass('d-none');
         }
 
         // Layer groups container
@@ -66,6 +62,40 @@ var LayerPanel = (function () {
             this.container.append(this.deleteArea);
         }
     }
+
+    LayerPanel.prototype.updateLayerHeadersVisibility = function () {
+        var that = this;
+        if (this.layers.length <= 1) {
+            this.layersContainer.find('.layer-group-header').hide();
+            this.layersContainer.find('.layer-group').removeClass('collapsed layer-hidden-group');
+            if (this.layers.length === 1 && !this.layers[0].visible) {
+                this.layers[0].visible = true;
+                this.layersContainer.find('.layer-group[data-layer-id="' + this.layers[0].id + '"] .layer-visibility-toggle i')
+                    .removeClass('fa-square').addClass('fa-check-square');
+                if (this.onLayerVisibilityChanged) {
+                    this.onLayerVisibilityChanged(this.layers[0].id, true);
+                }
+            }
+        } else {
+            this.layersContainer.find('.layer-group-header').show();
+            this.layersContainer.find('.layer-group').each(function () {
+                var groupId = $(this).attr('data-layer-id');
+                var layer = that.layers.find(function(l) { return l.id === groupId; });
+                if (layer) {
+                    if (!layer.visible) {
+                        $(this).addClass('layer-hidden-group');
+                    }
+                    var isCollapsed = false;
+                    try {
+                        isCollapsed = localStorage.getItem('layer_collapsed_' + layer.id) === 'true';
+                    } catch (e) {}
+                    if (isCollapsed) {
+                        $(this).addClass('collapsed');
+                    }
+                }
+            });
+        }
+    };
 
     LayerPanel.prototype.loadLayers = function (layersArray, layerContents) {
         var that = this;
@@ -86,6 +116,7 @@ var LayerPanel = (function () {
             that.renderLayerGroup(layer);
         });
 
+        this.updateLayerHeadersVisibility();
         this.initializeSortableIfNeeded();
     };
 
@@ -259,6 +290,7 @@ var LayerPanel = (function () {
                         that.setActiveLayer(id);
                         that.destroySortable();
                         that.initializeSortableIfNeeded();
+                        that.updateLayerHeadersVisibility();
                         
                         if (that.onLayerCreated) {
                             that.onLayerCreated(id, newLayer.name);
