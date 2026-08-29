@@ -1172,6 +1172,36 @@ var CourseCalendar = (function () {
         updateCalendarMaxDayAndTime(calendar);
     };
 
+    CourseCalendar.prototype.hideCustomEvent = function(eventId, layerId) {
+        var calendar = this.element;
+        var targetId = layerId + '.custom_event_' + eventId;
+        calendar.fullCalendar('clientEvents', function(event) {
+            if (event.id === targetId && event.layerId === layerId && !event.hiddenByToggle) {
+                event.hiddenByToggle = true;
+                event.start.add(7, 'days');
+                event.end.add(7, 'days');
+                calendar.fullCalendar('updateEvent', event);
+            }
+            return false;
+        });
+        updateCalendarMaxDayAndTime(calendar);
+    };
+
+    CourseCalendar.prototype.showCustomEvent = function(eventId, layerId) {
+        var calendar = this.element;
+        var targetId = layerId + '.custom_event_' + eventId;
+        calendar.fullCalendar('clientEvents', function(event) {
+            if (event.id === targetId && event.layerId === layerId && event.hiddenByToggle) {
+                event.hiddenByToggle = false;
+                event.start.add(-7, 'days');
+                event.end.add(-7, 'days');
+                calendar.fullCalendar('updateEvent', event);
+            }
+            return false;
+        });
+        updateCalendarMaxDayAndTime(calendar);
+    };
+
     CourseCalendar.prototype.saveAsIcs = function (icsCal, dateFrom, dateTo, daysOff) {
         var that = this;
         var calendar = that.element;

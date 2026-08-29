@@ -119,6 +119,12 @@
                 courseExamInfo.renderCourses(layerPanel.getCourseNumbers(true, null, true));
                 courseSelect.filterApply();
             },
+            onEnableCustomEvent: function (eventId, layerId) {
+                courseCalendar.showCustomEvent(eventId, layerId);
+            },
+            onDisableCustomEvent: function (eventId, layerId) {
+                courseCalendar.hideCustomEvent(eventId, layerId);
+            },
             onReorder: function (layerId) {
                 coursesOrderSave(layerId);
             },

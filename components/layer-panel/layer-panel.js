@@ -21,6 +21,8 @@ var LayerPanel = (function () {
         this.onHoverOut = options.onHoverOut;
         this.onEnableCourse = options.onEnableCourse;
         this.onDisableCourse = options.onDisableCourse;
+        this.onEnableCustomEvent = options.onEnableCustomEvent;
+        this.onDisableCustomEvent = options.onDisableCustomEvent;
         this.onReorder = options.onReorder;
         this.onItemMovedToLayer = options.onItemMovedToLayer;
 
@@ -488,10 +490,11 @@ var LayerPanel = (function () {
                     if (button.hasClass('active')) {
                         button.removeClass('active');
                         button.css('background-color', '');
-                        // Custom events don't have disable callback yet, but could be added
+                        if (that.onDisableCustomEvent) that.onDisableCustomEvent(eventId, layerId);
                     } else {
                         button.addClass('active');
                         button.css('background-color', color);
+                        if (that.onEnableCustomEvent) that.onEnableCustomEvent(eventId, layerId);
                     }
                 }
             })
