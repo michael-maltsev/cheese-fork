@@ -607,6 +607,9 @@ var LayerPanel = (function () {
                     
                     if (newLayerId !== originalLayerId) {
                         // Item moved to a different layer
+                        if (that.onReorder) {
+                            that.onReorder(newLayerId);
+                        }
                         if (that.onItemMovedToLayer) {
                             that.onItemMovedToLayer(itemType, itemId, originalLayerId, newLayerId);
                         }
