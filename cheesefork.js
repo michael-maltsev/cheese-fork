@@ -401,7 +401,7 @@
         $content.append($clearButton);
 
         var dialog = BootstrapDialog.show({
-            title: 'בחר צבע לשכבה',
+            title: 'בחר צבע',
             message: $content,
             buttons: [{
                 label: 'סגור',
