@@ -42,6 +42,8 @@
     position: relative;
     user-select: none;
     border-right: 3px solid transparent;
+    border-top-left-radius: calc(.25rem - 1px);
+    border-top-right-radius: calc(.25rem - 1px);
 }
 
 .layer-group-header.active-layer {
@@ -97,6 +99,12 @@
     min-height: 10px; /* Drop zone even when empty */
     transition: max-height 0.3s ease-out;
     overflow: hidden;
+    border-bottom-left-radius: calc(.25rem - 1px);
+    border-bottom-right-radius: calc(.25rem - 1px);
+}
+
+.single-layer-mode .layer-children {
+    border-radius: calc(.25rem - 1px);
 }
 
 .layer-group.collapsed .layer-children {

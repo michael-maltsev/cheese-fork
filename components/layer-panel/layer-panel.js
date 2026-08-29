@@ -66,6 +66,7 @@ var LayerPanel = (function () {
     LayerPanel.prototype.updateLayerHeadersVisibility = function () {
         var that = this;
         if (this.layers.length <= 1) {
+            this.layersContainer.addClass('single-layer-mode');
             this.layersContainer.find('.layer-group-header').hide();
             this.layersContainer.find('.layer-group').removeClass('collapsed layer-hidden-group');
             if (this.layers.length === 1 && !this.layers[0].visible) {
@@ -77,6 +78,7 @@ var LayerPanel = (function () {
                 }
             }
         } else {
+            this.layersContainer.removeClass('single-layer-mode');
             this.layersContainer.find('.layer-group-header').show();
             this.layersContainer.find('.layer-group').each(function () {
                 var groupId = $(this).attr('data-layer-id');
