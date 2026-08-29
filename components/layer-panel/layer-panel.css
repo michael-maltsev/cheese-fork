@@ -107,6 +107,10 @@
     border-radius: calc(.25rem - 1px);
 }
 
+.single-layer-mode .layer-group:has(.layer-children:empty) {
+    display: none;
+}
+
 .layer-group.collapsed .layer-children {
     display: none;
 }
