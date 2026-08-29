@@ -393,7 +393,7 @@ var LayerPanel = (function () {
         var courseTitle = that.courseManager.getTitle(course);
 
         // A wrapper div for proper word wrapping of the content text.
-        var spanAbsolute = $('<div class="layer-panel-content-wrapper"></div>').attr('title', courseTitle).html($('<span class="content-absolute"></span>').text(courseTitle));
+        var spanAbsolute = $('<div class="layer-panel-content-wrapper"></div>').attr('title', courseTitle).attr('data-text', courseTitle).html($('<span class="content-absolute"></span>').text(courseTitle));
         
         // Create drag handle (only visible when not readonly)
         var dragHandle = $('<span class="layer-panel-drag-handle">' +
@@ -477,7 +477,7 @@ var LayerPanel = (function () {
     LayerPanel.prototype.renderCustomEventItem = function (eventId, title, layerId, container) {
         var that = this;
         
-        var spanAbsolute = $('<div class="layer-panel-content-wrapper"></div>').attr('title', title).html($('<span class="content-absolute"></span>').text('✦ ' + title));
+        var spanAbsolute = $('<div class="layer-panel-content-wrapper"></div>').attr('title', title).attr('data-text', '✦ ' + title).html($('<span class="content-absolute"></span>').text('✦ ' + title));
         var dragHandle = $('<span class="layer-panel-drag-handle"><i class="fas fa-grip-vertical"></i></span>');
 
         var button = $('<li class="layer-panel-item active" data-item-type="custom" data-item-id="' + eventId + '" data-item-title="' + title.replace(/"/g, '&quot;') + '"></li>');

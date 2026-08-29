@@ -164,9 +164,21 @@
 }
 
 .layer-panel-content-wrapper {
+    display: grid;
     flex-grow: 1;
-    position: relative;
     padding-right: 5px;
+}
+
+.content-absolute {
+    grid-area: 1 / 1;
+}
+
+.layer-panel-content-wrapper::after {
+    content: attr(data-text);
+    grid-area: 1 / 1;
+    font-weight: bold;
+    visibility: hidden;
+    pointer-events: none;
 }
 
 .layer-panel-content-has-hidden {
