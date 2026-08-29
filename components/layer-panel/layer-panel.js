@@ -23,6 +23,7 @@ var LayerPanel = (function () {
         this.onDisableCourse = options.onDisableCourse;
         this.onEnableCustomEvent = options.onEnableCustomEvent;
         this.onDisableCustomEvent = options.onDisableCustomEvent;
+        this.onRemoveCustomEvent = options.onRemoveCustomEvent;
         this.onReorder = options.onReorder;
         this.onItemMovedToLayer = options.onItemMovedToLayer;
 
@@ -597,6 +598,8 @@ var LayerPanel = (function () {
                     ui.item.remove();
                     if (itemType === 'course' && that.onDisableCourse) {
                         that.onDisableCourse(itemId, originalLayerId);
+                    } else if (itemType === 'custom' && that.onRemoveCustomEvent) {
+                        that.onRemoveCustomEvent(itemId, originalLayerId);
                     }
                 } else {
                     var newLayerId = ui.item.closest('.layer-group').attr('data-layer-id');

@@ -1187,6 +1187,13 @@ var CourseCalendar = (function () {
         updateCalendarMaxDayAndTime(calendar);
     };
 
+    CourseCalendar.prototype.removeCustomEvent = function (eventId, layerId) {
+        var calendar = this.element;
+        calendar.fullCalendar('removeEvents', layerId + '.custom_event_' + eventId);
+        updateCalendarMaxDayAndTime(calendar);
+        this.onCustomEventRemoved(eventId, layerId);
+    };
+
     CourseCalendar.prototype.showCustomEvent = function(eventId, layerId) {
         var calendar = this.element;
         var targetId = layerId + '.custom_event_' + eventId;

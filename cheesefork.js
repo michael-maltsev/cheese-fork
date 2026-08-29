@@ -125,6 +125,9 @@
             onDisableCustomEvent: function (eventId, layerId) {
                 courseCalendar.hideCustomEvent(eventId, layerId);
             },
+            onRemoveCustomEvent: function (eventId, layerId) {
+                courseCalendar.removeCustomEvent(eventId, layerId);
+            },
             onReorder: function (layerId) {
                 coursesOrderSave(layerId);
             },
