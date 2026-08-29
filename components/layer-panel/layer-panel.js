@@ -361,7 +361,6 @@ var LayerPanel = (function () {
         BootstrapDialog.show({
             title: 'מחיקת שכבה',
             message: message,
-            type: BootstrapDialog.TYPE_WARNING,
             buttons: [{
                 label: 'מחק',
                 cssClass: 'btn-danger',
