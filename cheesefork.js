@@ -1053,13 +1053,12 @@
 
   function firebaseInit() {
     var config = {
-      apiKey: "AIzaSyCyxZsBibBcN5qq-rqVC9CqvW1bFo5fjnc",
-      authDomain: "cheese-fork-local.firebaseapp.com",
-      projectId: "cheese-fork-local",
-      storageBucket: "cheese-fork-local.firebasestorage.app",
-      messagingSenderId: "1089831905501",
-      appId: "1:1089831905501:web:98aa0b336071e691e4d334",
-      measurementId: "G-GSXTEPRH3K",
+      apiKey: 'AIzaSyAfKPyTM83mkLgdQTdx9YS9UXywiswwIYI',
+      authDomain: 'cheesefork-de9af.firebaseapp.com',
+      databaseURL: 'https://cheesefork-de9af.firebaseio.com',
+      projectId: 'cheesefork-de9af',
+      storageBucket: 'cheesefork-de9af.appspot.com',
+      messagingSenderId: '916559682433'
     };
     firebase.initializeApp(config);
 
