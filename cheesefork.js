@@ -673,6 +673,10 @@
       semesterFriendlyName(currentSemester),
     );
 
+    $("#top-navbar-dropdown-semester-name").text(
+      semesterFriendlyName(currentSemester),
+    );
+
     if (!viewingSharedSchedule) {
       var semesterSelect = $("#top-navbar-semester").find(".dropdown-menu");
 
