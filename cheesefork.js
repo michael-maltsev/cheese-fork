@@ -1,7 +1,7 @@
 'use strict';
 
 /* global introJs, ColorHash, BootstrapDialog, ics, JsDiff, firebase, firebaseui, gtag */
-/* global CourseManager, CourseSelect, CourseButtonList, CourseExamInfo, CourseCalendar, CourseFeedback */
+/* global CourseManager, CourseSelect, LayerPanel, CourseExamInfo, CourseCalendar, CourseFeedback */
 /* global courses_from_rishum, availableSemesters, currentSemester, scheduleSharingUserId */
 
 (function () {
@@ -18,7 +18,7 @@
     // UI components.
     var loginDialog = null;
     var courseSelect = null;
-    var courseButtonList = null;
+    var layerPanel = null;
     var courseExamInfo = null;
     var courseCalendar = null;
 
@@ -45,12 +45,12 @@
             courseSelect = new CourseSelect($('#course-select'), {
                 courseManager: courseManager,
                 onItemAdd: function (course) {
-                    if (!courseButtonList.isCourseInList(course)) {
-                        courseButtonList.addCourse(course);
-                        courseCalendar.addCourse(course);
-                        selectedCourseSave(course);
+                    if (!layerPanel.isCourseInLayer(course, layerPanel.activeLayerId)) {
+                        layerPanel.addCourse(course, layerPanel.activeLayerId);
+                        courseCalendar.addCourse(course, layerPanel.activeLayerId);
+                        selectedCourseSave(course, layerPanel.activeLayerId);
                         updateGeneralInfoLine();
-                        courseExamInfo.renderCourses(courseButtonList.getCourseNumbers(true));
+                        courseExamInfo.renderCourses(layerPanel.getCourseNumbers(true, null, true));
                         // Can't apply filter inside onItemAdd since it changes the select contents.
                         setTimeout(function () {
                             courseSelect.filterApply();
@@ -60,28 +60,23 @@
                 onDropdownItemActivate: function (course) {
                     previewingFromSelectControl = course;
 
-                    if (!courseButtonList.isCourseInList(course)) {
-                        courseCalendar.addCourse(course);
-                        courseExamInfo.renderCourses(courseButtonList.getCourseNumbers(true).concat([course]));
-                    }
+                    courseCalendar.addCourse(course, 'system_preview');
+                    courseExamInfo.renderCourses(layerPanel.getCourseNumbers(true, null, true).concat([course]));
+                    
                     courseExamInfo.setHighlighted(course);
-                    courseCalendar.previewCourse(course);
-                    courseButtonList.setFloatingCourseInfo(course);
+                    courseCalendar.previewCourse(course, 'system_preview');
                 },
                 onDropdownItemDeactivate: function (course) {
-                    if (!courseButtonList.isCourseInList(course)) {
-                        courseCalendar.removeCourse(course);
-                        courseExamInfo.renderCourses(courseButtonList.getCourseNumbers(true));
-                    } else {
-                        // Remove highlight
-                        courseExamInfo.removeHighlighted(course);
-                        courseCalendar.unpreviewCourse(course);
-                    }
+                    courseCalendar.unpreviewCourse(course);
+                    courseCalendar.removeCourse(course, 'system_preview');
+                    
+                    courseExamInfo.removeHighlighted(course);
+                    courseExamInfo.renderCourses(layerPanel.getCourseNumbers(true, null, true));
 
                     previewingFromSelectControl = null;
                 },
                 getSelectedCoursesForFilter: function () {
-                    return courseButtonList.getCourseNumbers(true);
+                    return layerPanel.getCourseNumbers(true, null, true);
                 }
             });
         } else {
@@ -91,54 +86,98 @@
             $('#course-select').hide();
         }
 
-        courseButtonList = new CourseButtonList($('#course-button-list'), {
+        layerPanel = new LayerPanel($('#layer-panel'), {
             courseManager: courseManager,
             colorGenerator: courseColorGenerator,
             readonly: viewingSharedSchedule,
-            onHoverIn: function (course) {
+            onHoverIn: function (course, layerId) {
                 courseExamInfo.setHovered(course);
                 if (previewingFromSelectControl) {
                     courseCalendar.unpreviewCourse(previewingFromSelectControl);
                 }
-                courseCalendar.previewCourse(course);
+                courseCalendar.previewCourse(course, layerId);
             },
-            onHoverOut: function (course) {
+            onHoverOut: function (course, layerId) {
                 courseExamInfo.removeHovered(course);
                 courseCalendar.unpreviewCourse(course);
                 if (previewingFromSelectControl) {
                     courseCalendar.previewCourse(previewingFromSelectControl);
                 }
             },
-            onEnableCourse: function (course) {
-                courseCalendar.addCourse(course);
+            onEnableCourse: function (course, layerId) {
+                courseCalendar.addCourse(course, layerId);
                 courseCalendar.previewCourse(course);
-                selectedCourseSave(course);
+                selectedCourseSave(course, layerId);
                 updateGeneralInfoLine();
-                courseExamInfo.renderCourses(courseButtonList.getCourseNumbers(true));
+                courseExamInfo.renderCourses(layerPanel.getCourseNumbers(true, null, true));
                 courseSelect.filterApply();
             },
-            onDisableCourse: function (course) {
-                courseCalendar.removeCourse(course);
-                selectedCourseUnsave(course);
+            onDisableCourse: function (course, layerId) {
+                courseCalendar.removeCourse(course, layerId);
+                selectedCourseUnsave(course, layerId);
                 updateGeneralInfoLine();
-                courseExamInfo.renderCourses(courseButtonList.getCourseNumbers(true));
+                courseExamInfo.renderCourses(layerPanel.getCourseNumbers(true, null, true));
                 courseSelect.filterApply();
             },
-            onReorder: coursesOrderSave
+            onEnableCustomEvent: function (eventId, layerId) {
+                courseCalendar.showCustomEvent(eventId, layerId);
+            },
+            onDisableCustomEvent: function (eventId, layerId) {
+                courseCalendar.hideCustomEvent(eventId, layerId);
+            },
+            onRemoveCustomEvent: function (eventId, layerId) {
+                courseCalendar.removeCustomEvent(eventId, layerId);
+            },
+            onReorder: function (layerId) {
+                coursesOrderSave(layerId);
+            },
+            onLayerVisibilityChanged: function (layerId, isVisible) {
+                if (isVisible) {
+                    courseCalendar.showLayer(layerId);
+                } else {
+                    courseCalendar.hideLayer(layerId);
+                }
+                layerVisibilitySave(layerId, isVisible);
+                updateGeneralInfoLine();
+                courseExamInfo.renderCourses(layerPanel.getCourseNumbers(true, null, true));
+            },
+            onLayerCreated: function (layerId, name) {
+                layerCreatedSave(layerId, name);
+            },
+            onLayerRenamed: function (layerId, name) {
+                layerRenamedSave(layerId, name);
+            },
+            onLayerDeleted: function (layerId, targetLayerId) {
+                layerDeletedSave(layerId, targetLayerId);
+                setScheduleFromSavedSession(currentSavedSession, true);
+            },
+            onActiveLayerChanged: function (layerId) {
+                // Keep track of active layer if needed, or layerPanel.activeLayerId is sufficient
+            },
+            onItemMovedToLayer: function (itemType, itemId, oldLayerId, newLayerId) {
+                itemMovedSave(itemType, itemId, oldLayerId, newLayerId);
+                
+                if (itemType === 'course') {
+                    setScheduleFromSavedSession(currentSavedSession, true);
+                    courseCalendar.previewCourse(itemId, newLayerId);
+                } else if (itemType === 'customEvent') {
+                    setScheduleFromSavedSession(currentSavedSession, true);
+                }
+            }
         });
 
         courseExamInfo = new CourseExamInfo($('#course-exam-info'), {
             courseManager: courseManager,
             colorGenerator: courseColorGenerator,
             onHoverIn: function (course) {
-                courseButtonList.setHovered(course);
+                layerPanel.setHovered(course);
                 if (previewingFromSelectControl) {
                     courseCalendar.unpreviewCourse(previewingFromSelectControl);
                 }
                 courseCalendar.previewCourse(course);
             },
             onHoverOut: function (course) {
-                courseButtonList.removeHovered(course);
+                layerPanel.removeHovered(course);
                 courseCalendar.unpreviewCourse(course);
                 if (previewingFromSelectControl) {
                     courseCalendar.previewCourse(previewingFromSelectControl);
@@ -150,39 +189,44 @@
             courseManager: courseManager,
             colorGenerator: courseColorGenerator,
             readonly: viewingSharedSchedule,
+            getActiveLayerId: function() { return layerPanel.activeLayerId; },
             onCourseHoverIn: function (course) {
-                courseButtonList.setHovered(course);
+                layerPanel.setHovered(course);
                 courseExamInfo.setHovered(course);
             },
             onCourseHoverOut: function (course) {
-                courseButtonList.removeHovered(course);
+                layerPanel.removeHovered(course);
                 courseExamInfo.removeHovered(course);
             },
             onCourseConflictedStatusChanged: function (course, conflicted) {
                 if (conflicted) {
-                    courseButtonList.setConflicted(course);
+                    layerPanel.setConflicted(course);
                 } else {
-                    courseButtonList.removeConflicted(course);
+                    layerPanel.removeConflicted(course);
                 }
             },
             onLessonTypesHidden: function (course, lessonTypesHidden) {
-                courseButtonList.setLessonTypesHidden(course, lessonTypesHidden);
+                layerPanel.setLessonTypesHidden(course, null, lessonTypesHidden);
             },
-            onLessonSelected: function (course, lessonNumber, lessonType) {
-                selectedLessonSave(course, lessonNumber, lessonType);
+            onLessonSelected: function (course, lessonNumber, lessonType, layerId) {
+                selectedLessonSave(course, lessonNumber, lessonType, layerId);
             },
-            onLessonUnselected: function (course, lessonNumber, lessonType) {
-                selectedLessonUnsave(course, lessonNumber, lessonType);
+            onLessonUnselected: function (course, lessonNumber, lessonType, layerId) {
+                selectedLessonUnsave(course, lessonNumber, lessonType, layerId);
             },
-            onCustomEventAdded: function (eventId, eventData) {
-                customEventSave(eventId, eventData);
+            onCustomEventAdded: function (eventId, eventData, layerId) {
+                layerPanel.addCustomEvent(eventId, eventData.title, layerId);
+                customEventSave(eventId, eventData, layerId);
             },
-            onCustomEventUpdated: function (eventId, eventData) {
-                customEventSave(eventId, eventData);
+            onCustomEventUpdated: function (eventId, eventData, layerId) {
+                layerPanel.updateCustomEvent(eventId, eventData.title, layerId);
+                customEventSave(eventId, eventData, layerId);
             },
-            onCustomEventRemoved: function (eventId) {
-                customEventUnsave(eventId);
-            }
+            onCustomEventRemoved: function (eventId, layerId) {
+                layerPanel.removeCustomEvent(eventId, layerId);
+                customEventUnsave(eventId, layerId);
+            },
+            onColorPickerClick: onColorPickerClick
         });
 
         $('#top-navbar-supported-content').removeClass('top-navbar-content-uninitialized');
@@ -225,7 +269,40 @@
         }
     }
 
-    function courseColorGenerator(course) {
+    function courseColorGenerator(course, layerId) {
+        if (!layerId && typeof layerPanel !== 'undefined' && layerPanel) {
+            var foundLayerId = null;
+            if (typeof layerPanel.isCourseActiveInLayer === 'function') {
+                for (var i = 0; i < layerPanel.layers.length; i++) {
+                    if (layerPanel.layers[i].visible && layerPanel.isCourseActiveInLayer(course, layerPanel.layers[i].id)) {
+                        foundLayerId = layerPanel.layers[i].id;
+                        break;
+                    }
+                }
+            }
+            if (foundLayerId) {
+                layerId = foundLayerId;
+            } else {
+                if (layerPanel.isCourseInLayer(course, layerPanel.activeLayerId)) {
+                    layerId = layerPanel.activeLayerId;
+                } else {
+                    for (var i = 0; i < layerPanel.layers.length; i++) {
+                        if (layerPanel.isCourseInLayer(course, layerPanel.layers[i].id)) {
+                            layerId = layerPanel.layers[i].id;
+                            break;
+                        }
+                    }
+                    if (!layerId) layerId = layerPanel.activeLayerId;
+                }
+            }
+        }
+        if (layerId) {
+            try {
+                var customColor = localStorage.getItem(getCourseColorStorageKey(course, layerId));
+                if (customColor) return customColor;
+            } catch (e) {}
+        }
+
         var str = courseManager.toOldCourseNumber(course);
         // Fixup: both 114036 and 114246 get a green color, and both are taken at the same semester.
         // So here we cause the color of 114246 to be different.
@@ -242,11 +319,102 @@
         if (coursePrefixForHashCalc[str]) {
             str = coursePrefixForHashCalc[str] + str;
         }
+        if (layerId && layerId !== 'default') {
+            var layerHash = 0;
+            for (var i = 0; i < layerId.length; i++) {
+                layerHash = ((layerHash << 5) - layerHash) + layerId.charCodeAt(i);
+                layerHash |= 0;
+            }
+            var shift = (Math.abs(layerHash) % 50) + 1;
+            str = String.fromCharCode(str.charCodeAt(0) + shift) + str.substring(1);
+        }
         return colorHash.hex(str);
     }
 
+    function refreshColors() {
+        if (typeof courseCalendar !== 'undefined' && courseCalendar) {
+            var events = courseCalendar.element.fullCalendar('clientEvents');
+            events.forEach(function(event) {
+                var colorStr = event.courseNumber !== null ? event.courseNumber : event.title;
+                event.backgroundColor = courseColorGenerator(colorStr, event.layerId);
+                courseCalendar.element.fullCalendar('updateEvent', event);
+            });
+        }
+        if (typeof layerPanel !== 'undefined' && layerPanel) {
+            layerPanel.updateColors();
+        }
+        if (typeof courseExamInfo !== 'undefined' && courseExamInfo && typeof layerPanel !== 'undefined' && layerPanel) {
+            courseExamInfo.renderCourses(layerPanel.getCourseNumbers(true, null, true));
+        }
+    }
+
+    function getCourseColorStorageKey(course, layerId) {
+        var normalizedCourse = String(course || '');
+        var normalizedLayerId = String(layerId || 'default');
+        if (typeof course === 'number' || /^\d+$/.test(normalizedCourse)) {
+            return 'courseColor_' + normalizedCourse + '_' + normalizedLayerId;
+        }
+
+        return 'courseColor_' + encodeURIComponent(normalizedCourse) + '_' + normalizedLayerId;
+    }
+
+    function onColorPickerClick(course, layerId) {
+        if (!layerId && typeof layerPanel !== 'undefined' && layerPanel) layerId = layerPanel.activeLayerId;
+
+        var storageKey = getCourseColorStorageKey(course, layerId);
+        var colors = [];
+        for (var i = 1; i <= 21; i++) {
+            colors.push(colorHash.hex(String(i * 1000 + 100)));
+        }
+
+        var $content = $('<div></div>').css({
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '10px',
+            justifyContent: 'center',
+            padding: '10px'
+        });
+
+        colors.forEach(function(color) {
+            var $colorDiv = $('<div></div>').css({
+                width: '40px',
+                height: '40px',
+                backgroundColor: color,
+                borderRadius: '4px',
+                cursor: 'pointer',
+                margin: '5px'
+            }).click(function() {
+                try {
+                    localStorage.setItem(storageKey, color);
+                } catch (e) {}
+                dialog.close();
+                refreshColors();
+            });
+            $content.append($colorDiv);
+        });
+
+        var $clearButton = $('<button class="btn btn-secondary btn-block mt-3">אפס צבע (חזור לברירת מחדל)</button>').click(function() {
+            try {
+                localStorage.removeItem(storageKey);
+            } catch (e) {}
+            dialog.close();
+            refreshColors();
+        });
+
+        $content.append($clearButton);
+
+        var dialog = BootstrapDialog.show({
+            title: 'בחר צבע',
+            message: $content,
+            buttons: [{
+                label: 'סגור',
+                action: function(d) { d.close(); }
+            }]
+        });
+    }
+
     function showExtraContentOnLoad() {
-        return showIntro() || showCourseFeedbackPopup() || showThursdayGraphPopup() || showTechnionScansPopup();
+        return showIntro() || showNewLayersSystemPopup() || showCourseFeedbackPopup() || showThursdayGraphPopup() || showTechnionScansPopup();
     }
 
     function showIntro() {
@@ -259,7 +427,7 @@
             // localStorage is not available in IE/Edge when running from a local file.
         }
 
-        if (courseButtonList.getCourseNumbers(true).length > 0) {
+        if (layerPanel.getCourseNumbers(true).length > 0) {
             try {
                 localStorage.setItem('dontShowIntro', Date.now().toString());
             } catch (e) {
@@ -285,6 +453,51 @@
                 // localStorage is not available in IE/Edge when running from a local file.
             }
         }).start();
+
+        return true;
+    }
+
+    function showNewLayersSystemPopup() {
+        try {
+            var dontShowDate = localStorage.getItem('dontShowNewLayersPopup');
+            if (dontShowDate) {
+                return false;
+            }
+        } catch (e) {
+            // localStorage is not available in IE/Edge when running from a local file.
+        }
+
+        var $content = $('<div></div>');
+        $content.append('<p>הוספנו למערכת השעות תמיכה ב<strong>שכבות</strong>!</p>');
+        $content.append('<p>מעכשיו ניתן ליצור שכבות נוספות בקלות, בעזרת תפריט השכבות החדש.<br>על מנת להציג את תפריט השכבות, יש ליצור שכבה חדשה על ידי לחיצה על כפתור ה"+" שמתחת לתיבת חיפוש המקצועות.</p>');
+        $content.append('<p><strong>לאחר שיצרתם שכבה חדשה:</strong></p>');
+        $content.append('<ul>')
+        $content.append('<li>לחיצה על תיבת הסימון לצד שם השכבה תציג או תסתיר אותה, ניתן לשנות שם או למחוק אותה.</li>');
+        $content.append('<li>השכבה שמסומנת עם <strong style="color: #007bff;">קו כחול</strong> הינה השכבה הפעילה, אליה קורסים או אירועים מותאמים אישית חדשים יתווספו. ניתן לשנות את השכבה הפעילה על ידי לחיצה על שם של שכבה אחרת.</li>');
+        $content.append('<li>קורסים יכולים להיות בכמה שכבות במקביל, וניתן לשנות את השכבה אליהם הם שייכים על ידי גרירה של הקורס בתפריט השכבות משכבה אחת לאחרת.</li>');
+        $content.append('</ul><br>');
+        $content.append('<p><strong>ובנוסף,</strong> ניתן לשנות <strong><span style="color:#ff0000">צ</span><span style="color:#ccff00">ב</span><span style="color:#00ff66">ע</span><span style="color:#0066ff">י</span><span style="color:#cc00ff">ם</span></strong> של קורסים ואירועים מותאמים אישית על ידי לחיצה על כפתור פלטת הצבעים המופיע במשבצת שלו במערכת השעות.</p><br>');
+        $content.append('<p>תודה רבה ל<a href="https://github.com/talisraeli" target="_blank" rel="noopener noreferrer">טל ישראלי</a> על המימוש של מערכת השכבות החדשה! 😎</p>');
+
+        BootstrapDialog.show({
+            title: 'מערכת שכבות חדשה!',
+            message: $content,
+            buttons: [{
+                label: 'אשר שינויים',
+                cssClass: 'btn-primary',
+                action: function (dialog) {
+                    try {
+                        localStorage.setItem('dontShowNewLayersPopup', Date.now().toString());
+                    } catch (e) { }
+                    dialog.close();
+                }
+            }, {
+                label: 'סגור',
+                action: function (dialog) {
+                    dialog.close();
+                }
+            }]
+        });
 
         return true;
     }
@@ -393,7 +606,7 @@
             // localStorage is not available in IE/Edge when running from a local file.
         }
 
-        var courseNumbers = courseButtonList.getCourseNumbers(true);
+        var courseNumbers = layerPanel.getCourseNumbers(true);
         if (courseNumbers.length === 0) {
             return false;
         }
@@ -800,7 +1013,7 @@
                 courseCalendar.saveAsIcs(icsCal, dateFrom, dateTo, daysOff);
 
                 // Exams.
-                courseButtonList.getCourseNumbers(true).forEach(function (course) {
+                layerPanel.getCourseNumbers(true).forEach(function (course) {
                     var general = courseManager.getGeneralInfo(course);
                     ['מועד א', 'מועד ב'].forEach(function (moed) {
                         if (general[moed]) {
@@ -1040,11 +1253,17 @@
         }
     }
 
+
     function updateGeneralInfoLine() {
         var courses = 0;
         var points = 0;
 
-        courseButtonList.getCourseNumbers(true).forEach(function (course) {
+        var uniqueCourses = {};
+        layerPanel.getCourseNumbers(true, null, true).forEach(function (course) {
+            uniqueCourses[course] = true;
+        });
+
+        Object.keys(uniqueCourses).forEach(function (course) {
             var general = courseManager.getGeneralInfo(course);
             courses++;
             points += parseFloat(general['נקודות']);
@@ -1073,7 +1292,7 @@
         $('#general-info').text(text);
     }
 
-    function selectedCourseSave(course) {
+    function selectedCourseSave(course, layerId) {
         var metadataCourseKey = null;
         var courseData = null;
         var metadataUpdate = !!metadataDiff;
@@ -1082,20 +1301,23 @@
             courseData = courseManager.getCourseData(course);
         }
 
-        var semesterCoursesKey = currentSemester + '_courses';
-        var courseKey = currentSemester + '_' + course;
+        var semesterLayerContentsKey = currentSemester + '_layer_contents';
+        var courseKey = currentSemester + '_' + layerId + '_' + course;
 
-        // Keep all of the items from currentSavedSession[semesterCoursesKey], even if there
-        // are numbers of courses which don't exist anymore. Use the button list for the order.
-        var courseNumbers = courseButtonList.getCourseNumbers(true);
-        currentSavedSession[semesterCoursesKey] = courseNumbers.concat(
-            $(currentSavedSession[semesterCoursesKey]).not(courseNumbers).get());
+        var courseNumbers = layerPanel.getCourseNumbers(true, layerId);
+        
+        if (!currentSavedSession[semesterLayerContentsKey]) currentSavedSession[semesterLayerContentsKey] = {};
+        if (!currentSavedSession[semesterLayerContentsKey][layerId]) currentSavedSession[semesterLayerContentsKey][layerId] = { courses: [], customEvents: {} };
+        
+        currentSavedSession[semesterLayerContentsKey][layerId].courses = courseNumbers.concat(
+            $(currentSavedSession[semesterLayerContentsKey][layerId].courses).not(courseNumbers).get());
+            
         currentSavedSession[courseKey] = {};
 
         var doc = firestoreAuthenticatedUserDoc();
         if (doc) {
             var input = {};
-            input[semesterCoursesKey] = currentSavedSession[semesterCoursesKey];
+            input[semesterLayerContentsKey + '.' + layerId + '.courses'] = currentSavedSession[semesterLayerContentsKey][layerId].courses;
             input[courseKey] = {};
             if (metadataUpdate) {
                 input[metadataCourseKey] = courseData;
@@ -1103,68 +1325,85 @@
             doc.update(input);
         } else {
             try {
-                localStorage.setItem(semesterCoursesKey, JSON.stringify(currentSavedSession[semesterCoursesKey]));
-                localStorage.removeItem(courseKey);
+                localStorage.setItem(semesterLayerContentsKey, JSON.stringify(currentSavedSession[semesterLayerContentsKey]));
+                localStorage.setItem(courseKey, JSON.stringify({})); // Empty initially
                 if (metadataUpdate) {
                     localStorage.setItem(metadataCourseKey, JSON.stringify(courseData));
                 }
-            } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
-            }
+            } catch (e) {}
         }
 
         onSavedSessionChange();
     }
 
-    function coursesOrderSave() {
-        // Save only the course order when reordering via drag-and-drop
-        var semesterCoursesKey = currentSemester + '_courses';
-        var courseNumbers = courseButtonList.getCourseNumbers(true);
-        currentSavedSession[semesterCoursesKey] = courseNumbers.concat(
-            $(currentSavedSession[semesterCoursesKey]).not(courseNumbers).get());
+    function coursesOrderSave(layerId) {
+        var semesterLayerContentsKey = currentSemester + '_layer_contents';
+        var courseNumbers = layerPanel.getCourseNumbers(true, layerId);
+        
+        if (!currentSavedSession[semesterLayerContentsKey] || !currentSavedSession[semesterLayerContentsKey][layerId]) return;
+        
+        currentSavedSession[semesterLayerContentsKey][layerId].courses = courseNumbers.concat(
+            $(currentSavedSession[semesterLayerContentsKey][layerId].courses).not(courseNumbers).get());
 
         var doc = firestoreAuthenticatedUserDoc();
         if (doc) {
             var input = {};
-            input[semesterCoursesKey] = currentSavedSession[semesterCoursesKey];
+            input[semesterLayerContentsKey + '.' + layerId + '.courses'] = currentSavedSession[semesterLayerContentsKey][layerId].courses;
             doc.update(input);
         } else {
             try {
-                localStorage.setItem(semesterCoursesKey, JSON.stringify(currentSavedSession[semesterCoursesKey]));
-            } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
-            }
+                localStorage.setItem(semesterLayerContentsKey, JSON.stringify(currentSavedSession[semesterLayerContentsKey]));
+            } catch (e) {}
         }
 
         onSavedSessionChange();
     }
 
-    function selectedCourseUnsave(course) {
+    function selectedCourseUnsave(course, layerId) {
         var metadataCourseKey = currentSemester + '_metadata_' + course;
+        var semesterLayerContentsKey = currentSemester + '_layer_contents';
+        var courseKey = currentSemester + '_' + layerId + '_' + course;
 
-        var semesterCoursesKey = currentSemester + '_courses';
-        var courseKey = currentSemester + '_' + course;
-
-        currentSavedSession[semesterCoursesKey] = currentSavedSession[semesterCoursesKey].filter(function (item) {
-            return item !== course;
-        });
+        if (currentSavedSession[semesterLayerContentsKey] && currentSavedSession[semesterLayerContentsKey][layerId]) {
+            currentSavedSession[semesterLayerContentsKey][layerId].courses = currentSavedSession[semesterLayerContentsKey][layerId].courses.filter(function (item) {
+                return item !== course;
+            });
+        }
         delete currentSavedSession[courseKey];
 
         var doc = firestoreAuthenticatedUserDoc();
         if (doc) {
             var input = {};
-            input[semesterCoursesKey] = firebase.firestore.FieldValue.arrayRemove(course);
+            if (currentSavedSession[semesterLayerContentsKey] && currentSavedSession[semesterLayerContentsKey][layerId]) {
+                input[semesterLayerContentsKey + '.' + layerId + '.courses'] = firebase.firestore.FieldValue.arrayRemove(course);
+            }
             input[courseKey] = firebase.firestore.FieldValue.delete();
-            input[metadataCourseKey] = firebase.firestore.FieldValue.delete();
+            
+            var isCourseInOtherLayers = false;
+            Object.keys(currentSavedSession[semesterLayerContentsKey] || {}).forEach(function(lId) {
+                if (currentSavedSession[semesterLayerContentsKey][lId].courses.indexOf(course) !== -1) {
+                    isCourseInOtherLayers = true;
+                }
+            });
+            if (!isCourseInOtherLayers) {
+                input[metadataCourseKey] = firebase.firestore.FieldValue.delete();
+            }
             doc.update(input);
         } else {
             try {
-                localStorage.setItem(semesterCoursesKey, JSON.stringify(currentSavedSession[semesterCoursesKey]));
+                localStorage.setItem(semesterLayerContentsKey, JSON.stringify(currentSavedSession[semesterLayerContentsKey]));
                 localStorage.removeItem(courseKey);
-                localStorage.removeItem(metadataCourseKey);
-            } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
-            }
+                
+                var isCourseInOtherLayers = false;
+                Object.keys(currentSavedSession[semesterLayerContentsKey] || {}).forEach(function(lId) {
+                    if (currentSavedSession[semesterLayerContentsKey][lId].courses.indexOf(course) !== -1) {
+                        isCourseInOtherLayers = true;
+                    }
+                });
+                if (!isCourseInOtherLayers) {
+                    localStorage.removeItem(metadataCourseKey);
+                }
+            } catch (e) {}
         }
 
         onSavedSessionChange();
@@ -1175,9 +1414,10 @@
         }
     }
 
-    function selectedLessonSave(course, lessonNumber, lessonType) {
-        var courseKey = currentSemester + '_' + course;
-
+    function selectedLessonSave(course, lessonNumber, lessonType, layerId) {
+        var courseKey = currentSemester + '_' + layerId + '_' + course;
+        
+        if (!currentSavedSession[courseKey]) currentSavedSession[courseKey] = {};
         currentSavedSession[courseKey][lessonType] = lessonNumber;
 
         var doc = firestoreAuthenticatedUserDoc();
@@ -1188,18 +1428,18 @@
         } else {
             try {
                 localStorage.setItem(courseKey, JSON.stringify(currentSavedSession[courseKey]));
-            } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
-            }
+            } catch (e) {}
         }
 
         onSavedSessionChange();
     }
 
-    function selectedLessonUnsave(course, lessonNumber, lessonType) {
-        var courseKey = currentSemester + '_' + course;
-
-        delete currentSavedSession[courseKey][lessonType];
+    function selectedLessonUnsave(course, lessonNumber, lessonType, layerId) {
+        var courseKey = currentSemester + '_' + layerId + '_' + course;
+        
+        if (currentSavedSession[courseKey]) {
+            delete currentSavedSession[courseKey][lessonType];
+        }
 
         var doc = firestoreAuthenticatedUserDoc();
         if (doc) {
@@ -1208,54 +1448,309 @@
             doc.update(input);
         } else {
             try {
-                localStorage.setItem(courseKey, JSON.stringify(currentSavedSession[courseKey]));
-            } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
-            }
+                if (currentSavedSession[courseKey]) {
+                    localStorage.setItem(courseKey, JSON.stringify(currentSavedSession[courseKey]));
+                }
+            } catch (e) {}
         }
 
         onSavedSessionChange();
     }
 
-    function customEventSave(eventId, eventData) {
-        var semesterCustomEventsKey = currentSemester + '_custom_events';
+    function customEventSave(eventId, eventData, layerId) {
+        var semesterLayerContentsKey = currentSemester + '_layer_contents';
 
-        currentSavedSession[semesterCustomEventsKey][eventId] = eventData;
+        if (!currentSavedSession[semesterLayerContentsKey]) currentSavedSession[semesterLayerContentsKey] = {};
+        if (!currentSavedSession[semesterLayerContentsKey][layerId]) currentSavedSession[semesterLayerContentsKey][layerId] = { courses: [], customEvents: {} };
+        
+        currentSavedSession[semesterLayerContentsKey][layerId].customEvents[eventId] = eventData;
 
         var doc = firestoreAuthenticatedUserDoc();
         if (doc) {
             var input = {};
-            input[semesterCustomEventsKey + '.' + eventId] = eventData;
+            input[semesterLayerContentsKey + '.' + layerId + '.customEvents.' + eventId] = eventData;
             doc.update(input);
         } else {
             try {
-                localStorage.setItem(semesterCustomEventsKey, JSON.stringify(currentSavedSession[semesterCustomEventsKey]));
-            } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
-            }
+                localStorage.setItem(semesterLayerContentsKey, JSON.stringify(currentSavedSession[semesterLayerContentsKey]));
+            } catch (e) {}
         }
 
         onSavedSessionChange();
     }
 
-    function customEventUnsave(eventId) {
-        var semesterCustomEventsKey = currentSemester + '_custom_events';
+    function customEventUnsave(eventId, layerId) {
+        var semesterLayerContentsKey = currentSemester + '_layer_contents';
 
-        delete currentSavedSession[semesterCustomEventsKey][eventId];
+        if (currentSavedSession[semesterLayerContentsKey] && currentSavedSession[semesterLayerContentsKey][layerId]) {
+            delete currentSavedSession[semesterLayerContentsKey][layerId].customEvents[eventId];
+        }
 
         var doc = firestoreAuthenticatedUserDoc();
         if (doc) {
             var input = {};
-            input[semesterCustomEventsKey + '.' + eventId] = firebase.firestore.FieldValue.delete();
+            input[semesterLayerContentsKey + '.' + layerId + '.customEvents.' + eventId] = firebase.firestore.FieldValue.delete();
             doc.update(input);
         } else {
             try {
-                localStorage.setItem(semesterCustomEventsKey, JSON.stringify(currentSavedSession[semesterCustomEventsKey]));
-            } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
-            }
+                localStorage.setItem(semesterLayerContentsKey, JSON.stringify(currentSavedSession[semesterLayerContentsKey]));
+            } catch (e) {}
         }
 
+        onSavedSessionChange();
+    }
+
+    function layerVisibilitySave(layerId, isVisible) {
+        var semesterLayersKey = currentSemester + '_layers';
+        if (currentSavedSession[semesterLayersKey]) {
+            for (var i = 0; i < currentSavedSession[semesterLayersKey].length; i++) {
+                if (currentSavedSession[semesterLayersKey][i].id === layerId) {
+                    currentSavedSession[semesterLayersKey][i].visible = isVisible;
+                    break;
+                }
+            }
+        }
+        
+        var doc = firestoreAuthenticatedUserDoc();
+        if (doc) {
+            var input = {};
+            input[semesterLayersKey] = currentSavedSession[semesterLayersKey];
+            doc.update(input);
+        } else {
+            try {
+                localStorage.setItem(semesterLayersKey, JSON.stringify(currentSavedSession[semesterLayersKey]));
+            } catch (e) {}
+        }
+    }
+    
+    function layerCreatedSave(layerId, name) {
+        var semesterLayersKey = currentSemester + '_layers';
+        var semesterLayerContentsKey = currentSemester + '_layer_contents';
+        
+        if (!currentSavedSession[semesterLayersKey]) currentSavedSession[semesterLayersKey] = [];
+        if (!currentSavedSession[semesterLayerContentsKey]) currentSavedSession[semesterLayerContentsKey] = {};
+        
+        var exists = currentSavedSession[semesterLayersKey].some(function(l) { return l.id === layerId; });
+        if (!exists) {
+            currentSavedSession[semesterLayersKey].push({
+                id: layerId,
+                name: name,
+                visible: true
+            });
+        }
+        
+        if (!currentSavedSession[semesterLayerContentsKey][layerId]) {
+            currentSavedSession[semesterLayerContentsKey][layerId] = { courses: [], customEvents: {} };
+        }
+        
+        var doc = firestoreAuthenticatedUserDoc();
+        if (doc) {
+            var input = {};
+            input[semesterLayersKey] = currentSavedSession[semesterLayersKey];
+            // Safe update for new layer contents
+            input[semesterLayerContentsKey] = currentSavedSession[semesterLayerContentsKey];
+            doc.update(input);
+        } else {
+            try {
+                localStorage.setItem(semesterLayersKey, JSON.stringify(currentSavedSession[semesterLayersKey]));
+                localStorage.setItem(semesterLayerContentsKey, JSON.stringify(currentSavedSession[semesterLayerContentsKey]));
+            } catch (e) {}
+        }
+    }
+    
+    function layerRenamedSave(layerId, name) {
+        var semesterLayersKey = currentSemester + '_layers';
+        if (currentSavedSession[semesterLayersKey]) {
+            for (var i = 0; i < currentSavedSession[semesterLayersKey].length; i++) {
+                if (currentSavedSession[semesterLayersKey][i].id === layerId) {
+                    currentSavedSession[semesterLayersKey][i].name = name;
+                    break;
+                }
+            }
+        }
+        
+        var doc = firestoreAuthenticatedUserDoc();
+        if (doc) {
+            var input = {};
+            input[semesterLayersKey] = currentSavedSession[semesterLayersKey];
+            doc.update(input);
+        } else {
+            try {
+                localStorage.setItem(semesterLayersKey, JSON.stringify(currentSavedSession[semesterLayersKey]));
+            } catch (e) {}
+        }
+    }
+    
+    function layerDeletedSave(layerId, targetLayerId) {
+        var semesterLayersKey = currentSemester + '_layers';
+        var semesterLayerContentsKey = currentSemester + '_layer_contents';
+        
+        if (currentSavedSession[semesterLayersKey]) {
+            currentSavedSession[semesterLayersKey] = currentSavedSession[semesterLayersKey].filter(function(l) {
+                return l.id !== layerId;
+            });
+        }
+        
+        if (currentSavedSession[semesterLayerContentsKey]) {
+            // Migrate courses and custom events
+            if (currentSavedSession[semesterLayerContentsKey][layerId] && currentSavedSession[semesterLayerContentsKey][targetLayerId]) {
+                var oldContents = currentSavedSession[semesterLayerContentsKey][layerId];
+                var targetContents = currentSavedSession[semesterLayerContentsKey][targetLayerId];
+                
+                // Migrate courses
+                if (oldContents.courses) {
+                    oldContents.courses.forEach(function(courseId) {
+                        if (targetContents.courses.indexOf(courseId) === -1) {
+                            targetContents.courses.push(courseId);
+                        }
+                        var oldCourseKey = currentSemester + '_' + layerId + '_' + courseId;
+                        var newCourseKey = currentSemester + '_' + targetLayerId + '_' + courseId;
+                        var lessons = currentSavedSession[oldCourseKey] || {};
+                        delete currentSavedSession[oldCourseKey];
+                        currentSavedSession[newCourseKey] = lessons;
+                    });
+                }
+                
+                // Migrate custom events
+                if (oldContents.customEvents) {
+                    Object.keys(oldContents.customEvents).forEach(function(eventId) {
+                        var eventData = oldContents.customEvents[eventId];
+                        eventData.layerId = targetLayerId;
+                        targetContents.customEvents[eventId] = eventData;
+                    });
+                }
+            }
+            delete currentSavedSession[semesterLayerContentsKey][layerId];
+        }
+        
+        var doc = firestoreAuthenticatedUserDoc();
+        if (doc) {
+            // Since this involves many dynamic keys (moving courses etc), it's safer to just set the whole schedule or deeply update.
+            // For safety, we will just sync the whole session.
+            doc.set(currentSavedSession);
+        } else {
+            try {
+                // For localStorage, rewrite only current-semester schedule keys and deleted-layer custom colors.
+                // Do not clear unrelated app/user data.
+                var semesterPrefix = currentSemester + '_';
+                var deletedLayerColorSuffix = '_' + layerId;
+                var keysToRemove = [];
+                for (var i = 0; i < localStorage.length; i++) {
+                    var key = localStorage.key(i);
+                    if (!key) continue;
+                    if (key.indexOf(semesterPrefix) === 0) {
+                        keysToRemove.push(key);
+                    } else if (key.indexOf('courseColor_') === 0 && key.lastIndexOf(deletedLayerColorSuffix) === key.length - deletedLayerColorSuffix.length) {
+                        keysToRemove.push(key);
+                    }
+                }
+                keysToRemove.forEach(function(key) {
+                    localStorage.removeItem(key);
+                });
+
+                Object.keys(currentSavedSession).forEach(function(key) {
+                    if (key.indexOf(semesterPrefix) === 0) {
+                        localStorage.setItem(key, JSON.stringify(currentSavedSession[key]));
+                    }
+                });
+            } catch (e) {}
+        }
+        
+        onSavedSessionChange();
+    }
+    
+    function itemMovedSave(itemType, itemId, oldLayerId, newLayerId) {
+        var semesterLayerContentsKey = currentSemester + '_layer_contents';
+        
+        if (!currentSavedSession[semesterLayerContentsKey]) return;
+        
+        var colorIdentifier = itemId;
+        if (itemType === 'customEvent') {
+            if (currentSavedSession[semesterLayerContentsKey][oldLayerId] && 
+                currentSavedSession[semesterLayerContentsKey][oldLayerId].customEvents &&
+                currentSavedSession[semesterLayerContentsKey][oldLayerId].customEvents[itemId]) {
+                colorIdentifier = currentSavedSession[semesterLayerContentsKey][oldLayerId].customEvents[itemId].title;
+            }
+        }
+        
+        // Migrate custom color to new layer if it exists, otherwise freeze the auto-generated color
+        var oldColorKey = getCourseColorStorageKey(colorIdentifier, oldLayerId);
+        var newColorKey = getCourseColorStorageKey(colorIdentifier, newLayerId);
+        try {
+            var existingColor = localStorage.getItem(oldColorKey) || localStorage.getItem('courseColor_' + colorIdentifier + '_' + oldLayerId);
+            if (existingColor) {
+                localStorage.setItem(newColorKey, existingColor);
+                localStorage.removeItem(oldColorKey);
+                localStorage.removeItem('courseColor_' + colorIdentifier + '_' + oldLayerId);
+            } else {
+                var autoColor = courseColorGenerator(colorIdentifier, oldLayerId);
+                localStorage.setItem(newColorKey, autoColor);
+            }
+        } catch (e) {}
+        
+        if (itemType === 'course') {
+            // Unsave old
+            if (currentSavedSession[semesterLayerContentsKey][oldLayerId]) {
+                currentSavedSession[semesterLayerContentsKey][oldLayerId].courses = currentSavedSession[semesterLayerContentsKey][oldLayerId].courses.filter(function(c) { return c !== itemId; });
+            }
+            // Move lessons object
+            var oldCourseKey = currentSemester + '_' + oldLayerId + '_' + itemId;
+            var newCourseKey = currentSemester + '_' + newLayerId + '_' + itemId;
+            var lessons = currentSavedSession[oldCourseKey] || {};
+            delete currentSavedSession[oldCourseKey];
+            currentSavedSession[newCourseKey] = lessons;
+            
+            // Save new
+            if (!currentSavedSession[semesterLayerContentsKey][newLayerId]) {
+                currentSavedSession[semesterLayerContentsKey][newLayerId] = { courses: [], customEvents: {} };
+            }
+            if (currentSavedSession[semesterLayerContentsKey][newLayerId].courses.indexOf(itemId) === -1) {
+                currentSavedSession[semesterLayerContentsKey][newLayerId].courses.push(itemId);
+            }
+            
+            var doc = firestoreAuthenticatedUserDoc();
+            if (doc) {
+                var input = {};
+                input[semesterLayerContentsKey + '.' + oldLayerId + '.courses'] = currentSavedSession[semesterLayerContentsKey][oldLayerId].courses;
+                input[semesterLayerContentsKey + '.' + newLayerId + '.courses'] = currentSavedSession[semesterLayerContentsKey][newLayerId].courses;
+                input[oldCourseKey] = firebase.firestore.FieldValue.delete();
+                input[newCourseKey] = lessons;
+                doc.update(input);
+            } else {
+                try {
+                    localStorage.setItem(semesterLayerContentsKey, JSON.stringify(currentSavedSession[semesterLayerContentsKey]));
+                    localStorage.removeItem(oldCourseKey);
+                    localStorage.setItem(newCourseKey, JSON.stringify(lessons));
+                } catch (e) {}
+            }
+        } else {
+            // custom event
+            var eventData = null;
+            if (currentSavedSession[semesterLayerContentsKey][oldLayerId] && currentSavedSession[semesterLayerContentsKey][oldLayerId].customEvents) {
+                eventData = currentSavedSession[semesterLayerContentsKey][oldLayerId].customEvents[itemId];
+                delete currentSavedSession[semesterLayerContentsKey][oldLayerId].customEvents[itemId];
+            }
+            
+            if (eventData) {
+                if (!currentSavedSession[semesterLayerContentsKey][newLayerId]) {
+                    currentSavedSession[semesterLayerContentsKey][newLayerId] = { courses: [], customEvents: {} };
+                }
+                currentSavedSession[semesterLayerContentsKey][newLayerId].customEvents[itemId] = eventData;
+                
+                var doc = firestoreAuthenticatedUserDoc();
+                if (doc) {
+                    var input = {};
+                    input[semesterLayerContentsKey + '.' + oldLayerId + '.customEvents.' + itemId] = firebase.firestore.FieldValue.delete();
+                    input[semesterLayerContentsKey + '.' + newLayerId + '.customEvents.' + itemId] = eventData;
+                    doc.update(input);
+                } else {
+                    try {
+                        localStorage.setItem(semesterLayerContentsKey, JSON.stringify(currentSavedSession[semesterLayerContentsKey]));
+                    } catch (e) {}
+                }
+            }
+        }
+        
         onSavedSessionChange();
     }
 
@@ -1295,16 +1790,10 @@
 
             stopScheduleWatching = doc.onSnapshot(function (result) {
                 if (result.metadata.hasPendingWrites) {
-                    // The callback was called as a result of a local change, ignore it.
-                    // https://stackoverflow.com/questions/50186413/is-firestore-onsnapshot-update-event-due-to-local-client-set
                     return;
                 }
 
                 if (!firstDataLoaded) {
-                    // Save name in server for sharing purposes.
-                    // Note: Setting displayName serves two purposes, saving the
-                    // name and actually creating the document for the semester
-                    // if it doesn't exist yet. So set it even if it's null.
                     doc.set({ displayName: firebase.auth().currentUser.displayName }, { merge: true });
                 }
 
@@ -1334,8 +1823,6 @@
         } else {
             var onStorageEvent = function (e) {
                 var prefix = currentSemester + '_';
-                // Check if the line starts with a required prefix.
-                // https://stackoverflow.com/a/4579228
                 if (e.key.lastIndexOf(prefix, 0) === 0) {
                     var session = savedSessionFromLocalStorage();
                     setScheduleFromSavedSession(session, true);
@@ -1378,8 +1865,24 @@
     }
 
     function savedSessionFromLocalStorage() {
-        var semesterCoursesKey = currentSemester + '_courses';
         var session = {};
+        
+        var semesterLayersKey = currentSemester + '_layers';
+        try {
+            session[semesterLayersKey] = JSON.parse(localStorage.getItem(semesterLayersKey) || 'null');
+        } catch(e) {
+            session[semesterLayersKey] = null;
+        }
+        
+        var semesterLayerContentsKey = currentSemester + '_layer_contents';
+        try {
+            session[semesterLayerContentsKey] = JSON.parse(localStorage.getItem(semesterLayerContentsKey) || 'null');
+        } catch(e) {
+            session[semesterLayerContentsKey] = null;
+        }
+        
+        // Also load legacy courses for migration
+        var semesterCoursesKey = currentSemester + '_courses';
         try {
             session[semesterCoursesKey] = JSON.parse(localStorage.getItem(semesterCoursesKey) || '[]');
             session[semesterCoursesKey].forEach(function (course) {
@@ -1387,7 +1890,6 @@
                 session[courseKey] = JSON.parse(localStorage.getItem(courseKey) || '{}');
             });
         } catch (e) {
-            // localStorage is not available in IE/Edge when running from a local file.
             session[semesterCoursesKey] = [];
         }
 
@@ -1395,43 +1897,72 @@
         try {
             session[semesterCustomEventsKey] = JSON.parse(localStorage.getItem(semesterCustomEventsKey) || '{}');
         } catch (e) {
-            // localStorage is not available in IE/Edge when running from a local file.
             session[semesterCustomEventsKey] = {};
+        }
+
+        // And load new per-layer course selections
+        if (session[semesterLayerContentsKey]) {
+            Object.keys(session[semesterLayerContentsKey]).forEach(function (layerId) {
+                var courses = session[semesterLayerContentsKey][layerId].courses || [];
+                courses.forEach(function (course) {
+                    var courseKey = currentSemester + '_' + layerId + '_' + course;
+                    try {
+                        session[courseKey] = JSON.parse(localStorage.getItem(courseKey) || '{}');
+                    } catch(e) {
+                        session[courseKey] = {};
+                    }
+                });
+            });
         }
 
         return session;
     }
 
     function savedMetadataFromLocalStorage() {
-        var semesterCoursesKey = currentSemester + '_courses';
         var metadata = {};
+        
+        var loadMetadataForCourse = function(course) {
+            var metadataCourseKey = currentSemester + '_metadata_' + course;
+            var courseMetadataEncoded = localStorage.getItem(metadataCourseKey);
+            if (courseMetadataEncoded) {
+                metadata[course] = JSON.parse(courseMetadataEncoded);
+            }
+        };
+
+        var semesterLayerContentsKey = currentSemester + '_layer_contents';
+        try {
+            var layerContents = JSON.parse(localStorage.getItem(semesterLayerContentsKey) || '{}');
+            Object.keys(layerContents).forEach(function (layerId) {
+                var courses = layerContents[layerId].courses || [];
+                courses.forEach(loadMetadataForCourse);
+            });
+        } catch (e) {}
+
+        // Fallback for legacy
+        var semesterCoursesKey = currentSemester + '_courses';
         try {
             var courses = JSON.parse(localStorage.getItem(semesterCoursesKey) || '[]');
-            courses.forEach(function (course) {
-                var metadataCourseKey = currentSemester + '_metadata_' + course;
-                var courseMetadataEncoded = localStorage.getItem(metadataCourseKey);
-                if (courseMetadataEncoded) {
-                    metadata[course] = JSON.parse(courseMetadataEncoded);
-                }
-            });
-
-            // If there's at least one course but no metadata at all, that probably means that
-            // the user built the schedule before the feature was introduced.
-            // Return null to handle the case.
-            if (courses.length > 0 && Object.keys(metadata).length === 0) {
-                metadata = null;
-            }
-        } catch (e) {
-            // localStorage is not available in IE/Edge when running from a local file.
+            courses.forEach(loadMetadataForCourse);
+        } catch(e) {}
+        
+        if (Object.keys(metadata).length === 0) {
+            metadata = null;
         }
 
         return metadata;
     }
 
     function savedSessionFromFirestoreData(data) {
-        // Returns only the data relevant to the current semester from data.
-        var semesterCoursesKey = currentSemester + '_courses';
         var session = {};
+        
+        var semesterLayersKey = currentSemester + '_layers';
+        session[semesterLayersKey] = data[semesterLayersKey] || null;
+        
+        var semesterLayerContentsKey = currentSemester + '_layer_contents';
+        session[semesterLayerContentsKey] = data[semesterLayerContentsKey] || null;
+        
+        // Legacy
+        var semesterCoursesKey = currentSemester + '_courses';
         session[semesterCoursesKey] = data[semesterCoursesKey] || [];
         session[semesterCoursesKey].forEach(function (course) {
             var courseKey = currentSemester + '_' + course;
@@ -1441,25 +1972,42 @@
         var semesterCustomEventsKey = currentSemester + '_custom_events';
         session[semesterCustomEventsKey] = data[semesterCustomEventsKey] || {};
 
+        // Per-layer course selections
+        if (session[semesterLayerContentsKey]) {
+            Object.keys(session[semesterLayerContentsKey]).forEach(function (layerId) {
+                var courses = session[semesterLayerContentsKey][layerId].courses || [];
+                courses.forEach(function (course) {
+                    var courseKey = currentSemester + '_' + layerId + '_' + course;
+                    session[courseKey] = data[courseKey] || {};
+                });
+            });
+        }
+
         return session;
     }
 
     function savedMetadataFromFirestoreData(data) {
-        var semesterCoursesKey = currentSemester + '_courses';
         var metadata = {};
-
-        var courses = data[semesterCoursesKey] || [];
-        courses.forEach(function (course) {
+        var semesterLayerContentsKey = currentSemester + '_layer_contents';
+        var layerContents = data[semesterLayerContentsKey] || {};
+        
+        var loadMetadataForCourse = function (course) {
             var metadataCourseKey = currentSemester + '_metadata_' + course;
             if (data[metadataCourseKey]) {
                 metadata[course] = data[metadataCourseKey];
             }
+        };
+
+        Object.keys(layerContents).forEach(function (layerId) {
+            var courses = layerContents[layerId].courses || [];
+            courses.forEach(loadMetadataForCourse);
         });
 
-        // If there's at least one course but no metadata at all, that probably means that
-        // the user built the schedule before the feature was introduced.
-        // Return null to handle the case.
-        if (courses.length > 0 && Object.keys(metadata).length === 0) {
+        var semesterCoursesKey = currentSemester + '_courses';
+        var courses = data[semesterCoursesKey] || [];
+        courses.forEach(loadMetadataForCourse);
+
+        if (Object.keys(metadata).length === 0) {
             metadata = null;
         }
 
@@ -1467,90 +2015,26 @@
     }
 
     function restoreSavedSession(currentSession, sessionToRestore) {
-        var newKeys = [], removeKeys = [];
-        var newMetadataCourses = [];
-
-        var semesterCoursesKey = currentSemester + '_courses';
-        var currentCourses = currentSession[semesterCoursesKey];
-        var newCourses = sessionToRestore[semesterCoursesKey];
-        if (JSON.stringify(currentCourses) !== JSON.stringify(newCourses)) {
-            newKeys.push(semesterCoursesKey);
-        }
-
-        currentCourses.forEach(function (course) {
-            if (newCourses.indexOf(course) === -1) {
-                var courseKey = currentSemester + '_' + course;
-                removeKeys.push(courseKey);
-
-                if (metadataDiff) {
-                    var metadataCourseKey = currentSemester + '_metadata_' + course;
-                    removeKeys.push(metadataCourseKey);
-                }
-            }
-        });
-
-        newCourses.forEach(function (course) {
-            var courseKey = currentSemester + '_' + course;
-            if (currentCourses.indexOf(course) === -1) {
-                newKeys.push(courseKey);
-                if (metadataDiff) {
-                    newMetadataCourses.push(course);
-                }
-            } else {
-                var currentLessons = currentSession[courseKey];
-                var newLessons = sessionToRestore[courseKey];
-                // Can be different even if object are equal due to key order,
-                // but that's OK, we'll just override the same data.
-                if (JSON.stringify(currentLessons) !== JSON.stringify(newLessons)) {
-                    newKeys.push(courseKey);
-                }
-            }
-        });
-
-        var semesterCustomEventsKey = currentSemester + '_custom_events';
-        var currentCustomEvents = currentSession[semesterCustomEventsKey];
-        var newCustomEvents = sessionToRestore[semesterCustomEventsKey];
-        // Can be different even if object are equal due to key order,
-        // but that's OK, we'll just override the same data.
-        if (JSON.stringify(currentCustomEvents) !== JSON.stringify(newCustomEvents)) {
-            newKeys.push(semesterCustomEventsKey);
-        }
-
+        // Redoing this for full layer support is extremely complex.
+        // For simplicity, we just save the whole tree.
+        
         var doc = firestoreAuthenticatedUserDoc();
         if (doc) {
-            var input = {};
-
-            removeKeys.forEach(function (key) {
-                input[key] = firebase.firestore.FieldValue.delete();
-            });
-
-            newKeys.forEach(function (key) {
-                input[key] = sessionToRestore[key];
-            });
-
-            newMetadataCourses.forEach(function (course) {
-                var metadataCourseKey = currentSemester + '_metadata_' + course;
-                input[metadataCourseKey] = courseManager.getCourseData(course);
-            });
-
-            doc.update(input);
+            doc.set(sessionToRestore);
         } else {
             try {
-                removeKeys.forEach(function (key) {
-                    localStorage.removeItem(key);
-                });
+                var key;
+                for (var i = localStorage.length - 1; i >= 0; i--) {
+                    key = localStorage.key(i);
+                    if (key && key.indexOf(currentSemester + '_') === 0) {
+                        localStorage.removeItem(key);
+                    }
+                }
 
-                newKeys.forEach(function (key) {
+                Object.keys(sessionToRestore).forEach(function(key) {
                     localStorage.setItem(key, JSON.stringify(sessionToRestore[key]));
                 });
-
-                newMetadataCourses.forEach(function (course) {
-                    var metadataCourseKey = currentSemester + '_metadata_' + course;
-                    localStorage.setItem(metadataCourseKey, JSON.stringify(courseManager.getCourseData(course)));
-                });
-            } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
-            }
+            } catch (e) {}
         }
 
         setScheduleFromSavedSession(sessionToRestore);
@@ -1562,36 +2046,109 @@
             scrollTop = $(window).scrollTop(); // save scroll position
         }
 
-        var semesterCoursesKey = currentSemester + '_courses';
-        courseButtonList.clear();
-
-        var schedule = {};
-
-        var courses = session[semesterCoursesKey] || [];
-        courses.forEach(function (course) {
-            if (!schedule[course] && courseManager.doesExist(course)) {
-                courseButtonList.addCourse(course);
-
-                var courseKey = currentSemester + '_' + course;
-                var lessons = session[courseKey] || {};
-                schedule[course] = lessons;
+        var semesterLayersKey = currentSemester + '_layers';
+        var semesterLayerContentsKey = currentSemester + '_layer_contents';
+        
+        var layers = session[semesterLayersKey];
+        var layerContents = session[semesterLayerContentsKey];
+        
+        // Clean up any corrupted layer names from the previous bug
+        if (layers) {
+            layers.forEach(function(l) {
+                if (typeof l.name === 'object' && l.name !== null) {
+                    l.name = l.name.name || 'שכבה';
+                }
+            });
+        }
+        
+        // Migration from legacy structure
+        if (!layers || !layerContents) {
+            var semesterCoursesKey = currentSemester + '_courses';
+            var legacyCourses = session[semesterCoursesKey] || [];
+            var legacyCustomEvents = session[currentSemester + '_custom_events'] || {};
+            
+            layers = [{ id: 'default', name: 'הקורסים שלי', visible: true }];
+            layerContents = {
+                'default': {
+                    courses: legacyCourses,
+                    customEvents: legacyCustomEvents
+                }
+            };
+            
+            // Move course lessons to new keys
+            legacyCourses.forEach(function(course) {
+                var legacyKey = currentSemester + '_' + course;
+                var newKey = currentSemester + '_default_' + course;
+                session[newKey] = session[legacyKey] || {};
+            });
+            
+            // Save the migrated state immediately
+            session[semesterLayersKey] = layers;
+            session[semesterLayerContentsKey] = layerContents;
+            currentSavedSession = session;
+            var doc = firestoreAuthenticatedUserDoc();
+            if (doc) {
+                var input = {};
+                input[semesterLayersKey] = layers;
+                input[semesterLayerContentsKey] = layerContents;
+                // Add lesson migrations
+                legacyCourses.forEach(function(course) {
+                    var newKey = currentSemester + '_default_' + course;
+                    input[newKey] = session[newKey];
+                });
+                doc.update(input);
+            } else {
+                try {
+                    localStorage.setItem(semesterLayersKey, JSON.stringify(layers));
+                    localStorage.setItem(semesterLayerContentsKey, JSON.stringify(layerContents));
+                    legacyCourses.forEach(function(course) {
+                        var newKey = currentSemester + '_default_' + course;
+                        localStorage.setItem(newKey, JSON.stringify(session[newKey]));
+                    });
+                } catch(e) {}
             }
+        }
+        
+        layerPanel.loadLayers($.extend(true, [], layers), $.extend(true, {}, layerContents));
+
+        var calendarContents = {};
+        
+        // Populate layerContents structure for CourseCalendar
+        layers.forEach(function(layer) {
+            var lId = layer.id;
+            var lContents = layerContents[lId] || { courses: [], customEvents: {} };
+            
+            var coursesDict = {};
+            lContents.courses.forEach(function(course) {
+                if (courseManager.doesExist(course)) {
+                    var courseKey = currentSemester + '_' + lId + '_' + course;
+                    coursesDict[course] = session[courseKey] || {};
+                }
+            });
+            
+            calendarContents[lId] = {
+                courses: coursesDict,
+                customEvents: lContents.customEvents
+            };
         });
 
-        var semesterCustomEventsKey = currentSemester + '_custom_events';
-        var customEvents = session[semesterCustomEventsKey] || {};
-
-        courseCalendar.loadSavedSchedule(schedule, customEvents);
+        courseCalendar.loadSavedSchedule(calendarContents);
         updateGeneralInfoLine();
-        courseExamInfo.renderCourses(courseButtonList.getCourseNumbers(true));
+        courseExamInfo.renderCourses(layerPanel.getCourseNumbers(true, null, true));
+        
+        // Set layer visibilities on calendar
+        layers.forEach(function(layer) {
+            if (!layer.visible) {
+                courseCalendar.hideLayer(layer.id);
+            }
+        });
 
         if (restoreScrollPosition) {
             $(window).scrollTop(scrollTop); // restore scroll position
         }
     }
-
     function resetSchedule() {
-        courseButtonList.clear();
+        layerPanel.loadLayers([{id: 'default', name: 'הקורסים שלי', visible: true}], {'default': {courses: [], customEvents: {}}});
         courseCalendar.removeAll();
         updateGeneralInfoLine();
         courseExamInfo.renderCourses([]);
@@ -1664,7 +2221,12 @@
         // Only enable the feature for last four semesters.
         // Only the last three are updated, and extra semester to give time to see the most recent changes.
         var lastFourSemesters = Object.keys(availableSemesters).sort().reverse().slice(0, 4);
-        return lastFourSemesters.indexOf(currentSemester) !== -1;
+        if (lastFourSemesters.indexOf(currentSemester) === -1) {
+            return false;
+        }
+
+        if (typeof layerPanel === 'undefined' || !layerPanel) return false;
+        return layerPanel.getCourseNumbers(true).length > 0;
     }
 
     function computeMetadataDiff(metadata) {
@@ -1904,7 +2466,7 @@
             delete currentSavedSession[courseKey];
         });
 
-        var courseNumbers = courseButtonList.getCourseNumbers(true);
+        var courseNumbers = layerPanel.getCourseNumbers(true);
 
         var doc = firestoreAuthenticatedUserDoc();
         if (doc) {
@@ -1928,7 +2490,9 @@
                 input[metadataCourseKey] = firebase.firestore.FieldValue.delete();
             });
 
-            doc.update(input);
+            if (Object.keys(input).length > 0) {
+                doc.update(input);
+            }
         } else {
             try {
                 courseNumbers.forEach(function (course) {
@@ -1960,7 +2524,9 @@
     function onMetadataDiffChange() {
         var badgeCount = 0;
 
-        if (metadataDiff) {
+        if (!shouldEnableMetadataDiff()) {
+            badgeCount = 0;
+        } else if (metadataDiff) {
             var diffCourses = Object.keys(metadataDiff);
             if (diffCourses.length > 0) {
                 badgeCount = diffCourses.reduce(function (accumulator, course) {
