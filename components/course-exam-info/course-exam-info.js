@@ -74,6 +74,7 @@ CourseExamInfo.prototype.renderCourses = function (courses) {
         });
 
         var spanExamList = $('<span>');
+        var prevDaysText = null;
 
         moedCourses.forEach(function (course, i) {
             if (i !== 0) {
@@ -114,6 +115,7 @@ CourseExamInfo.prototype.renderCourses = function (courses) {
                 elementText = diff;
                 if (diff === 0) {
                     daysText.addClass('exam-info-item-conflicted');
+                    prevDaysText.addClass('exam-info-item-conflicted');
                 }
                 tooltipText = dateWithTime || date;
             }
@@ -145,6 +147,7 @@ CourseExamInfo.prototype.renderCourses = function (courses) {
             }
 
             spanExamList.append(daysText);
+            prevDaysText = daysText;
         });
 
         return spanExamList;
