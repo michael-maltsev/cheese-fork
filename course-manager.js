@@ -334,7 +334,7 @@ CourseManager.prototype.getDescription = function (course, options) {
             '<img src="assets/icon-facebook.png" alt="icon" width="16" height="16"> חיפוש קבוצה בפייסבוק</a>';
 
         loggingProps = options.logging ? ' onclick="gtag(\'event\', \'info-click-link-tscans\')"' : '';
-        linksHtml += '<br><a href="https://tscans.cf/?course=' + course + '" target="_blank" rel="noopener"' + loggingProps + '>' +
+        linksHtml += '<br><a href="https://scans.cheesefork.cf/?course=' + course + '" target="_blank" rel="noopener"' + loggingProps + '>' +
             '<img src="assets/icon-scans.png" alt="icon" width="16" height="16"> סריקות מבחנים</a>';
 
         if (options.whatsappGroupLink) {

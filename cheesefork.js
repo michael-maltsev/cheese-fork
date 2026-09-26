@@ -549,15 +549,15 @@
 
         BootstrapDialog.show({
             title: 'סריקות לקראת המבחנים',
-            message: '<a href="https://tscans.cf/" target="_blank" rel="noopener" onclick="gtag(\'event\', \'scans-click-logo\')">' +
-                    '<img src="https://tscans.cf/scanner_technion.png" width="30%" class="mx-auto d-block">' +
+            message: '<a href="https://scans.cheesefork.cf/" target="_blank" rel="noopener" onclick="gtag(\'event\', \'scans-click-logo\')">' +
+                    '<img src="https://scans.cheesefork.cf/scanner_technion.png" width="30%" class="mx-auto d-block">' +
                 '</a><br>' +
                 'לומדים למבחנים? (אם לא, אולי אתם צריכים להתחיל 🙂)<br>' +
                 'מחפשים סריקות של סטודנטים מסמסטרים קודמים ללמוד מהם?<br>' +
                 'קיבלתם ציון טוב, ויש לכם סריקות שיכולות לעזור לאחרים?<br>' +
                 '<br>' +
                 'אתם מוזמנים ' +
-                    '<a href="https://tscans.cf/" target="_blank" rel="noopener" onclick="gtag(\'event\', \'scans-click-link\')">להיכנס למערכת הסריקות</a>' +
+                    '<a href="https://scans.cheesefork.cf/" target="_blank" rel="noopener" onclick="gtag(\'event\', \'scans-click-link\')">להיכנס למערכת הסריקות</a>' +
                     ', להיעזר ולעזור.<br>' +
                 'בהצלחה במבחנים!<br>' +
                 '<br>' +
@@ -573,7 +573,7 @@
                 action: function (dialog) {
                     gtag('event', 'scans-click-button');
 
-                    var win = window.open('https://tscans.cf/', '_blank', 'noopener');
+                    var win = window.open('https://scans.cheesefork.cf/', '_blank', 'noopener');
                     if (win) {
                         win.focus();
                     }
