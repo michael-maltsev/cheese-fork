@@ -179,4 +179,53 @@ img[src="assets/icon-students.png"] {
     filter: brightness(2);
 }
 
+/* Layer Panel */
+.layer-panel-header {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.layer-group {
+    background-color: #343a40;
+    border-color: #495057;
+}
+
+.layer-group-header {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-bottom-color: #495057;
+}
+
+.layer-hidden-group .layer-group-header {
+    color: #adb5bd;
+}
+
+.layer-panel-item {
+    background-color: #343a40;
+    border-bottom-color: #495057;
+    color: rgb(222,226,230);
+}
+
+.layer-panel-item.active {
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.2), rgba(255, 255, 255, 0.05));
+    border-color: #495057;
+}
+
+.layer-panel-drag-handle {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.layer-panel-item.ui-sortable-placeholder {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border: 2px dashed rgba(255, 255, 255, 0.3) !important;
+}
+
+.layer-panel-delete-area {
+    background-color: rgba(220, 53, 69, 0.15);
+    border-color: rgba(220, 53, 69, 0.3);
+    color: #e4606d;
+}
+
+.layer-panel-drag-target {
+    background-color: rgba(0, 123, 255, 0.15);
+}
+
 }

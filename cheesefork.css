@@ -151,6 +151,10 @@ html.os-html>.os-host>.os-scrollbar {
     overflow: auto;
 }
 
+.modal-body li {
+    margin-right: 1rem;
+}
+
 /* dark-mode-toggle customizations */
 footer dark-mode-toggle {
     display: inline-block;
