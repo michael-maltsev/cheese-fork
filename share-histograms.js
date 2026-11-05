@@ -1,6 +1,96 @@
 let cheeseforkShareHistograms = function () {
     'use strict';
 
+    const scriptUrl = document.currentScript && document.currentScript.src;
+    const requestedLocale = scriptUrl ? new URL(scriptUrl).searchParams.get('lang') : null;
+    const locale = requestedLocale === 'en' ? 'en' : 'he';
+    const messages = {
+        "he": {
+            "sharing.overlay.heading": "שיתוף היסטוגרמות",
+            "sharing.overlay.title": "שיתוף היסטוגרמות: {status}",
+            "sharing.overlay.loading": "טוען נתונים...",
+            "sharing.overlay.share": "לחצו כאן לשיתוף ההיסטוגרמות",
+            "sharing.overlay.retry": "נסה שוב",
+            "sharing.overlay.close": "סגירת חלון השיתוף",
+            "sharing.overlay.semester": "סמסטר",
+            "sharing.overlay.course": "קורס",
+            "sharing.overlay.courseName": "שם קורס",
+            "sharing.overlay.staff": "סגל",
+            "sharing.overlay.examA": "מבחן מועד א'",
+            "sharing.overlay.finalA": "סופי מועד א'",
+            "sharing.overlay.examB": "מבחן מועד ב'",
+            "sharing.overlay.finalB": "סופי מועד ב'",
+            "sharing.overlay.examC": "מבחן מועד ג'",
+            "sharing.overlay.finalC": "סופי מועד ג'",
+            "sharing.overlay.finals": "סופי",
+            "sharing.overlay.available": "קיים מידע לשיתוף",
+            "sharing.overlay.unavailable": "אין מידע לשיתוף",
+            "sharing.overlay.ready": "מוכן",
+            "sharing.overlay.sharing": "משתף...",
+            "sharing.overlay.error": "שגיאה",
+            "sharing.overlay.errorDetails": "שגיאה: {message}",
+            "sharing.overlay.complete": "השיתוף הושלם",
+            "sharing.overlay.uploading": "משתף מידע...",
+            "sharing.overlay.exists": "המידע כבר קיים",
+            "sharing.overlay.success": "המידע שותף בהצלחה",
+            "sharing.overlay.failed": "שיתוף המידע נכשל",
+            "sharing.overlay.getTreeFailed": "קריאת רשימת הקבצים מ-GitHub החזירה שגיאה {status}",
+            "sharing.overlay.putFileFailed": "שמירת קובץ ב-GitHub החזירה שגיאה {status}",
+            "sharing.overlay.fetchFailed": "טעינת {resource} החזירה שגיאה {status}",
+            "sharing.overlay.resource.coursePage": "עמוד הקורס",
+            "sharing.overlay.resource.histogramPage": "עמוד ההיסטוגרמה",
+            "sharing.overlay.resource.histogramImage": "תמונת ההיסטוגרמה",
+            "sharing.overlay.semester.winter": "חורף {year}-{nextYear}",
+            "sharing.overlay.semester.spring": "אביב {year}",
+            "sharing.overlay.semester.summer": "קיץ {year}"
+        },
+        "en": {
+            "sharing.overlay.heading": "Share histograms",
+            "sharing.overlay.title": "Histogram sharing: {status}",
+            "sharing.overlay.loading": "Loading data...",
+            "sharing.overlay.share": "Share histograms",
+            "sharing.overlay.retry": "Try again",
+            "sharing.overlay.close": "Close sharing window",
+            "sharing.overlay.semester": "Semester",
+            "sharing.overlay.course": "Course",
+            "sharing.overlay.courseName": "Course name",
+            "sharing.overlay.staff": "Staff",
+            "sharing.overlay.examA": "Exam A",
+            "sharing.overlay.finalA": "Final grade A",
+            "sharing.overlay.examB": "Exam B",
+            "sharing.overlay.finalB": "Final grade B",
+            "sharing.overlay.examC": "Exam C",
+            "sharing.overlay.finalC": "Final grade C",
+            "sharing.overlay.finals": "Final grade",
+            "sharing.overlay.available": "Data available to share",
+            "sharing.overlay.unavailable": "No data to share",
+            "sharing.overlay.ready": "Ready",
+            "sharing.overlay.sharing": "Sharing...",
+            "sharing.overlay.error": "Error",
+            "sharing.overlay.errorDetails": "Error: {message}",
+            "sharing.overlay.complete": "Sharing complete",
+            "sharing.overlay.uploading": "Sharing data...",
+            "sharing.overlay.exists": "Data already exists",
+            "sharing.overlay.success": "Data shared successfully",
+            "sharing.overlay.failed": "Could not share the data",
+            "sharing.overlay.getTreeFailed": "Reading the file list from GitHub returned status {status}",
+            "sharing.overlay.putFileFailed": "Saving a file to GitHub returned status {status}",
+            "sharing.overlay.fetchFailed": "Loading {resource} returned status {status}",
+            "sharing.overlay.resource.coursePage": "the course page",
+            "sharing.overlay.resource.histogramPage": "the histogram page",
+            "sharing.overlay.resource.histogramImage": "the histogram image",
+            "sharing.overlay.semester.winter": "Winter {year}-{nextYear}",
+            "sharing.overlay.semester.spring": "Spring {year}",
+            "sharing.overlay.semester.summer": "Summer {year}"
+        }
+    };
+    let sharingRoot;
+
+    function t(key, params = {}) {
+        return messages[locale][key].replace(/\{([^{}]+)\}/g, (placeholder, name) =>
+            Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : placeholder);
+    }
+
     const histogramCategories = [
         'Exam_A',
         'Final_A',
@@ -13,7 +103,7 @@ let cheeseforkShareHistograms = function () {
     let histogramUploadQueue = [];
 
     function escapeHtml(unsafe) {
-        return unsafe
+        return String(unsafe)
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
@@ -21,112 +111,136 @@ let cheeseforkShareHistograms = function () {
             .replace(/'/g, '&#039;');
     }
 
+    function semesterFriendlyName(semester) {
+        const year = parseInt(semester.slice(0, 4), 10);
+        switch (semester.slice(4)) {
+        case '01':
+            return t('sharing.overlay.semester.winter', {year, nextYear: year + 1});
+        case '02':
+            return t('sharing.overlay.semester.spring', {year: year + 1});
+        case '03':
+            return t('sharing.overlay.semester.summer', {year: year + 1});
+        default:
+            return semester;
+        }
+    }
+
     function uiCreateTable(courses) {
-        let html = '<div class="HeaderWarp"><div id="grabber_title">' +
-            'שיתוף היסטוגרמות: טוען נתונים...' +
+        let html = '<button type="button" id="grabber_close_button" style="float:' + (locale === 'he' ? 'left' : 'right') + ';">' +
+            escapeHtml(t('sharing.overlay.close')) + '</button>' +
+            '<div class="HeaderWarp"><div id="grabber_title" role="status" aria-live="polite">' +
+            escapeHtml(t('sharing.overlay.title', {status: t('sharing.overlay.loading')})) +
             '</div></div><br>' +
-            '<a href="#" class="btn btn-default btn-sm histogram" id="grabber_submit_button" style="background-color:#a5cd4e;display:none;">' +
-            '<i class="fas fa-chart-line fa-lg"></i>&nbsp;' +
-            'לחצו כאן לשיתוף ההיסטוגרמות' +
-            '</a>' +
-            '<a href="#" class="btn btn-default btn-sm histogram" id="grabber_try_again_button" style="background-color:#a5cd4e;display:none;">' +
-            '<i class="fas fa-chart-line fa-lg"></i>&nbsp;' +
-            'נסה שוב' +
-            '</a>' +
-            '<table class="tab tablesorter-ice">' +
-            '<thead><tr>' +
-            '<th>סמסטר</th>' +
-            '<th>קורס</th>' +
-            '<th>שם קורס</th>' +
-            '<th>סגל</th>' +
-            '<th>מבחן מועד א\'</th>' +
-            '<th>סופי מועד א\'</th>' +
-            '<th>מבחן מועד ב\'</th>' +
-            '<th>סופי מועד ב\'</th>' +
-            '<th>מבחן מועד ג\'</th>' +
-            '<th>סופי מועד ג\'</th>' +
-            '<th>סופי</th>' +
-            '</tr></thead>' +
-            '<tbody>';
+            '<button type="button" class="btn btn-default btn-sm histogram" id="grabber_submit_button" style="background-color:#a5cd4e;display:none;">' +
+            escapeHtml(t('sharing.overlay.share')) +
+            '</button> ' +
+            '<button type="button" class="btn btn-default btn-sm histogram" id="grabber_try_again_button" style="background-color:#a5cd4e;display:none;">' +
+            escapeHtml(t('sharing.overlay.retry')) +
+            '</button>' +
+            '<div style="overflow-x:auto;"><table class="tab tablesorter-ice" style="direction:inherit;">' +
+            '<thead><tr>';
+        const columns = ['semester', 'course', 'courseName', 'staff', 'examA', 'finalA', 'examB', 'finalB', 'examC', 'finalC', 'finals'];
+        for (const column of columns) {
+            html += '<th scope="col">' + escapeHtml(t('sharing.overlay.' + column)) + '</th>';
+        }
+        html += '</tr></thead><tbody>';
 
         for (const course of courses) {
             const className = 'grabber_course_' + course.semester + '_' + course.course;
-            html += '<tr class="' + className + '">' +
-                '<td>' + escapeHtml(course.semesterPretty) + '</td>' +
+            html += '<tr class="' + escapeHtml(className) + '">' +
+                '<td>' + escapeHtml(semesterFriendlyName(course.semester)) + '</td>' +
                 '<td>' + escapeHtml(course.course) + '</td>' +
                 '<td>' + escapeHtml(course.name) + '</td>';
 
-            html += '<td class="Staff">...</td>';
+            html += '<td class="Staff" title="' + escapeHtml(t('sharing.overlay.loading')) + '">...</td>';
 
             for (const category of histogramCategories) {
-                html += '<td class="' + category + '">...</td>';
+                html += '<td class="' + category + '" title="' + escapeHtml(t('sharing.overlay.loading')) + '">...</td>';
             }
 
             html += '</tr>';
         }
 
-        html += '</tbody></table>';
+        html += '</tbody></table></div>';
 
-        document.getElementById('contents').innerHTML = html;
+        if (!sharingRoot) {
+            sharingRoot = document.createElement('section');
+            sharingRoot.id = 'cheesefork-histogram-sharing';
+            sharingRoot.lang = locale;
+            sharingRoot.dir = locale === 'he' ? 'rtl' : 'ltr';
+            sharingRoot.setAttribute('role', 'region');
+            sharingRoot.setAttribute('aria-label', t('sharing.overlay.heading'));
+            sharingRoot.style.cssText = 'position:fixed;top:12px;right:12px;bottom:12px;left:12px;z-index:2147483647;overflow:auto;background:#fff;color:#212529;border:1px solid #777;padding:20px;text-align:' +
+                (locale === 'he' ? 'right' : 'left') + ';font:14px Arial,sans-serif;box-sizing:border-box;';
+            document.body.appendChild(sharingRoot);
+        }
+        sharingRoot.innerHTML = html;
+        sharingRoot.querySelector('#grabber_close_button').onclick = () => {
+            sharingRoot.style.display = 'none';
+        };
     }
 
     function uiUpdateTitle(title) {
-        document.getElementById('grabber_title').textContent = 'שיתוף היסטוגרמות: ' + title;
+        sharingRoot.querySelector('#grabber_title').textContent = t('sharing.overlay.title', {status: title});
     }
 
     function uiUpdateItemStatus(semester, course, category, status, statusText) {
         const className = 'grabber_course_' + semester + '_' + course;
-        const node = document.querySelector('tr.' + className + ' td.' + category);
+        const node = sharingRoot.querySelector('tr.' + className + ' td.' + category);
         node.textContent = status;
         node.title = statusText;
+        node.setAttribute('aria-label', statusText);
     }
 
     function uiAddCourseCategories(semester, course, categories) {
         let status = '📁';
-        let statusText = 'קיים מידע לשיתוף';
+        let statusText = t('sharing.overlay.available');
         uiUpdateItemStatus(semester, course, 'Staff', status, statusText);
 
         for (const category of histogramCategories) {
             if (categories.includes(category)) {
                 status = '📁';
-                statusText = 'קיים מידע לשיתוף';
+                statusText = t('sharing.overlay.available');
             } else {
                 status = '➖';
-                statusText = 'אין מידע לשיתוף';
+                statusText = t('sharing.overlay.unavailable');
             }
             uiUpdateItemStatus(semester, course, category, status, statusText);
         }
     }
 
     function uiOnFirstLoadingDone() {
-        uiUpdateTitle('מוכן');
+        uiUpdateTitle(t('sharing.overlay.ready'));
 
-        const submitButton = document.getElementById('grabber_submit_button');
+        const submitButton = sharingRoot.querySelector('#grabber_submit_button');
         submitButton.style.display = 'inline-block';
         submitButton.onclick = () => {
             submitButton.style.display = 'none';
-            uiUpdateTitle('משתף...');
+            uiUpdateTitle(t('sharing.overlay.sharing'));
             submitHistograms().catch(reason => uiOnError(reason.message));
             return false;
         };
     }
 
     function uiOnError(message) {
-        alert('Error: ' + message);
-        uiUpdateTitle('שגיאה');
+        alert(t('sharing.overlay.errorDetails', {message}));
+        if (!sharingRoot) {
+            uiCreateTable([]);
+        }
+        uiUpdateTitle(t('sharing.overlay.error'));
 
-        const tryAgainButton = document.getElementById('grabber_try_again_button');
+        const tryAgainButton = sharingRoot.querySelector('#grabber_try_again_button');
         tryAgainButton.style.display = 'inline-block';
         tryAgainButton.onclick = () => {
             tryAgainButton.style.display = 'none';
-            uiUpdateTitle('טוען נתונים...');
+            uiUpdateTitle(t('sharing.overlay.loading'));
             run().catch(reason => uiOnError(reason.message));
             return false;
         };
     }
 
     function uiOnSubmitDone() {
-        uiUpdateTitle('השיתוף הושלם');
+        uiUpdateTitle(t('sharing.overlay.complete'));
     }
 
     function getCourses() {
@@ -284,7 +398,7 @@ let cheeseforkShareHistograms = function () {
                 // No such folder.
                 return null;
             } else {
-                throw new Error('Get tree API returned ' + response.status);
+                throw new Error(t('sharing.overlay.getTreeFailed', {status: response.status}));
             }
         }
 
@@ -355,7 +469,7 @@ let cheeseforkShareHistograms = function () {
             } else if (response.status === 201) {
                 return 'created';
             } else {
-                throw new Error('Put file API returned ' + response.status);
+                throw new Error(t('sharing.overlay.putFileFailed', {status: response.status}));
             }
         }
     }
@@ -376,7 +490,7 @@ let cheeseforkShareHistograms = function () {
             lastStatus = result.status;
         }
 
-        throw new Error(`Fetching ${name} returned ` + lastStatus);
+        throw new Error(t('sharing.overlay.fetchFailed', {resource: t(name), status: lastStatus}));
     }
 
     async function fetchValidResponseAsText(url, name, encoding) {
@@ -397,9 +511,9 @@ let cheeseforkShareHistograms = function () {
                 courseName
             };
 
-            uiUpdateItemStatus(semester, course, 'Staff', '...', 'משתף מידע...');
+            uiUpdateItemStatus(semester, course, 'Staff', '...', t('sharing.overlay.uploading'));
 
-            const coursePageHtml = await fetchValidResponseAsText(courseUrl, 'course page', 'windows-1255');
+            const coursePageHtml = await fetchValidResponseAsText(courseUrl, 'sharing.overlay.resource.coursePage', 'windows-1255');
             const staffArray = getStaffFromHtml(coursePageHtml);
             const staff = new TextEncoder().encode(JSON.stringify(staffArray, null, 2)).buffer;
             const skipIfExists = staffArray.length === 0;
@@ -409,15 +523,15 @@ let cheeseforkShareHistograms = function () {
             });
 
             if (staffResult === 'exists') {
-                uiUpdateItemStatus(semester, course, 'Staff', '⚌', 'המידע כבר קיים');
+                uiUpdateItemStatus(semester, course, 'Staff', '⚌', t('sharing.overlay.exists'));
             } else {
-                uiUpdateItemStatus(semester, course, 'Staff', '✔', 'המידע שותף בהצלחה');
+                uiUpdateItemStatus(semester, course, 'Staff', '✔', t('sharing.overlay.success'));
             }
 
             for (const {category, url: histogramUrl} of histograms) {
-                uiUpdateItemStatus(semester, course, category, '...', 'משתף מידע...');
+                uiUpdateItemStatus(semester, course, category, '...', t('sharing.overlay.uploading'));
 
-                const histogramPageHtml = await fetchValidResponseAsText(histogramUrl, 'histogram page', 'windows-1255');
+                const histogramPageHtml = await fetchValidResponseAsText(histogramUrl, 'sharing.overlay.resource.histogramPage', 'windows-1255');
                 const histogram = getCourseHistogramFromHtml(histogramPageHtml);
 
                 // The histogram course name might not match. This can happen if a different course page was loaded before loading the histogram page.
@@ -467,18 +581,18 @@ let cheeseforkShareHistograms = function () {
                 // git hash-object image.png
                 const skipIfSha = '76b85c3ecefcb57e8856889dbb44b31c52b50fc3';
 
-                const image = await (await fetchValidResponse(histogram.imgSrc, 'histogram image')).arrayBuffer();
+                const image = await (await fetchValidResponse(histogram.imgSrc, 'sharing.overlay.resource.histogramImage')).arrayBuffer();
                 const imageResult = await submitToGithub(courseToCommit, semester, category, '.png', image, {
                     commitMetadata: histogramCommitMetadata,
                     skipIfSha
                 });
 
                 if (propertiesResult === 'skipped' || imageResult === 'skipped') {
-                    uiUpdateItemStatus(semester, course, category, '⚠', 'שיתוף המידע נכשל');
+                    uiUpdateItemStatus(semester, course, category, '⚠', t('sharing.overlay.failed'));
                 } else if (propertiesResult === 'exists' && imageResult === 'exists') {
-                    uiUpdateItemStatus(semester, course, category, '⚌', 'המידע כבר קיים');
+                    uiUpdateItemStatus(semester, course, category, '⚌', t('sharing.overlay.exists'));
                 } else {
-                    uiUpdateItemStatus(semester, course, category, '✔', 'המידע שותף בהצלחה');
+                    uiUpdateItemStatus(semester, course, category, '✔', t('sharing.overlay.success'));
                 }
             }
         }
@@ -491,7 +605,7 @@ let cheeseforkShareHistograms = function () {
         uiCreateTable(courses);
 
         for (const {courseMatched, course, semester, url, name} of courses) {
-            const html = await fetchValidResponseAsText(url, 'course page', 'windows-1255');
+            const html = await fetchValidResponseAsText(url, 'sharing.overlay.resource.coursePage', 'windows-1255');
             const histograms = getCourseHistogramsFromHtml(html);
 
             histogramUploadQueue.push({

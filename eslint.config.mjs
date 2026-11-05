@@ -31,5 +31,16 @@ export default [
             "no-undef": "error",
             "semi": "error"
         }
+    },
+    {
+        files: ["tests/**/*.cjs"],
+        languageOptions: {
+            ecmaVersion: "latest",
+            sourceType: "commonjs",
+            globals: globals.node
+        },
+        rules: {
+            "compat/compat": "off"
+        }
     }
 ];

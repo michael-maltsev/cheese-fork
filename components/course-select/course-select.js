@@ -1,6 +1,6 @@
 'use strict';
 
-/* global moment, showBootstrapDialogWithModelessButton, currentSemester, gtag */
+/* global moment, showBootstrapDialogWithModelessButton, currentSemester, gtag, CheeseI18n */
 
 // eslint-disable-next-line no-unused-vars
 var CourseSelect = (function () {
@@ -27,7 +27,7 @@ var CourseSelect = (function () {
             render: {
                 option: function (item) {
                     if (item.value === 'partial') {
-                        return $('<div>').addClass('option font-italic').text('מציג 200 קורסים ראשונים').get(0);
+                        return $('<div>').addClass('option font-italic').text(CheeseI18n.t('courses.partialList')).get(0);
                     }
 
                     var course = item.value;
@@ -45,7 +45,7 @@ var CourseSelect = (function () {
                             'data-boundary': 'viewport'
                         });
 
-                    return $('<div>').addClass('option').append(courseNumber)
+                    return $('<div>').addClass('option source-content').attr({lang: /[א-ת]/.test(general['שם מקצוע']) ? 'he' : 'en', dir: 'auto'}).append(courseNumber)
                         .append(document.createTextNode(' - ' + general['שם מקצוע'])).get(0);
                 }
             },
@@ -90,7 +90,7 @@ var CourseSelect = (function () {
     }
 
     function addFilterButton(courseSelect, selectize) {
-        var title = 'לחצו כאן לסינון מתקדם של הקורסים המוצגים';
+        var title = CheeseI18n.t('filters.advancedTip');
         var extraClass = '';
         if (courseSelect.filteredCoursesCount < courseSelect.allCoursesCount) {
             title += ' (' + courseSelect.filteredCoursesCount + '/' + courseSelect.allCoursesCount + ')';
@@ -118,7 +118,7 @@ var CourseSelect = (function () {
     function updateFilterButton(courseSelect, selectize) {
         var button = selectize.$control.find('button.course-select-filter-button');
 
-        var title = 'לחצו כאן לסינון מתקדם של הקורסים המוצגים';
+        var title = CheeseI18n.t('filters.advancedTip');
         if (courseSelect.filteredCoursesCount < courseSelect.allCoursesCount) {
             title += ' (' + courseSelect.filteredCoursesCount + '/' + courseSelect.allCoursesCount + ')';
             button.addClass('course-select-filter-on');
@@ -206,7 +206,7 @@ var CourseSelect = (function () {
         faculties.forEach(function (faculty) {
             selectFaculties.append($('<option>', {
                 value: faculty,
-                text: faculty
+                text: courseManager.getFacultyLabel(faculty)
             }));
         });
 
@@ -219,7 +219,7 @@ var CourseSelect = (function () {
         frameworks.forEach(function (framework) {
             selectFrameworks.append($('<option>', {
                 value: framework,
-                text: framework
+                text: courseManager.getFrameworkLabel(framework)
             }));
         });
 
@@ -319,10 +319,10 @@ var CourseSelect = (function () {
 
         showBootstrapDialogWithModelessButton('course-filter', {
             cssClass: 'course-filter-dialog',
-            title: 'סינון קורסים',
+            title: CheeseI18n.t('filters.title'),
             message: filterForm,
             buttons: [{
-                label: 'סינון',
+                label: CheeseI18n.t('filters.apply'),
                 cssClass: 'btn-primary',
                 action: function (dialog) {
                     gtag('event', 'course-select-filter-submit');
@@ -330,14 +330,14 @@ var CourseSelect = (function () {
                     that.filterApply();
                 }
             }, {
-                label: 'איפוס',
+                label: CheeseI18n.t('filters.reset'),
                 action: function (dialog) {
                     gtag('event', 'course-select-filter-reset');
 
                     that.filterReset();
                 }
             }, {
-                label: 'סגור',
+                label: CheeseI18n.t('filters.close'),
                 action: function (dialog) {
                     dialog.close();
                 }
@@ -347,10 +347,9 @@ var CourseSelect = (function () {
                     id: 'filter-result',
                     class: 'bootstrap-dialog-message',
                     css: {
-                        'margin-bottom': '.25rem',
-                        'margin-left': 'auto'
+                        'margin-bottom': '.25rem'
                     }
-                }).prependTo(dialog.getModalFooter());
+                }).css(CheeseI18n.isRTL() ? 'margin-left' : 'margin-right', 'auto').prependTo(dialog.getModalFooter());
 
                 filterFormOnSubmit = function (event) {
                     event.preventDefault();
@@ -470,7 +469,7 @@ var CourseSelect = (function () {
 
         if (that.filterDialog) {
             var messageElement = that.filterDialog.getModalFooter().find('#filter-result');
-            messageElement.text('מציג ' + that.filteredCoursesCount + ' מתוך ' + that.allCoursesCount + ' קורסים');
+            messageElement.text(CheeseI18n.t('filters.result', {count: that.filteredCoursesCount, total: that.allCoursesCount}));
         }
 
         updateFilterButton(that, that.courseSelect);

@@ -1,6 +1,6 @@
 'use strict';
 
-/* global moment, currentSemester */
+/* global moment, currentSemester, CheeseI18n */
 
 function CourseExamInfo(element, options) {
     this.element = element;
@@ -23,14 +23,14 @@ CourseExamInfo.prototype.renderCourses = function (courses) {
     if (!moedASpan && !moedBSpan) {
         that.element.empty();
     } else {
-        that.element.html($('<div>').text('מספר ימי למידה למבחנים:'));
+        that.element.html($('<div>').text(CheeseI18n.t('exams.studyDays')));
 
         if (moedASpan) {
-            that.element.append($('<div>').addClass('exam-info-content').text('מועדי א\': ').append(moedASpan));
+            that.element.append($('<div>').addClass('exam-info-content').text(CheeseI18n.t('exams.sessionA')).append(moedASpan));
         }
 
         if (moedBSpan) {
-            that.element.append($('<div>').addClass('exam-info-content').text('מועדי ב\': ').append(moedBSpan));
+            that.element.append($('<div>').addClass('exam-info-content').text(CheeseI18n.t('exams.sessionB')).append(moedBSpan));
         }
     }
 
@@ -45,7 +45,7 @@ CourseExamInfo.prototype.renderCourses = function (courses) {
             if (general[moedName]) {
                 var parsedDate = that.courseManager.parseExamDateTime(general[moedName]);
                 if (parsedDate) {
-                    moedDates[course] = moment.utc(parsedDate.start);
+                    moedDates[course] = moment.utc(parsedDate.start).locale(CheeseI18n.getLocale());
                 }
 
                 // For SAP info, each line contains an exam date. Previous data
@@ -130,9 +130,9 @@ CourseExamInfo.prototype.renderCourses = function (courses) {
                 daysText.addClass('exam-info-item-has-extra-dates');
                 tooltipText = tooltipText ? (tooltipText + ' ') : '';
                 if (extraDates === 1) {
-                    tooltipText += 'ועוד מועד אחד נוסף';
+                    tooltipText += CheeseI18n.t('exams.extraDate');
                 } else {
-                    tooltipText += 'ועוד ' + extraDates + ' מועדים נוספים';
+                    tooltipText += CheeseI18n.t('exams.extraDates', {count: extraDates});
                 }
             }
 
