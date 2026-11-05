@@ -1,6 +1,6 @@
 # CheeseFork Privacy Policy
 
-Last updated: 2026-09-22
+Last updated: 2026-11-05
 
 CheeseFork (https://cheesefork.cf) is a free, open source schedule builder for Technion students. This policy describes what data the site handles, where it goes, and how you can control it. The full source code is available at https://github.com/michael-maltsev/cheese-fork, so everything described here can be verified.
 
@@ -21,6 +21,7 @@ When you are not signed in, the schedule you build (selected courses, chosen les
 The site also stores small preference values in local storage, such as:
 
 - the last semester you viewed;
+- your selected interface language;
 - whether you dismissed the intro tour, tips, and reminder popups (course feedback, weekly graph, histogram sharing, Technion scans);
 - the display name you last used when posting course feedback;
 - your light/dark mode choice.
@@ -66,6 +67,8 @@ You can read course feedback (reviews) without signing in. Posting feedback requ
 When you post feedback, the following is stored in Cloud Firestore and shown publicly to all CheeseFork users, including through the embeddable feedback widget: the author name you type in the form (which may be anything you choose, and is not your account name), the semester, the review text, the workload and overall ratings, and the time of posting. As stated in the posting form, feedback is displayed anonymously, but your account identity is retained for moderation purposes. Feedback that violates the posting guidelines may be removed.
 
 When you report a post as inappropriate, the email address and reason you enter, together with the reported post's text, author name, and timestamp, are stored in Cloud Firestore. Reports are visible only to the CheeseFork maintainers and are used to review the reported content and, if needed, to follow up with you.
+
+In English mode, you can choose to translate a Hebrew review using your browser's built-in Translator API, where supported. Translation runs on your device after you click the translation button; your browser may first download a language model. CheeseFork does not send the review to a translation service or save the translated version. The original review remains available. If you use your browser's separate page or selection translation command instead, that feature follows your browser's own settings and privacy policy.
 
 ## 7. Sharing histograms
 

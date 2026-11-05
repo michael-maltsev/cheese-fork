@@ -1,10 +1,23 @@
 'use strict';
 
-/* global introJs, ColorHash, BootstrapDialog, ics, JsDiff, firebase, firebaseui, gtag */
+/* global introJs, ColorHash, BootstrapDialog, ics, JsDiff, firebase, firebaseui, gtag, CheeseI18n, moment */
 /* global CourseManager, CourseSelect, CourseButtonList, CourseExamInfo, CourseCalendar, CourseFeedback */
 /* global courses_from_rishum, availableSemesters, currentSemester, scheduleSharingUserId */
 
 (function () {
+    CheeseI18n.apply(document);
+    moment.locale(CheeseI18n.getLocale());
+
+    $('dark-mode-toggle').attr({
+        light: CheeseI18n.t('shell.theme.toDark'),
+        dark: CheeseI18n.t('shell.theme.toLight'),
+        remember: CheeseI18n.t('shell.theme.remember')
+    });
+    $('#top-navbar-home a, #top-navbar .navbar-brand').prop('href', shellUrl({
+        semester: currentSemester, uid: null, course: null, staff: null, room: null
+    }));
+    $('#course-list-crawler-link').prop('href', crawlerUrl({course: 'all'}));
+
     var courseManager = new CourseManager(courses_from_rishum);
     var colorHash = new ColorHash();
     var firestoreDb = null;
@@ -276,10 +289,10 @@
         }
 
         introJs().setOptions({
-            nextLabel: 'הבא',
-            prevLabel: 'קודם',
-            skipLabel: 'דלג',
-            doneLabel: 'בואו נתחיל',
+            nextLabel: CheeseI18n.t('shell.tour.next'),
+            prevLabel: CheeseI18n.t('shell.tour.previous'),
+            skipLabel: CheeseI18n.t('shell.tour.skip'),
+            doneLabel: CheeseI18n.t('shell.tour.done'),
             disableInteraction: true,
             exitOnOverlayClick: false,
             showStepNumbers: false,
@@ -339,7 +352,7 @@
         var prevSemesterLinks = $('<div>');
         prevSemesters.forEach(function (semester) {
             var link = $('<a>', {
-                href: '?semester=' + encodeURIComponent(semester),
+                href: shellUrl({semester: semester}),
                 text: semesterFriendlyName(semester)
             });
             prevSemesterLinks.append(link, '<br>');
@@ -348,11 +361,11 @@
         prevSemesterLinks = prevSemesterLinks.html();
 
         BootstrapDialog.show({
-            title: 'פרסום חוות דעת עבור סמסטרים קודמים',
+            title: CheeseI18n.t('shell.feedback.previousTitle'),
             message: '<div>' +
-                    'זוכרים את הפעם האחרונה שבה הרכבתם מערכת? את התחושה שהמידע היבש על הקורסים לא מספיק? את החיפושים אחרי מידע נוסף והשאלות בפייסבוק?<br>' +
+                    escapeHtml(CheeseI18n.t('shell.feedback.memory')) + '<br>' +
                     '<br>' +
-                    'עכשיו תורכם לתרום מניסיונכם לדורות הבאים, והפעם אפשר לעשות את זה ממש פה! עברו לסמסטרים הקודמים והשאירו חוות דעת על קורסים שעשיתם:' +
+                    escapeHtml(CheeseI18n.t('shell.feedback.previousPrompt')) +
                     '<br>' +
                     prevSemesterLinks +
                     '<div class="row text-center my-4">' +
@@ -365,11 +378,11 @@
                 '<div class="form-check">' +
                     '<input class="form-check-input" type="checkbox" id="dont-show-course-feedback-popup"> ' +
                     '<label class="form-check-label" for="dont-show-course-feedback-popup">' +
-                    'אל תציג את ההודעה שוב' +
+                    escapeHtml(CheeseI18n.t('shell.notice.dontShow')) +
                     '</label>' +
                 '</div>',
             buttons: [{
-                label: 'סגור',
+                label: CheeseI18n.t('shell.dialog.close'),
                 action: function (dialog) {
                     dialog.close();
                 }
@@ -415,14 +428,14 @@
         var courseFeedback = new CourseFeedback(null, {});
         courseFeedback.endOfSemesterFeedbackDialog(courses, {
             dialogHtml: '<div>' +
-                    'זוכרים את הפעם האחרונה שבה הרכבתם מערכת? את התחושה שהמידע היבש על הקורסים לא מספיק? את החיפושים אחרי מידע נוסף והשאלות בפייסבוק?<br>' +
+                    escapeHtml(CheeseI18n.t('shell.feedback.memory')) + '<br>' +
                     '<br>' +
-                    'עכשיו תורכם לתרום מניסיונכם לדורות הבאים, והפעם אפשר לעשות את זה ממש פה!' +
+                    escapeHtml(CheeseI18n.t('shell.feedback.currentPrompt')) +
                 '</div>' +
                 '<div class="form-check my-3">' +
                     '<input class="form-check-input" type="checkbox" id="dont-show-course-feedback-popup"> ' +
                     '<label class="form-check-label" for="dont-show-course-feedback-popup">' +
-                    'אל תציג את ההודעה שוב' +
+                    escapeHtml(CheeseI18n.t('shell.notice.dontShow')) +
                     '</label>' +
                 '</div>',
             postHtml: null,
@@ -473,13 +486,13 @@
         }
 
         BootstrapDialog.show({
-            title: 'הגרף השבועי',
-            message: 'בכל יום חמישי אנחנו מפרסמים בעמוד הפייסבוק שלנו גרף מעניין שקשור למקצועות בטכניון.<br>' +
+            title: CheeseI18n.t('shell.weekly.title'),
+            message: escapeHtml(CheeseI18n.t('shell.weekly.message')) + '<br>' +
                 '<br>' +
                 '<div class="form-check">' +
                     '<input class="form-check-input" type="checkbox" id="dont-show-thursday-graph-popup"> ' +
                     '<label class="form-check-label" for="dont-show-thursday-graph-popup">' +
-                    'אל תציג את ההודעה פעם בשבוע' +
+                    escapeHtml(CheeseI18n.t('shell.weekly.dontShow')) +
                     '</label>' +
                 '</div>' +
                 '<br>' +
@@ -491,11 +504,11 @@
                 var frameSrc = 'https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fcheesefork.technion%2F&tabs=timeline' +
                     '&width=' + width + '&height=' + height + '&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=true&appId=863730240682785';
                 var frameElem = $('<iframe style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowTransparency="true" allow="encrypted-media"></iframe>')
-                    .attr('src', frameSrc).width(width).height(height);
+                    .attr({src: frameSrc, title: CheeseI18n.t('shell.weekly.frameTitle')}).width(width).height(height);
                 modalBody.find('.facebook-iframe-container').html(frameElem);
             },
             buttons: [{
-                label: 'סגור',
+                label: CheeseI18n.t('shell.dialog.close'),
                 action: function (dialog) {
                     dialog.close();
                 }
@@ -555,27 +568,27 @@
         }
 
         BootstrapDialog.show({
-            title: 'סריקות לקראת המבחנים',
+            title: CheeseI18n.t('shell.scans.title'),
             message: '<a href="https://scans.cheesefork.cf/" target="_blank" rel="noopener" onclick="gtag(\'event\', \'scans-click-logo\')">' +
-                    '<img src="https://scans.cheesefork.cf/scanner_technion.png" width="30%" class="mx-auto d-block">' +
+                    '<img src="https://scans.cheesefork.cf/scanner_technion.png" width="30%" class="mx-auto d-block" alt="' + escapeHtml(CheeseI18n.t('shell.scans.logo')) + '">' +
                 '</a><br>' +
-                'לומדים למבחנים? (אם לא, אולי אתם צריכים להתחיל 🙂)<br>' +
-                'מחפשים סריקות של סטודנטים מסמסטרים קודמים ללמוד מהם?<br>' +
-                'קיבלתם ציון טוב, ויש לכם סריקות שיכולות לעזור לאחרים?<br>' +
+                escapeHtml(CheeseI18n.t('shell.scans.studying')) + '<br>' +
+                escapeHtml(CheeseI18n.t('shell.scans.find')) + '<br>' +
+                escapeHtml(CheeseI18n.t('shell.scans.contribute')) + '<br>' +
                 '<br>' +
-                'אתם מוזמנים ' +
-                    '<a href="https://scans.cheesefork.cf/" target="_blank" rel="noopener" onclick="gtag(\'event\', \'scans-click-link\')">להיכנס למערכת הסריקות</a>' +
-                    ', להיעזר ולעזור.<br>' +
-                'בהצלחה במבחנים!<br>' +
+                escapeHtml(CheeseI18n.t('shell.scans.invitation')) +
+                    '<a href="https://scans.cheesefork.cf/" target="_blank" rel="noopener" onclick="gtag(\'event\', \'scans-click-link\')">' + escapeHtml(CheeseI18n.t('shell.scans.link')) + '</a>' +
+                    escapeHtml(CheeseI18n.t('shell.scans.help')) + '<br>' +
+                escapeHtml(CheeseI18n.t('shell.scans.goodLuck')) + '<br>' +
                 '<br>' +
                 '<div class="form-check">' +
                     '<input class="form-check-input" type="checkbox" id="dont-show-technion-scans-popup"> ' +
                     '<label class="form-check-label" for="dont-show-technion-scans-popup">' +
-                    'אל תציג את ההודעה שוב' +
+                    escapeHtml(CheeseI18n.t('shell.notice.dontShow')) +
                     '</label>' +
                 '</div>',
             buttons: [{
-                label: 'מעבר למערכת הסריקות',
+                label: CheeseI18n.t('shell.scans.open'),
                 cssClass: 'btn-primary',
                 action: function (dialog) {
                     gtag('event', 'scans-click-button');
@@ -586,7 +599,7 @@
                     }
                 }
             }, {
-                label: 'סגור',
+                label: CheeseI18n.t('shell.dialog.close'),
                 action: function (dialog) {
                     dialog.close();
                 }
@@ -615,7 +628,7 @@
 
             Object.keys(availableSemesters).sort().reverse().forEach(function (semester) {
                 var link = $('<a class="dropdown-item"></a>')
-                    .prop('href', '?semester=' + encodeURIComponent(semester))
+                    .prop('href', shellUrl({semester: semester}))
                     .text(semesterFriendlyName(semester));
                 if (semester === currentSemester) {
                     link.addClass('active');
@@ -629,10 +642,10 @@
                 gtag('event', 'navbar-changes');
 
                 BootstrapDialog.show({
-                    title: 'שינויים במערכת השעות',
+                    title: CheeseI18n.t('shell.changes.title'),
                     message: getPrettyMetadataDiff(),
                     buttons: [{
-                        label: 'אשר שינויים',
+                        label: CheeseI18n.t('shell.changes.accept'),
                         cssClass: 'btn-primary',
                         action: function (dialog) {
                             gtag('event', metadataDiff ? 'metadata-to-current' : 'metadata-first-time');
@@ -641,7 +654,7 @@
                             dialog.close();
                         }
                     }, {
-                        label: 'סגור',
+                        label: CheeseI18n.t('shell.dialog.close'),
                         action: function (dialog) {
                             dialog.close();
                         }
@@ -660,10 +673,10 @@
                 }
 
                 loginDialog = BootstrapDialog.show({
-                    title: 'כניסה למערכת',
+                    title: CheeseI18n.t('shell.login.title'),
                     message: $('#firebaseui-auth-container'),
                     buttons: [{
-                        label: 'סגור',
+                        label: CheeseI18n.t('shell.dialog.close'),
                         action: function (dialog) {
                             dialog.close();
                         }
@@ -680,17 +693,17 @@
                 $(this).find('[data-toggle="tooltip"]').tooltip('hide');
 
                 BootstrapDialog.show({
-                    title: 'יציאה מהמערכת',
-                    message: 'האם אתם בטוחים שברצונכם לצאת מהמערכת?',
+                    title: CheeseI18n.t('shell.logout.title'),
+                    message: CheeseI18n.t('shell.logout.message'),
                     buttons: [{
-                        label: 'יציאה',
+                        label: CheeseI18n.t('shell.nav.logout'),
                         cssClass: 'btn-primary',
                         action: function (dialog) {
                             firebase.auth().signOut();
                             dialog.close();
                         }
                     }, {
-                        label: 'ביטול',
+                        label: CheeseI18n.t('shell.dialog.cancel'),
                         action: function (dialog) {
                             dialog.close();
                         }
@@ -706,27 +719,25 @@
 
                 gtag('event', 'navbar-share');
 
-                var url = location.protocol + '//' + location.host + location.pathname +
-                    '?semester=' + encodeURIComponent(currentSemester) +
-                    '&uid=' + encodeURIComponent(firebase.auth().currentUser.uid);
-                var urlElement = $('<a target="_blank" rel="noopener">לחצו כאן לפתיחה</a>').prop('href', url);
-                var shareDialogContent = $('<div>הקישור לשיתוף המערכת: </div>').append(urlElement).append('.');
+                var url = shellUrl({semester: currentSemester, uid: firebase.auth().currentUser.uid});
+                var urlElement = $('<a target="_blank" rel="noopener">').text(CheeseI18n.t('shell.share.open')).prop('href', url);
+                var shareDialogContent = $('<div>').text(CheeseI18n.t('shell.share.link')).append(urlElement).append('.');
 
                 BootstrapDialog.show({
-                    title: 'שיתוף מערכת',
+                    title: CheeseI18n.t('shell.nav.share'),
                     message: shareDialogContent,
                     buttons: [{
-                        label: 'העתק קישור',
+                        label: CheeseI18n.t('shell.share.copy'),
                         cssClass: 'btn-primary',
                         action: function (dialog) {
                             copyToClipboard(url, function () {
                                 dialog.close();
                             }, function () {
-                                alert('ההעתקה נכשלה');
+                                alert(CheeseI18n.t('shell.error.copy'));
                             });
                         }
                     }, {
-                        label: 'סגור',
+                        label: CheeseI18n.t('shell.dialog.close'),
                         action: function (dialog) {
                             dialog.close();
                         }
@@ -813,7 +824,7 @@
                         if (general[moed]) {
                             var parsedDate = courseManager.parseExamDateTime(general[moed]);
                             if (parsedDate) {
-                                var title = moed + '\' - ' + general['שם מקצוע'];
+                                var title = courseManager.getFieldLabel(moed) + ' - ' + general['שם מקצוע'];
                                 icsCal.addEvent(title, '', '', parsedDate.start, parsedDate.end);
                             }
                         }
@@ -822,8 +833,8 @@
 
                 var errorEmptySchedule = function () {
                     BootstrapDialog.show({
-                        title: 'אופס',
-                        message: 'המערכת ריקה',
+                        title: CheeseI18n.t('shell.export.emptyTitle'),
+                        message: CheeseI18n.t('shell.export.empty'),
                         size: BootstrapDialog.SIZE_SMALL
                     });
                 };
@@ -846,29 +857,26 @@
                 var calendarUrl = 'https://files.cheesefork.cf/' + calFilePath;
 
                 var exportCalendarDialog = BootstrapDialog.show({
-                    title: ' ייצוא לקובץ iCalendar',
-                    message: 'קובץ ה-iCalendar נשמר בשרת של CheeseFork ומסתנכרן אוטומטית עם המערכת שבניתם בכל פתיחה של חלון זה. ' +
-                        'הקישור קבוע פר משתמש וסמסטר, כך שניתן לייבא את הקישור עצמו לכלי שתומך בכך. ' +
-                        'עבור כל עדכון נוסף מספיק לפתוח את החלון פעם נוספת, במקום הורדה וייבוא בכל פעם של הקובץ. ' +
-                        'שימו לב שהעדכון לא מיידי, ברוב שירותי לוח השנה הסנכרון מתבצע אחת למספר שעות.<br>' +
-                        '<br>' +
-                        'הקישור לקובץ iCalendar: <span class="calendar-link-placeholder">מעדכן את הקובץ בשרת...</span>.',
+                    title: CheeseI18n.t('shell.export.title'),
+                    message: escapeHtml(CheeseI18n.t('shell.export.explanation')) + '<br><br>' +
+                        escapeHtml(CheeseI18n.t('shell.export.link')) + '<span class="calendar-link-placeholder">' +
+                        escapeHtml(CheeseI18n.t('shell.export.updating')) + '</span>.',
                     onshow: function (dialog) {
                         dialog.getButton('copy-link').disable();
                     },
                     buttons: [{
                         id: 'copy-link',
-                        label: 'העתק קישור',
+                        label: CheeseI18n.t('shell.share.copy'),
                         cssClass: 'btn-primary',
                         action: function (dialog) {
                             copyToClipboard(calendarUrl, function () {
                                 dialog.close();
                             }, function () {
-                                alert('ההעתקה נכשלה');
+                                alert(CheeseI18n.t('shell.error.copy'));
                             });
                         }
                     }, {
-                        label: 'סגור',
+                        label: CheeseI18n.t('shell.dialog.close'),
                         action: function (dialog) {
                             dialog.close();
                         }
@@ -884,12 +892,12 @@
                     // https://stackoverflow.com/q/41938969
                     cacheControl: 'public, max-age=0'
                 }).then(function (snapshot) {
-                    var urlElement = $('<a target="_blank" rel="noopener">לחצו כאן להורדה</a>').prop('href', calendarUrl);
+                    var urlElement = $('<a target="_blank" rel="noopener">').text(CheeseI18n.t('shell.export.download')).prop('href', calendarUrl);
                     exportCalendarDialog.getModalBody().find('.calendar-link-placeholder').html(urlElement);
 
                     exportCalendarDialog.getButton('copy-link').enable();
                 }, function (error) {
-                    alert('Error saving calendar to server: ' + error.message);
+                    alert(CheeseI18n.t('shell.error.saveCalendar', {error: error.message}));
                 });
             }
 
@@ -902,8 +910,8 @@
                         doExport([]);
                     } else {
                         BootstrapDialog.show({
-                            title: 'שגיאה',
-                            message: 'לא ניתן לטעון את נתוני ימי החופשה עבור הסמסטר הנוכחי.',
+                            title: CheeseI18n.t('shell.dialog.danger'),
+                            message: CheeseI18n.t('shell.export.holidaysError'),
                             size: BootstrapDialog.SIZE_SMALL
                         });
                     }
@@ -921,6 +929,7 @@
             messagingSenderId: '916559682433'
         };
         firebase.initializeApp(config);
+        firebase.auth().languageCode = CheeseI18n.getLocale();
 
         firestoreDb = firebase.firestore();
 
@@ -997,7 +1006,7 @@
         function handleSignedInUser(user) {
             $('#top-navbar-login').addClass('d-none');
             $('#top-navbar-logout').removeClass('d-none')
-                .find('a').attr('data-original-title', 'מחובר בתור: ' + firestoreDisplayNameDecode(user.displayName || user.email || 'משתמש לא מזוהה'));
+                .find('a').attr('data-original-title', CheeseI18n.t('shell.login.signedInAs', {name: firestoreDisplayNameDecode(user.displayName || user.email || CheeseI18n.t('shell.login.unknown'))}));
             $('#top-navbar-share').find('a').removeClass('disabled').tooltip('disable');
         }
 
@@ -1015,13 +1024,13 @@
 
         switch (semesterCode) {
         case '01':
-            return 'חורף ' + year + '-' + (year + 1);
+            return CheeseI18n.t('shell.semester.winter', {year: year, nextYear: year + 1});
 
         case '02':
-            return 'אביב ' + (year + 1);
+            return CheeseI18n.t('shell.semester.spring', {year: year, nextYear: year + 1});
 
         case '03':
-            return 'קיץ ' + (year + 1);
+            return CheeseI18n.t('shell.semester.summer', {year: year, nextYear: year + 1});
 
         default:
             return semester;
@@ -1062,19 +1071,19 @@
         var text;
         if (courses > 0) {
             if (courses === 1) {
-                text = 'מקצוע אחד';
+                text = CheeseI18n.t('shell.summary.oneCourse');
             } else {
-                text = courses + ' מקצועות';
+                text = CheeseI18n.t('shell.summary.courses', {count: courses});
             }
 
             text += ', ';
             if (points === '1') {
-                text += 'נקודה אחת';
+                text += CheeseI18n.t('shell.summary.oneCredit');
             } else {
-                text += points + ' נקודות';
+                text += CheeseI18n.t('shell.summary.credits', {count: points});
             }
         } else {
-            text = 'לא נבחרו מקצועות';
+            text = CheeseI18n.t('shell.summary.none');
         }
 
         $('#general-info').text(text);
@@ -1279,11 +1288,11 @@
                 $('#sharing-user-name').text(displayName);
                 $('#sharing-user-known').removeClass('d-none');
                 $('#sharing-user-unknown').addClass('d-none');
-                document.title = displayName + ' - CheeseFork - Your Cheesy Scheduler';
+                setPageTitle(displayName + ' - ' + CheeseI18n.t('shell.meta.title'));
             } else {
                 $('#sharing-user-unknown').removeClass('d-none');
                 $('#sharing-user-known').addClass('d-none');
-                document.title = 'CheeseFork - Your Cheesy Scheduler';
+                setPageTitle(CheeseI18n.t('shell.meta.title'));
             }
 
             if (!firstDataLoaded) {
@@ -1291,7 +1300,7 @@
                 firstDataLoaded = true;
             }
         }, function (error) {
-            alert('Error loading data from server: ' + error);
+            alert(CheeseI18n.t('shell.error.loadData', {error: error}));
         });
     }
 
@@ -1336,7 +1345,7 @@
                     onSavedSessionChange();
                 }
             }, function (error) {
-                alert('Error loading data from server: ' + error);
+                alert(CheeseI18n.t('shell.error.loadData', {error: error}));
             });
         } else {
             var onStorageEvent = function (e) {
@@ -1754,14 +1763,14 @@
         var oldText = '';
         Object.keys(oldGeneral).sort(compareFunction).forEach(function (key) {
             if (!keyExclude[key] && oldGeneral[key] !== newGeneral[key] && oldGeneral[key]) {
-                oldText += key + ': ' + oldGeneral[key] + '\n';
+                oldText += courseManager.getFieldLabel(key) + ': ' + metadataDisplayValue(key, oldGeneral[key]) + '\n';
             }
         });
 
         var newText = '';
         Object.keys(newGeneral).sort(compareFunction).forEach(function (key) {
             if (!keyExclude[key] && newGeneral[key] !== oldGeneral[key] && newGeneral[key]) {
-                newText += key + ': ' + newGeneral[key] + '\n';
+                newText += courseManager.getFieldLabel(key) + ': ' + metadataDisplayValue(key, newGeneral[key]) + '\n';
             }
         });
 
@@ -1770,7 +1779,7 @@
         }
 
         return [{
-            title: 'מידע כללי',
+            title: CheeseI18n.t('shell.changes.general'),
             old: oldText.trim(),
             new: newText.trim()
         }];
@@ -1780,22 +1789,24 @@
         var diff = [];
         var scheduleGroups = {};
 
-        var oldScheduleByGroups = scheduleToGroupOfTexts(oldSchedule);
-        var newScheduleByGroups = scheduleToGroupOfTexts(newSchedule);
+        var oldScheduleByGroups = scheduleToGroupOfTexts(oldSchedule, false);
+        var newScheduleByGroups = scheduleToGroupOfTexts(newSchedule, false);
+        var oldDisplayByGroups = scheduleToGroupOfTexts(oldSchedule, true);
+        var newDisplayByGroups = scheduleToGroupOfTexts(newSchedule, true);
 
         Object.keys(scheduleGroups).sort().forEach(function (typeAndNumber) {
             if (oldScheduleByGroups[typeAndNumber] !== newScheduleByGroups[typeAndNumber]) {
                 diff.push({
-                    title: typeAndNumber,
-                    old: (oldScheduleByGroups[typeAndNumber] || '').trim(),
-                    new: (newScheduleByGroups[typeAndNumber] || '').trim()
+                    title: scheduleGroups[typeAndNumber],
+                    old: (oldDisplayByGroups[typeAndNumber] || '').trim(),
+                    new: (newDisplayByGroups[typeAndNumber] || '').trim()
                 });
             }
         });
 
         return diff;
 
-        function scheduleToGroupOfTexts(schedule) {
+        function scheduleToGroupOfTexts(schedule, localized) {
             var keyOrder = [
                 'מרצה/מתרגל',
                 'יום',
@@ -1827,11 +1838,16 @@
                         key !== 'מס.' &&
                         key !== 'סוג' &&
                         lesson[key]) {
-                        lessonText += key + ': ' + lesson[key] + '\n';
+                        var label = localized ? courseManager.getFieldLabel(key) : key;
+                        var value = localized ? metadataDisplayValue(key, lesson[key]) : lesson[key];
+                        lessonText += label + ': ' + value + '\n';
                     }
                 });
 
-                var typeAndNumber = courseManager.getLessonTypeAndNumber(lesson);
+                var typeAndNumber = courseManager.getLessonType(lesson);
+                if (lesson['סוג'] !== 'sadna') {
+                    typeAndNumber += ' ' + lesson['מס.'];
+                }
                 if (!scheduleByGroups[typeAndNumber]) {
                     scheduleByGroups[typeAndNumber] = '';
                 }
@@ -1839,7 +1855,7 @@
                 scheduleByGroups[typeAndNumber] += lessonText + '\n';
 
                 lessonsAdded[lesson['מס.']] = lesson['קבוצה'];
-                scheduleGroups[typeAndNumber] = true;
+                scheduleGroups[typeAndNumber] = courseManager.getLessonTypeAndNumber(lesson);
             });
 
             return scheduleByGroups;
@@ -1858,7 +1874,7 @@
                 if (courseDiff.exists) {
                     general = courseManager.getGeneralInfo(course);
                     courseTitle = general['מספר מקצוע'] + ' - ' + general['שם מקצוע'];
-                    result.append($('<h3>').text(courseTitle));
+                    result.append(sourceText(courseTitle, '<h3>'));
 
                     courseDiff.changes.forEach(function (diff) {
                         result.append($('<h5>').text(diff.title));
@@ -1878,14 +1894,13 @@
                 } else {
                     general = courseDiff.general;
                     courseTitle = general['מספר מקצוע'] + ' - ' + general['שם מקצוע'];
-                    result.append($('<h3>').text(courseTitle)).append($('<span>').text('הקורס לא קיים יותר'));
+                    result.append(sourceText(courseTitle, '<h3>')).append($('<span>').text(CheeseI18n.t('shell.changes.removed')));
                 }
             });
         } else {
             result = $('<div>');
 
-            var explanation = 'מעכשיו תוכלו להתעדכן בכל השינויים שקורים בקורסים שלכם דרך CheeseFork! ' +
-                'לחצו על הכפתור <b>אשר שינויים</b>, ובכל פעם שיהיו שינויים באחד הקורסים שאתם רשומים אליו, אתם תראו אותם פה בחלון השינויים.';
+            var explanation = escapeHtml(CheeseI18n.t('shell.changes.explanation'));
 
             result.html(explanation);
         }
@@ -2046,7 +2061,7 @@
             } else {
                 crawlersMakeListHeader(content, 'course');
                 crawlersMakeCourseListContent(content);
-                title = 'קורסים - ' + title;
+                title = CheeseI18n.t('shell.crawler.courses') + ' - ' + title;
             }
         } else if (staffParameter !== null) {
             if (crawlersMakeStaffContent(content, staffParameter)) {
@@ -2054,7 +2069,7 @@
             } else {
                 crawlersMakeListHeader(content, 'staff');
                 crawlersMakeStaffListContent(content);
-                title = 'סגל - ' + title;
+                title = CheeseI18n.t('shell.crawler.staff') + ' - ' + title;
             }
         } else { // if (roomParameter !== null)
             if (crawlersMakeRoomContent(content, roomParameter)) {
@@ -2062,11 +2077,11 @@
             } else {
                 crawlersMakeListHeader(content, 'room');
                 crawlersMakeRoomListContent(content);
-                title = 'חדרים - ' + title;
+                title = CheeseI18n.t('shell.crawler.rooms') + ' - ' + title;
             }
         }
 
-        document.title = title;
+        setPageTitle(title);
 
         $('#content-container').html(content);
 
@@ -2095,7 +2110,10 @@
             if (semester === currentSemester) {
                 content.append($('<span>').text(text));
             } else {
-                var url = '?semester=' + encodeURIComponent(semester) + '&course=all';
+                var targetList = {};
+                targetList[currentList] = 'all';
+                targetList.semester = semester;
+                var url = crawlerUrl(targetList);
                 content.append($('<a>').text(text).prop('href', url));
             }
             content.append('<br>');
@@ -2104,9 +2122,9 @@
         content.append('<br>');
 
         var listToText = {
-            'course': 'קורסים',
-            'staff': 'סגל',
-            'room': 'חדרים'
+            'course': CheeseI18n.t('shell.crawler.courses'),
+            'staff': CheeseI18n.t('shell.crawler.staff'),
+            'room': CheeseI18n.t('shell.crawler.rooms')
         };
 
         ['course', 'staff', 'room'].forEach(function (list) {
@@ -2114,7 +2132,9 @@
             if (list === currentList) {
                 content.append($('<span>').text(text));
             } else {
-                var url = '?semester=' + encodeURIComponent(currentSemester) + '&' + encodeURIComponent(list) + '=all';
+                var targetList = {};
+                targetList[list] = 'all';
+                var url = crawlerUrl(targetList);
                 content.append($('<a>').text(text).prop('href', url));
             }
             content.append('<br>');
@@ -2124,8 +2144,8 @@
     }
 
     function crawlersMakeCourseContent(content, course) {
-        var url = '?semester=' + encodeURIComponent(currentSemester) + '&course=all';
-        content.append($('<a>').text('לרשימת הקורסים').prop('href', url));
+        var url = crawlerUrl({course: 'all'});
+        content.append($('<a>').text(CheeseI18n.t('shell.crawler.courseList')).prop('href', url));
         content.append('<br><br>');
 
         var description = courseManager.getDescription(course, {html: true, relatedCourseInfo: true, links: true});
@@ -2143,39 +2163,39 @@
             content.append($('<div style="font-weight: bold;"></div>').text(typeAndNumber));
 
             if (lesson['מרצה/מתרגל']) {
-                var staffContents = $('<div>').text('מרצה/מתרגל' + ': ');
+                var staffContents = $('<div>').text(courseManager.getFieldLabel('מרצה/מתרגל') + ': ');
                 lesson['מרצה/מתרגל'].split('\n').forEach(function (name, i) {
                     if (i > 0) {
                         staffContents.append(', ');
                     }
-                    var staffUrl = '?semester=' + encodeURIComponent(currentSemester) + '&staff=' + encodeURIComponent(name);
-                    var staffLink = $('<a>').text(name).prop('href', staffUrl);
+                    var staffUrl = crawlerUrl({staff: name});
+                    var staffLink = sourceText(name, '<a>').prop('href', staffUrl);
                     staffContents.append(staffLink);
                 });
                 content.append(staffContents);
             }
 
             if (lesson['יום']) {
-                content.append($('<div>').text('יום' + ': ' + lesson['יום']));
+                content.append($('<div>').text(courseManager.getFieldLabel('יום') + ': ' + courseManager.getDayLabel(lesson['יום'])));
             }
 
             if (lesson['שעה']) {
-                content.append($('<div>').text('שעה' + ': ' + lesson['שעה']));
+                content.append($('<div>').text(courseManager.getFieldLabel('שעה') + ': ' + lesson['שעה']));
             }
 
             var roomUrl;
             var roomLink;
             if (lesson['בניין'] && lesson['חדר']) {
-                content.append($('<div>').text('בניין' + ': ' + lesson['בניין']));
-                roomUrl = '?semester=' + encodeURIComponent(currentSemester) + '&room=' + encodeURIComponent(lesson['בניין'] + ' ' + lesson['חדר']);
-                roomLink = $('<a>').text(lesson['חדר']).prop('href', roomUrl);
-                content.append($('<div>').text('חדר' + ': ').append(roomLink));
+                content.append($('<div>').text(courseManager.getFieldLabel('בניין') + ': ').append(sourceText(lesson['בניין'])));
+                roomUrl = crawlerUrl({room: lesson['בניין'] + ' ' + lesson['חדר']});
+                roomLink = sourceText(lesson['חדר'], '<a>').prop('href', roomUrl);
+                content.append($('<div>').text(courseManager.getFieldLabel('חדר') + ': ').append(roomLink));
             } else if (lesson['בניין']) {
-                roomUrl = '?semester=' + encodeURIComponent(currentSemester) + '&room=' + encodeURIComponent(lesson['בניין']);
-                roomLink = $('<a>').text(lesson['בניין']).prop('href', roomUrl);
-                content.append($('<div>').text('בניין' + ': ').append(roomLink));
+                roomUrl = crawlerUrl({room: lesson['בניין']});
+                roomLink = sourceText(lesson['בניין'], '<a>').prop('href', roomUrl);
+                content.append($('<div>').text(courseManager.getFieldLabel('בניין') + ': ').append(roomLink));
             } else if (lesson['חדר']) {
-                content.append($('<div>').text('חדר' + ': ' + lesson['חדר']));
+                content.append($('<div>').text(courseManager.getFieldLabel('חדר') + ': ').append(sourceText(lesson['חדר'])));
             }
 
             lessonsAdded[lesson['מס.']] = lesson['קבוצה'];
@@ -2185,8 +2205,8 @@
     function crawlersMakeCourseListContent(content) {
         courseManager.getAllCourses().sort().forEach(function (cbCourse) {
             var title = courseManager.getTitle(cbCourse);
-            var url = '?semester=' + encodeURIComponent(currentSemester) + '&course=' + encodeURIComponent(cbCourse);
-            content.append($('<a>').text(title).prop('href', url));
+            var url = crawlerUrl({course: cbCourse});
+            content.append(sourceText(title, '<a>').prop('href', url));
             content.append('<br>');
         });
     }
@@ -2210,7 +2230,7 @@
                         }
                     }
 
-                    schedule.push({course: course, time: time});
+                    schedule.push({course: course, time: time, displayTime: lessonDisplayTime(lesson)});
                 }
 
                 lessonsAdded[lesson['מס.']] = lesson['קבוצה'];
@@ -2221,11 +2241,11 @@
             return false;
         }
 
-        var url = '?semester=' + encodeURIComponent(currentSemester) + '&staff=all';
-        content.append($('<a>').text('לרשימת הסגל').prop('href', url));
+        var url = crawlerUrl({staff: 'all'});
+        content.append($('<a>').text(CheeseI18n.t('shell.crawler.staffList')).prop('href', url));
         content.append('<br><br>');
 
-        content.append($('<b>').text(staff));
+        content.append(sourceText(staff, '<b>'));
         content.append('<br>');
 
         schedule.sort(function (a, b) {
@@ -2256,12 +2276,12 @@
             }
         }).forEach(function (item) {
             if (item.time) {
-                content.append($('<span>').text(item.time + ' - '));
+                content.append($('<span>').text(item.displayTime + ' - '));
             }
 
-            var url = '?semester=' + encodeURIComponent(currentSemester) + '&course=' + encodeURIComponent(item.course);
+            var url = crawlerUrl({course: item.course});
             var courseTitle = courseManager.getTitle(item.course);
-            content.append($('<a>').text(courseTitle).prop('href', url));
+            content.append(sourceText(courseTitle, '<a>').prop('href', url));
             content.append('<br>');
         });
 
@@ -2281,8 +2301,8 @@
         });
 
         Object.keys(staff).sort().forEach(function (name) {
-            var url = '?semester=' + encodeURIComponent(currentSemester) + '&staff=' + encodeURIComponent(name);
-            content.append($('<a>').text(name).prop('href', url));
+            var url = crawlerUrl({staff: name});
+            content.append(sourceText(name, '<a>').prop('href', url));
             content.append('<br>');
         });
     }
@@ -2315,7 +2335,7 @@
                         }
                     }
 
-                    schedule.push({course: course, time: time});
+                    schedule.push({course: course, time: time, displayTime: lessonDisplayTime(lesson)});
                 }
 
                 lessonsAdded[lesson['מס.']] = lesson['קבוצה'];
@@ -2326,11 +2346,11 @@
             return false;
         }
 
-        var url = '?semester=' + encodeURIComponent(currentSemester) + '&room=all';
-        content.append($('<a>').text('לרשימת החדרים').prop('href', url));
+        var url = crawlerUrl({room: 'all'});
+        content.append($('<a>').text(CheeseI18n.t('shell.crawler.roomList')).prop('href', url));
         content.append('<br><br>');
 
-        content.append($('<b>').text(room));
+        content.append(sourceText(room, '<b>'));
         content.append('<br>');
 
         schedule.sort(function (a, b) {
@@ -2361,12 +2381,12 @@
             }
         }).forEach(function (item) {
             if (item.time) {
-                content.append($('<span>').text(item.time + ' - '));
+                content.append($('<span>').text(item.displayTime + ' - '));
             }
 
-            var url = '?semester=' + encodeURIComponent(currentSemester) + '&course=' + encodeURIComponent(item.course);
+            var url = crawlerUrl({course: item.course});
             var courseTitle = courseManager.getTitle(item.course);
-            content.append($('<a>').text(courseTitle).prop('href', url));
+            content.append(sourceText(courseTitle, '<a>').prop('href', url));
             content.append('<br>');
         });
 
@@ -2388,10 +2408,75 @@
         });
 
         Object.keys(rooms).sort().forEach(function (room) {
-            var url = '?semester=' + encodeURIComponent(currentSemester) + '&room=' + encodeURIComponent(room);
-            content.append($('<a>').text(room).prop('href', url));
+            var url = crawlerUrl({room: room});
+            content.append(sourceText(room, '<a>').prop('href', url));
             content.append('<br>');
         });
+    }
+
+    function setPageTitle(title) {
+        $('title').removeAttr('data-i18n');
+        document.title = title;
+    }
+
+    function escapeHtml(text) {
+        return $('<div>').text(text).html().replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function sourceText(text, element) {
+        return $(element || '<span>').addClass('source-content').attr({
+            lang: /[\u0590-\u05ff]/.test(text) ? 'he' : 'en',
+            dir: 'auto'
+        }).text(text);
+    }
+
+    function metadataDisplayValue(key, value) {
+        if (key === 'יום') {
+            return courseManager.getDayLabel(value);
+        }
+        if (key === 'פקולטה') {
+            return courseManager.getFacultyLabel(value);
+        }
+        if (key === 'מסגרת לימודים') {
+            return value.split('\n').map(function (framework) {
+                return courseManager.getFrameworkLabel(framework);
+            }).join('\n');
+        }
+        return value;
+    }
+
+    function lessonDisplayTime(lesson) {
+        if (!lesson['יום']) {
+            return null;
+        }
+        var day = CheeseI18n.t('shell.crawler.day', {day: courseManager.getDayLabel(lesson['יום'])});
+        return day + (lesson['שעה'] ? ' ' + lesson['שעה'] : '');
+    }
+
+    function shellUrl(updates) {
+        var anchor = document.createElement('a');
+        anchor.href = window.location.href;
+        var parameters = anchor.search ? anchor.search.slice(1).split('&') : [];
+        Object.keys(updates).forEach(function (name) {
+            parameters = parameters.filter(function (parameter) {
+                var parameterName = parameter.split('=')[0].replace(/\+/g, ' ');
+                try {
+                    parameterName = decodeURIComponent(parameterName);
+                } catch (error) {
+                    return true;
+                }
+                return parameterName !== name;
+            });
+            if (updates[name] !== null) {
+                parameters.push(encodeURIComponent(name) + '=' + encodeURIComponent(updates[name]));
+            }
+        });
+        anchor.search = parameters.length ? '?' + parameters.join('&') : '';
+        return CheeseI18n.withLocale(anchor.href);
+    }
+
+    function crawlerUrl(updates) {
+        return shellUrl($.extend({semester: currentSemester, course: null, staff: null, room: null}, updates));
     }
 
     // https://stackoverflow.com/a/901144
@@ -2418,12 +2503,13 @@
 function showBootstrapDialogWithModelessButton(dialogName, options) {
     var newOptions = $.extend({}, options, {
         onshow: function (dialog) {
-            var restoreButton = $('<div class="bootstrap-dialog-close-button" style="margin-right: auto;">' +
+            var restoreButton = $('<div class="bootstrap-dialog-close-button">' +
                 '<button class="close d-none d-sm-inline-block">' +
                 '<i class="far fa-window-restore" style="font-size: 18px;"></i>' +
                 '</button>' +
-                '</div>');
+                '</div>').css(CheeseI18n.isRTL() ? 'margin-right' : 'margin-left', 'auto');
 
+            restoreButton.find('button').attr('aria-label', CheeseI18n.t('shell.dialog.modeless'));
             dialog.getModalHeader().find('.bootstrap-dialog-close-button').before(restoreButton);
 
             restoreButton.click(function () {

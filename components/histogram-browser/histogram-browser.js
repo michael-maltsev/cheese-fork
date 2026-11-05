@@ -1,6 +1,6 @@
 'use strict';
 
-/* global BootstrapDialog, gtag */
+/* global BootstrapDialog, CheeseI18n, gtag */
 
 // eslint-disable-next-line no-unused-vars
 var HistogramBrowser = (function () {
@@ -8,6 +8,23 @@ var HistogramBrowser = (function () {
         this.element = element;
         this.selectColumnGrid = options.selectColumnGrid;
         this.shareGuideInNewWindow = options.shareGuideInNewWindow;
+    }
+
+    function t(key, params) {
+        return CheeseI18n.t(key, params);
+    }
+
+    function escapeHtml(value) {
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function h(key, params) {
+        return escapeHtml(t(key, params));
     }
 
     function roundGrade(strGrade) {
@@ -18,7 +35,7 @@ var HistogramBrowser = (function () {
         var element = histogramBrowser.element;
         var semesters = Object.keys(data);
         if (semesters.length > 0) {
-            var semesterSelect = $('<select class="form-control"></select>');
+            var semesterSelect = $('<select class="form-control"></select>').attr('aria-label', t('histogram.semester'));
 
             semesters.sort(function (a, b) {
                 return b.localeCompare(a, undefined, {numeric: true});
@@ -28,22 +45,17 @@ var HistogramBrowser = (function () {
 
                 var termA = data[semester].Final_A || data[semester].Exam_A;
                 if (termA) {
-                    props.push('א\' ' + roundGrade(termA.average));
+                    props.push(t('histogram.summary.a', {grade: roundGrade(termA.average)}));
                 }
 
                 var termB = data[semester].Final_B || data[semester].Exam_B;
                 if (termB) {
-                    props.push('ב\' ' + roundGrade(termB.average));
+                    props.push(t('histogram.summary.b', {grade: roundGrade(termB.average)}));
                 }
-
-                // var termC = data[semester].Final_C || data[semester].Exam_C;
-                // if (termC) {
-                //     props.push('ג\' ' + roundGrade(termC.average));
-                // }
 
                 var final = data[semester].Finals;
                 if (final) {
-                    props.push('סופי ' + roundGrade(final.average));
+                    props.push(t('histogram.summary.final', {grade: roundGrade(final.average)}));
                 }
 
                 var staff = data[semester].Staff;
@@ -61,7 +73,7 @@ var HistogramBrowser = (function () {
                 }
 
                 if (props.length > 0) {
-                    text += '\xA0'.repeat(16 - text.length);
+                    text += '\xA0'.repeat(Math.max(2, 16 - text.length));
                     text += props.join('\xA0\xA0');
                 }
 
@@ -77,16 +89,16 @@ var HistogramBrowser = (function () {
             var html = '<div class="histogram-container' + (activated ? ' histogram-activated' : '') + '">' +
                     '<div class="histogram-overlay-message">' +
                         '<div class="alert alert-primary" role="alert">' +
-                            'עליכם לשתף את ההיסטגרמות שלכם לפני שתוכלו להציג היסטוגרמות שסטודנטים אחרים שיתפו. השיתוף אוטומטי ולוקח מספר דקות.' +
+                            h('histogram.shareRequired') +
                         '</div>' +
                         '<div class="histogram-overlay-message-button-container">' +
-                            '<button type="button" class="btn btn-primary histogram-button-share">שיתוף היסטוגרמות</button>' +
+                            '<button type="button" class="btn btn-primary histogram-button-share">' + h('histogram.share') + '</button>' +
                         '</div>' +
                         '<div class="histogram-overlay-message-button-container">' +
-                            '<button type="button" class="btn histogram-button-activate">כבר שיתפתי</button>' +
+                            '<button type="button" class="btn histogram-button-activate">' + h('histogram.alreadyShared') + '</button>' +
                         '</div>' +
                         '<div class="histogram-overlay-message-button-container">' +
-                            '<button type="button" class="btn histogram-button-snooze">שיתוף בפעם אחרת</button>' +
+                            '<button type="button" class="btn histogram-button-snooze">' + h('histogram.shareLater') + '</button>' +
                         '</div>' +
                     '</div>' +
                     '<div class="histogram-content">' +
@@ -98,14 +110,14 @@ var HistogramBrowser = (function () {
                             '<table class="table table-bordered table-sm">' +
                                 '<thead class="thead-light">' +
                                     '<tr>' +
-                                        '<th scope="col">סטודנטים</th>' +
-                                        '<th scope="col">עברו</th>' +
-                                        '<th scope="col">נכשלו</th>' +
-                                        '<th scope="col">אחוז עוברים</th>' +
-                                        '<th scope="col">ציון מינימלי</th>' +
-                                        '<th scope="col">ציון מקסימלי</th>' +
-                                        '<th scope="col">ממוצע</th>' +
-                                        '<th scope="col">חציון</th>' +
+                                        '<th scope="col">' + h('histogram.students') + '</th>' +
+                                        '<th scope="col">' + h('histogram.passed') + '</th>' +
+                                        '<th scope="col">' + h('histogram.failed') + '</th>' +
+                                        '<th scope="col">' + h('histogram.passPercent') + '</th>' +
+                                        '<th scope="col">' + h('histogram.minimum') + '</th>' +
+                                        '<th scope="col">' + h('histogram.maximum') + '</th>' +
+                                        '<th scope="col">' + h('histogram.average') + '</th>' +
+                                        '<th scope="col">' + h('histogram.median') + '</th>' +
                                     '</tr>' +
                                 '</thead>' +
                                 '<tbody>' +
@@ -123,13 +135,14 @@ var HistogramBrowser = (function () {
                             '</table>' +
                         '</div>' +
                         '<div class="histogram-image-container-outer"><div class="histogram-image-container"></div></div>' +
+                        '<p class="histogram-image-note small text-muted"></p>' +
                         '<div class="histogram-staff-table row mt-3 d-none">' +
                             '<div class="col-' + selectColumnGrid + '-6">' +
                                 '<table class="table table-bordered table-sm">' +
                                     '<thead class="thead-light">' +
                                         '<tr>' +
-                                            '<th scope="col">איש סגל</th>' +
-                                            '<th scope="col">תפקיד</th>' +
+                                            '<th scope="col">' + h('histogram.staffMember') + '</th>' +
+                                            '<th scope="col">' + h('histogram.staffRole') + '</th>' +
                                         '</tr>' +
                                     '</thead>' +
                                     '<tbody>' +
@@ -138,7 +151,7 @@ var HistogramBrowser = (function () {
                             '</div>' +
                         '</div>' +
                         '<div>' +
-                            '<a href="share-histograms.html" target="_blank" class="small">שיתוף היסטוגרמות</a>' +
+                            '<a href="' + escapeHtml(CheeseI18n.withLocale('share-histograms.html')) + '" target="_blank" class="small">' + h('histogram.share') + '</a>' +
                         '</div>' +
                     '</div>' +
                 '</div>';
@@ -159,9 +172,9 @@ var HistogramBrowser = (function () {
                 onSemesterSelect(histogramBrowser, course, this.value, data[this.value]);
             }).trigger('change');
         } else {
-            var noDataHtml = '<div>לא קיימות היסטוגרמות לקורס זה.</div>' +
+            var noDataHtml = '<div>' + h('histogram.empty') + '</div>' +
                 '<div>' +
-                    '<a href="share-histograms.html" target="_blank" class="small">שיתוף היסטוגרמות</a>' +
+                    '<a href="' + escapeHtml(CheeseI18n.withLocale('share-histograms.html')) + '" target="_blank" class="small">' + h('histogram.share') + '</a>' +
                 '</div>';
             element.html(noDataHtml);
         }
@@ -174,20 +187,85 @@ var HistogramBrowser = (function () {
         return win.open(url, title, 'toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width=' + w + ', height=' + h + ', top=' + y + ', left=' + x);
     }
 
+    function createShareGuide() {
+        var guide = $('<div class="histogram-modal-guide-content">' +
+            '<div class="form-group language-selector d-inline-flex">' +
+                '<i class="fas fa-globe" aria-hidden="true"></i>' +
+                '<label for="histogram-guide-language" class="sr-only">' + h('sharing.language') + '</label>' +
+                '<select id="histogram-guide-language" class="language-switch" data-language-switch aria-label="' + h('sharing.language') + '">' +
+                    '<option value="en" lang="en">English</option><option value="he" lang="he">עברית</option>' +
+                '</select>' +
+            '</div>' +
+            '<p>' + h('sharing.guide.intro') + '</p>' +
+            '<p>' + h('sharing.guide.scriptIntro') + ' <a href="' + escapeHtml(CheeseI18n.withLocale('share-histograms.js')) + '" target="_blank" rel="noopener">' + h('sharing.here') + '</a>.</p>' +
+            '<p>' + h('sharing.guide.repositoryIntro') + ' <a href="https://github.com/michael-maltsev/technion-histograms" target="_blank" rel="noopener">' + h('sharing.here') + '</a>.</p>' +
+            '<p>' + h('sharing.guide.privacy') + '</p>' +
+            '<p>' + h('sharing.guide.mobile') + '</p>' +
+            '<h3>' + h('sharing.guide.extensionTitle') + ' <a href="https://chromewebstore.google.com/detail/technion-plus-plus/pfhjnidbfndnjhpcpfecngcigdjebemk" target="_blank" rel="noopener">Technion Plus Plus</a></h3>' +
+            '<ol>' +
+                '<li class="mb-0">' + h('sharing.guide.open') + ' <a href="https://grades.technion.ac.il/" target="_blank" rel="noopener">' + h('sharing.guide.gradesSite') + '</a> ' + h('sharing.guide.signIn') + '</li>' +
+                '<li class="mb-0">' + h('sharing.guide.click') + ' <a href="assets/share-histograms-guide-technionplus-1.png" target="_blank" rel="noopener">' + h('sharing.guide.extensionButton') + '</a>.</li>' +
+                '<li>' + h('sharing.guide.skipToFour') + '</li>' +
+            '</ol>' +
+            '<h3>' + h('sharing.guide.manualTitle') + '</h3>' +
+            '<ol>' +
+                '<li>' + h('sharing.guide.copyCode') +
+                    '<div class="form-row mt-2"><div class="form-group mb-0 col-md-12">' +
+                        '<textarea dir="ltr" class="form-control" id="javascript-code-container" aria-label="' + h('sharing.guide.codeLabel') + '" rows="4" onfocus="this.select();" onmouseup="return false;" readonly></textarea>' +
+                        '<button type="button" class="btn btn-primary mt-2" id="javascript-code-copy-button">' + h('sharing.guide.copy') + '</button>' +
+                    '</div></div>' +
+                '</li>' +
+                '<li>' + h('sharing.guide.visitGrades') +
+                    '<div class="form-group"><a class="btn btn-primary mt-2" href="https://grades.technion.ac.il/" role="button" target="_blank" rel="noopener">' + h('sharing.guide.openGrades') + '</a></div>' +
+                '</li>' +
+                '<li>' +
+                    '<p><strong>' + h('sharing.guide.chrome') + '</strong> ' + h('sharing.guide.chromeInstructions') + '<br>' +
+                        '<img class="border border-primary mt-2 img-fluid d-none d-sm-block" src="assets/share-histograms-guide-1.png" alt="' + h('sharing.guide.pasteImageAlt') + '">' +
+                        '<img class="border border-primary mt-2 img-fluid d-block d-sm-none" src="assets/share-histograms-guide-mobile-1.png" alt="' + h('sharing.guide.pasteImageAlt') + '">' +
+                    '</p>' +
+                    '<p><strong>' + h('sharing.guide.otherBrowsers') + '</strong> ' + h('sharing.guide.otherBrowserInstructions') + '</p>' +
+                '</li>' +
+                '<li><p>' + h('sharing.guide.waitForData') + '<br>' +
+                    '<strong>' + h('sharing.guide.important') + '</strong> ' + h('sharing.guide.avoidBrowsing') + '<br>' +
+                    '<img class="border border-primary mt-2 img-fluid d-none d-sm-block" src="assets/share-histograms-guide-2.png" alt="' + h('sharing.guide.shareImageAlt') + '">' +
+                    '<img class="border border-primary mt-2 img-fluid d-block d-sm-none" src="assets/share-histograms-guide-mobile-2.png" alt="' + h('sharing.guide.shareImageAlt') + '">' +
+                '</p></li>' +
+                '<li>' + h('sharing.guide.waitForCompletion') + '</li>' +
+            '</ol>' +
+        '</div>');
+        var scriptLink = document.createElement('a');
+        scriptLink.href = CheeseI18n.withLocale('share-histograms.js');
+        var code = 'avascript:var url=' + JSON.stringify(scriptLink.href) + ';var script=document.createElement(\'script\');script.src=url;document.head.appendChild(script);';
+        guide.find('#javascript-code-container').val(code);
+        guide.find('#javascript-code-copy-button').click(function () {
+            var button = $(this);
+            copyToClipboard(code, function () {
+                var text = button.text();
+                button.text(text + ' ✓').prop('disabled', true);
+                setTimeout(function () {
+                    button.text(text).prop('disabled', false);
+                }, 500);
+            }, function () {
+                alert(t('sharing.copyFailed'));
+            });
+        });
+        CheeseI18n.apply(guide[0]);
+        return guide;
+    }
+
     function onButtonShare(histogramBrowser) {
         gtag('event', 'histogram-button-share');
 
         if (histogramBrowser.shareGuideInNewWindow) {
-            popupWindow('share-histograms.html', 'share-histograms.html', window, 800, 600);
+            popupWindow(CheeseI18n.withLocale('share-histograms.html'), 'share-histograms.html', window, 800, 600);
             return;
         }
 
         BootstrapDialog.show({
-            title: 'שיתוף היסטוגרמות',
-            // Message based on share-histograms.html.
-            message: '<div class="histogram-modal-guide-content"> <p>עקבו אחרי השלבים הבאים בשביל לשתף את ההיסטוגרמות הנגישות לכם באתר הציונים של הטכניון.</p> <p>ביצוע השלבים יגרום לקוד של שיתוף ההיסטוגרמות לרוץ בסביבת אתר הציונים של הטכניון. את הקוד ניתן לראות <a href="share-histograms.js" target="_blank"> כאן</a>.</p> <p>המידע יישלח למאגר שמאוחסן ב-GitHub <a href="https://github.com/michael-maltsev/technion-histograms" target="_blank" rel="noopener">כאן</a>.</p> <p>ישותף מידע כללי בלבד, כגון מספר הסטודנטים וממוצעי המבחנים. המידע ישותף רק לאחר לחיצה על כפתור השיתוף. לא ישותף מידע אישי.</p> <p>את השיתוף ניתן לבצע גם מהפלאפון, לפחות דרך Chrome, וייתכן גם דרך דפדפנים אחרים שלא בדקנו.</p> <h3>שלבי השיתוף עם התוסף <a href="https://chromewebstore.google.com/detail/technion-plus-plus/pfhjnidbfndnjhpcpfecngcigdjebemk" target="_blank" rel="noopener">Technion Plus Plus</a></h3> <ol> <li class="mb-0"> היכנסו <a href="https://grades.technion.ac.il/" target="_blank" rel="noopener">לאתר הציונים של הטכניון</a> והתחברו במידת הצורך. </li> <li class="mb-0"> לחצו על <a href="assets/share-histograms-guide-technionplus-1.png" target="_blank">כפתור שיתוף ההיסטוגרמות</a>. </li> <li> דלגו לשלב 4 בהמשך עמוד זה. </li> </ol> <h3>שלבי השיתוף ללא התוסף</h3> <ol> <li> העתיקו את הקוד הבא: <div class="form-row mt-2"> <div class="form-group mb-0 col-md-12"> <textarea dir="ltr" class="form-control" id="javascript-code-container" rows="4" onfocus="this.select();" onmouseup="return false;" readonly>avascript:var url=\'https://cheesefork.cf/share-histograms.js\';var script=document.createElement(\'script\');script.src=url;document.head.appendChild(script);</textarea> <button type="button" class="btn btn-primary mt-2" id="javascript-code-copy-button">העתקת הקוד</button> </div> </div> </li> <li> היכנסו לאתר הציונים של הטכניון והתחברו במידת הצורך. <div class="form-group"> <a class="btn btn-primary mt-2" href="https://grades.technion.ac.il/" role="button" target="_blank" rel="noopener">כניסה לאתר הציונים</a> </div> </li> <li> <p> <strong>עבור Chrome:</strong> הכניסו בשורת הכתובת את האות j, ולאחריה הדביקו את הקוד שהעתקתם בשלב 1. לבסוף לחצו Enter.<br> <img class="border border-primary mt-2 img-fluid d-none d-sm-block" src="assets/share-histograms-guide-1.png" alt="הדביקו את הקוד כך"> <img class="border border-primary mt-2 img-fluid d-block d-sm-none" src="assets/share-histograms-guide-mobile-1.png" alt="הדביקו את הקוד כך"> </p> <p> <strong>עבור דפדפנים אחרים:</strong> תנסו לבצע את הנ"ל. אם זה לא עובד (למשל האפשרות חסומה בגרסאות חדשות של Firefox) תפתחו את ה-Developer Tools בדפדפן שלכם, עברו ללשונית Console, הכניסו בשורת הקוד את האות j, ולאחריה הדביקו את הקוד שהעתקתם בשלב 1. לבסוף לחצו Enter. </p> </li> <li> <p> המתינו לטעינת המידע, ולחצו על כפתור השיתוף הירוק לשיתוף ההיסטוגרמות.<br> <strong>חשוב:</strong> אל תגלשו באתר הציונים בזמן הטעינה, גם לא בחלון אחר של הדפדפן.<br> <img class="border border-primary mt-2 img-fluid d-none d-sm-block" src="assets/share-histograms-guide-2.png" alt="לחצו לשיתוף ההיסטוגרמות כך"> <img class="border border-primary mt-2 img-fluid d-block d-sm-none" src="assets/share-histograms-guide-mobile-2.png" alt="לחצו לשיתוף ההיסטוגרמות כך"> </p> </li> <li> המתינו להשלמת השיתוף. גם בזמן השיתוף, אל תגלשו באתר הציונים, גם לא בחלון אחר של הדפדפן. </li> </ol> </div>',
+            title: t('histogram.share'),
+            message: createShareGuide(),
             buttons: [{
-                label: 'שיתפתי',
+                label: t('histogram.shared'),
                 cssClass: 'btn-primary',
                 action: function (dialog) {
                     gtag('event', 'histogram-share-submit');
@@ -199,26 +277,11 @@ var HistogramBrowser = (function () {
                     dialog.close();
                 }
             }, {
-                label: 'סגור',
+                label: t('histogram.close'),
                 action: function (dialog) {
                     dialog.close();
                 }
-            }],
-            onshow: function (dialog) {
-                dialog.getModalBody().find('#javascript-code-copy-button').click(function () {
-                    var button = $(this);
-                    var code = dialog.getModalBody().find('#javascript-code-container').val();
-                    copyToClipboard(code, function () {
-                        var text = button.text();
-                        button.text(text + ' ✓').prop('disabled', true);
-                        setTimeout(function () {
-                            button.text(text).prop('disabled', false);
-                        }, 500);
-                    }, function () {
-                        alert('ההעתקה נכשלה');
-                    });
-                });
-            }
+            }]
         });
     }
 
@@ -272,7 +335,7 @@ var HistogramBrowser = (function () {
             'Final_C',
             'Finals'
         ];
-        var categorySelect = $('<select class="form-control"></select>');
+        var categorySelect = $('<select class="form-control"></select>').attr('aria-label', t('histogram.category'));
 
         categories.forEach(function (category) {
             if (!data[category]) {
@@ -304,7 +367,7 @@ var HistogramBrowser = (function () {
             data.Staff.forEach(function (staffPerson) {
                 var row = $('<tr>')
                     .append($('<td>').text(staffPerson.name))
-                    .append($('<td>').text(staffPerson.title));
+                    .append($('<td>').text(staffTitleFriendlyName(staffPerson.title)));
                 staffTableBody.append(row);
             });
 
@@ -329,7 +392,14 @@ var HistogramBrowser = (function () {
         });
 
         var imageUrl = 'https://michael-maltsev.github.io/technion-histograms/' + course + '/' + semester + '/' + category + '.png';
-        element.find('.histogram-image-container').html($('<img class="img-fluid histogram-image">').prop('src', imageUrl));
+        element.find('.histogram-image-container').html($('<img class="img-fluid histogram-image">')
+            .prop('src', imageUrl)
+            .attr('alt', t('histogram.imageAlt', {
+                course: course,
+                semester: semesterFriendlyName(semester),
+                category: categoryFriendlyName(category)
+            })));
+        element.find('.histogram-image-note').text(t('histogram.imageNote'));
     }
 
     function semesterFriendlyName(semester) {
@@ -338,13 +408,13 @@ var HistogramBrowser = (function () {
 
         switch (semesterCode) {
         case '01':
-            return 'חורף ' + year + '-' + (year + 1);
+            return t('histogram.semester.winter', {year: year, nextYear: year + 1});
 
         case '02':
-            return 'אביב ' + (year + 1);
+            return t('histogram.semester.spring', {year: year + 1});
 
         case '03':
-            return 'קיץ ' + (year + 1);
+            return t('histogram.semester.summer', {year: year + 1});
 
         default:
             return semester;
@@ -353,16 +423,27 @@ var HistogramBrowser = (function () {
 
     function categoryFriendlyName(category) {
         var histogramCategories = {
-            Exam_A: 'מבחן מועד א\'',
-            Final_A: 'סופי מועד א\'',
-            Exam_B: 'מבחן מועד ב\'',
-            Final_B: 'סופי מועד ב\'',
-            Exam_C: 'מבחן מועד ג\'',
-            Final_C: 'סופי מועד ג\'',
-            Finals: 'סופי'
+            Exam_A: 'histogram.category.examA',
+            Final_A: 'histogram.category.finalA',
+            Exam_B: 'histogram.category.examB',
+            Final_B: 'histogram.category.finalB',
+            Exam_C: 'histogram.category.examC',
+            Final_C: 'histogram.category.finalC',
+            Finals: 'histogram.category.finals'
         };
 
-        return histogramCategories[category] || category;
+        return histogramCategories[category] ? t(histogramCategories[category]) : category;
+    }
+
+    function staffTitleFriendlyName(title) {
+        var titles = {
+            'מרצה - אחראי מקצוע': 'histogram.staff.courseCoordinator',
+            'מרצה': 'histogram.staff.lecturer',
+            'מתרגל': 'histogram.staff.teachingAssistant',
+            'מתרגלת': 'histogram.staff.teachingAssistant',
+            'מתרגל - אחראי תרגול': 'histogram.staff.teachingCoordinator'
+        };
+        return titles[title] ? t(titles[title]) : title;
     }
 
     // https://stackoverflow.com/a/30810322
@@ -406,12 +487,12 @@ var HistogramBrowser = (function () {
         var element = this.element;
         var that = this;
 
-        element.text('טוען נתונים...');
+        element.text(t('histogram.loading'));
 
         var onError = function () {
             var fallbackUrl = 'https://michael-maltsev.github.io/technion-histograms/' + course + '/';
-            element.html('טעינת הנתונים נכשלה. נסו לגשת למאגר בצורה ידנית ');
-            var urlElement = $('<a target="_blank" rel="noopener">כאן</a>').prop('href', fallbackUrl);
+            element.text(t('histogram.loadFailed') + ' ');
+            var urlElement = $('<a target="_blank" rel="noopener"></a>').prop('href', fallbackUrl).text(t('histogram.here'));
             element.append(urlElement);
             element.append('.');
         };
@@ -441,6 +522,8 @@ var HistogramBrowser = (function () {
         request.onerror = onError;
         request.send();
     };
+
+    HistogramBrowser.createShareGuide = createShareGuide;
 
     return HistogramBrowser;
 })();

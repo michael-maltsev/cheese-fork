@@ -17,9 +17,12 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="utf-8">
-    <meta name="description" content="כלי בניית מערכת שעות עבור סטודנטים בטכניון | A class schedule maker for students at the Technion">
+    <script src="i18n.js"></script>
+    <script src="locales/he.js"></script>
+    <script src="locales/en.js"></script>
+    <meta name="description" data-i18n-content="shell.meta.description" content="כלי בניית מערכת שעות עבור סטודנטים בטכניון | A class schedule maker for students at the Technion">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>CheeseFork - Your Cheesy Scheduler</title>
+    <title data-i18n="shell.meta.title">CheeseFork - Your Cheesy Scheduler</title>
     <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
     <script>
         window.cheeseForkAlt = 0;
@@ -39,7 +42,9 @@
     <meta name="msapplication-TileColor" content="#ffc40d">
     <meta name="msapplication-config" content="icons/browserconfig.xml">
     <meta name="theme-color" content="#ffffff">
-    <link rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/3.3.0/firebase-ui-auth-rtl.css">
+    <script>
+        document.write('<link rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/3.3.0/firebase-ui-auth' + (CheeseI18n.isRTL() ? '-rtl' : '') + '.css">');
+    </script>
     <link rel="stylesheet" href="modules/bootstrap-rtl/css/bootstrap.min.css">
     <link rel="stylesheet" href="modules/bootstrap4-dialog/css/bootstrap-dialog.min.css">
     <link rel="stylesheet" href="modules/OverlayScrollbars/css/OverlayScrollbars.min.css">
@@ -47,7 +52,11 @@
     <link rel="stylesheet" href="modules/selectize/css/selectize.bootstrap4.css">
     <link rel="stylesheet" href="modules/fontawesome/css/all.min.css">
     <link rel="stylesheet" href="modules/intro.js/introjs.min.css">
-    <link rel="stylesheet" href="modules/intro.js/introjs-rtl.min.css">
+    <script>
+        if (CheeseI18n.isRTL()) {
+            document.write('<link rel="stylesheet" href="modules/intro.js/introjs-rtl.min.css">');
+        }
+    </script>
     <link rel="stylesheet" href="loader.css">
     <link rel="stylesheet" href="components/course-select/course-select.css">
     <link rel="stylesheet" href="components/course-button-list/course-button-list.css">
@@ -61,10 +70,11 @@
     </noscript>
     <script src="dark-mode-toggle-stylesheets-loader.min.js"></script>
     <link rel="stylesheet" href="cheesefork-print.css" media="print">
+    <link rel="stylesheet" href="i18n.css">
 </head>
 <body class="bg-light">
 <div class="container-fluid">
-    <div class="loading" id="page-loader">Loading&#8230;</div>
+    <div class="loading" id="page-loader" role="status" data-i18n="shell.loading">טוען&#8230;</div>
 
     <div class="d-none">
         <div id="firebaseui-auth-container"></div>
@@ -78,61 +88,69 @@
                         <i class="fas fa-newspaper unread-count-badge-container">
                             <span class="unread-count-badge"></span>
                         </i>
-                        שינויים
+                        <span data-i18n="shell.nav.changes">שינויים</span>
                     </a>
                 </li>
                 <li id="top-navbar-home" class="nav-item d-none">
                     <a class="nav-link" href=".">
                         <i class="fas fa-home"></i>
-                        המערכת שלי
+                        <span data-i18n="shell.nav.home">המערכת שלי</span>
                     </a>
                 </li>
-                <li id="top-navbar-login" class="nav-item d-none" data-intro="היכנסו על מנת לגשת למערכת מכל מקום (אופציונאלי אך מאוד מומלץ)">
+                <li id="top-navbar-login" class="nav-item d-none" data-i18n-data-intro="shell.tour.login" data-intro="היכנסו על מנת לגשת למערכת מכל מקום (אופציונאלי אך מאוד מומלץ)">
                     <a class="nav-link" href="#">
                         <i class="fas fa-sign-in-alt"></i>
-                        כניסה
+                        <span data-i18n="shell.nav.login">כניסה</span>
                     </a>
                 </li>
                 <li id="top-navbar-logout" class="nav-item d-none">
                     <a class="nav-link" href="#" data-toggle="tooltip" data-placement="bottom" data-trigger="hover" title="">
                         <i class="fas fa-sign-out-alt"></i>
-                        יציאה
+                        <span data-i18n="shell.nav.logout">יציאה</span>
                     </a>
                 </li>
                 <li id="top-navbar-share" class="nav-item">
-                    <a class="nav-link disabled" href="#" data-toggle="tooltip" data-placement="bottom" data-trigger="hover" title="יש לבצע כניסה על מנת לשתף את המערכת">
+                    <a class="nav-link disabled" href="#" data-toggle="tooltip" data-placement="bottom" data-trigger="hover" data-i18n-title="shell.nav.shareTooltip" title="יש לבצע כניסה על מנת לשתף את המערכת">
                         <i class="fas fa-share-alt"></i>
-                        שיתוף מערכת
+                        <span data-i18n="shell.nav.share">שיתוף מערכת</span>
                     </a>
                 </li>
                 <li id="top-navbar-export" class="nav-item">
-                    <a class="nav-link" href="#" data-toggle="tooltip" data-placement="bottom" data-trigger="hover" title="מאפשר לייבא את המערכת לכלי שתומך בקבצי iCalendar כגון Google Calendar">
+                    <a class="nav-link" href="#" data-toggle="tooltip" data-placement="bottom" data-trigger="hover" data-i18n-title="shell.nav.exportTooltip" title="מאפשר לייבא את המערכת לכלי שתומך בקבצי iCalendar כגון Google Calendar">
                         <i class="fas fa-file-download"></i>
-                        ייצוא לקובץ iCalendar
+                        <span data-i18n="shell.nav.export">ייצוא לקובץ iCalendar</span>
                     </a>
                 </li>
                 <li id="top-navbar-undo" class="nav-item d-none">
                     <a class="nav-link" href="#">
                         <i class="fas fa-redo"></i>
-                        בטל שינויים
+                        <span data-i18n="shell.nav.undo">בטל שינויים</span>
                     </a>
                 </li>
                 <li id="top-navbar-redo" class="nav-item d-none">
                     <a class="nav-link" href="#">
                         <i class="fas fa-undo"></i>
-                        החזר שינויים
+                        <span data-i18n="shell.nav.redo">החזר שינויים</span>
                     </a>
                 </li>
                 <li id="top-navbar-semester" class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="top-navbar-dropdown-semester" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <i class="fas fa-calendar-alt"></i>
-                        סמסטר
+                        <span data-i18n="shell.nav.semester">סמסטר</span>
                     </a>
                     <div class="dropdown-menu" aria-labelledby="top-navbar-dropdown-semester"></div>
                 </li>
             </ul>
         </div>
-        <button class="navbar-toggler unread-count-badge-container" type="button" data-toggle="collapse" data-target="#top-navbar-supported-content" aria-controls="top-navbar-supported-content" aria-expanded="false" aria-label="Toggle navigation">
+        <div class="language-selector">
+            <i class="fas fa-globe" aria-hidden="true"></i>
+            <label class="sr-only" for="site-language" data-i18n="shell.language">שפה</label>
+            <select id="site-language" class="language-switch" data-language-switch data-i18n-aria-label="shell.language" aria-label="שפה">
+                <option value="en" lang="en" dir="ltr">English</option>
+                <option value="he" lang="he" dir="rtl">עברית</option>
+            </select>
+        </div>
+        <button class="navbar-toggler unread-count-badge-container" type="button" data-toggle="collapse" data-target="#top-navbar-supported-content" aria-controls="top-navbar-supported-content" aria-expanded="false" data-i18n-aria-label="shell.nav.toggle" aria-label="הצג או הסתר את התפריט">
             <span class="navbar-toggler-icon"></span>
             <span class="unread-count-badge d-none"></span>
         </button>
@@ -148,7 +166,7 @@
                     } else if (alt === 2) {
                         path = 'assets/logo-alt2.png';
                     }
-                    document.write('<img src="' + path + '" alt="logo" height="30">');
+                    document.write('<img src="' + path + '" alt="CheeseFork" height="30">');
                 })(window.cheeseForkAlt);
             </script>
             <span class="font-weight-bold">CheeseFork</span>
@@ -158,16 +176,16 @@
     <div id="content-container" class="row">
         <div id="right-content-bar" class="col-md-2 my-2 my-md-0 invisible">
             <div class="d-flex flex-column h-100">
-                <div data-intro="ביחרו את המקצועות הרצויים">
-                    <select id="course-select" placeholder="לחצו לבחירת מקצוע...">
-                        <option value="">לחצו לבחירת מקצוע...</option>
+                <div data-i18n-data-intro="shell.tour.courses" data-intro="ביחרו את המקצועות הרצויים">
+                    <select id="course-select" data-i18n-placeholder="shell.courses.placeholder" placeholder="לחצו לבחירת מקצוע...">
+                        <option value="" data-i18n="shell.courses.placeholder">לחצו לבחירת מקצוע...</option>
                     </select>
                 </div>
 
                 <div id="shared-schedule-title">
-                    <h3 id="sharing-user-unknown" class="d-none">מציג מערכת של משתמש אחר</h3>
+                    <h3 id="sharing-user-unknown" class="d-none" data-i18n="shell.shared.unknown">מציג מערכת של משתמש אחר</h3>
                     <h3 id="sharing-user-known" class="d-none">
-                        מציג את המערכת של <span id="sharing-user-name" class="font-weight-bold"></span>
+                        <span data-i18n="shell.shared.known">מציג את המערכת של</span> <span id="sharing-user-name" class="font-weight-bold" dir="auto"></span>
                     </h3>
                 </div>
 
@@ -180,42 +198,42 @@
                 </div>
             </div>
         </div>
-        <div id="course-calendar" class="col-md-10" data-intro="תתחילו לבנות את המערכת שלכם בצורה אינטראקטיבית ונוחה"></div>
+        <div id="course-calendar" class="col-md-10" data-i18n-data-intro="shell.tour.calendar" data-intro="תתחילו לבנות את המערכת שלכם בצורה אינטראקטיבית ונוחה"></div>
     </div>
 
     <div class="d-none">
         <form id="filter-form">
             <div class="form-group">
-                <label for="filter-faculty">פקולטה</label>
+                <label for="filter-faculty" data-i18n="shell.filter.faculty">פקולטה</label>
                 <select id="filter-faculty" class="form-control" multiple>
                 </select>
             </div>
             <div class="form-group">
-                <label for="filter-framework">מסגרת לימודים</label>
+                <label for="filter-framework" data-i18n="shell.filter.framework">מסגרת לימודים</label>
                 <select id="filter-framework" class="form-control" multiple>
                 </select>
             </div>
             <div class="form-row">
                 <div class="form-group col-md-6">
-                    <label for="filter-points-min">מספר נקודות מינימלי</label>
+                    <label for="filter-points-min" data-i18n="shell.filter.pointsMin">מספר נקודות מינימלי</label>
                     <select id="filter-points-min" class="form-control">
                     </select>
                 </div>
                 <div class="form-group col-md-6">
-                    <label for="filter-points-max">מספר נקודות מקסימלי</label>
+                    <label for="filter-points-max" data-i18n="shell.filter.pointsMax">מספר נקודות מקסימלי</label>
                     <select id="filter-points-max" class="form-control">
                     </select>
                 </div>
             </div>
             <div class="form-group">
-                <label for="filter-courses-taken-list">קורסים שהושלמו (עבור שלושת האפשרויות הבאות)</label>
-                <input type="text" class="form-control" id="filter-courses-taken-list" placeholder="מספרי קורסים, מופרדים ברווח או פסיק"
-                       data-toggle="tooltip" data-placement="bottom" title="אפשר להדביק פה גם גיליון ציונים - כל טקסט המכיל מספרי קורסים יתאים">
+                <label for="filter-courses-taken-list" data-i18n="shell.filter.completedCourses">קורסים שהושלמו (עבור שלושת האפשרויות הבאות)</label>
+                <input type="text" class="form-control" id="filter-courses-taken-list" data-i18n-placeholder="shell.filter.completedPlaceholder" placeholder="מספרי קורסים, מופרדים ברווח או פסיק"
+                       data-toggle="tooltip" data-placement="bottom" data-i18n-title="shell.filter.completedTooltip" title="אפשר להדביק פה גם גיליון ציונים - כל טקסט המכיל מספרי קורסים יתאים">
             </div>
             <div class="form-group">
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" id="filter-prerequisites">
-                    <label class="form-check-label" for="filter-prerequisites">
+                    <label class="form-check-label" for="filter-prerequisites" data-i18n="shell.filter.prerequisites">
                         אל תציג קורסים שחסר עבורם קדם
                     </label>
                 </div>
@@ -223,7 +241,7 @@
             <div class="form-group">
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" id="filter-linked-courses">
-                    <label class="form-check-label" for="filter-linked-courses">
+                    <label class="form-check-label" for="filter-linked-courses" data-i18n="shell.filter.linked">
                         אל תציג קורסים שחסר עבורם צמוד
                     </label>
                 </div>
@@ -231,47 +249,47 @@
             <div class="form-group">
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" id="filter-overlapping-courses">
-                    <label class="form-check-label" for="filter-overlapping-courses">
+                    <label class="form-check-label" for="filter-overlapping-courses" data-i18n="shell.filter.overlapping">
                         אל תציג קורסים ללא זיכוי נוסף
                     </label>
                 </div>
             </div>
-            <div class="form-row">
+            <div class="form-row align-items-end">
                 <div class="form-group col-md-3">
-                    <label for="filter-moed-a-min">מועד א' מתאריך</label>
+                    <label for="filter-moed-a-min" data-i18n="shell.filter.examAFrom">מועד א' מתאריך</label>
                     <select id="filter-moed-a-min" class="form-control">
                     </select>
                 </div>
                 <div class="form-group col-md-3">
-                    <label for="filter-moed-a-max">עד תאריך</label>
+                    <label for="filter-moed-a-max" data-i18n="shell.filter.examAUntil">עד תאריך</label>
                     <select id="filter-moed-a-max" class="form-control">
                     </select>
                 </div>
                 <div class="form-group col-md-3">
-                    <label for="filter-moed-b-min">מועד ב' מתאריך</label>
+                    <label for="filter-moed-b-min" data-i18n="shell.filter.examBFrom">מועד ב' מתאריך</label>
                     <select id="filter-moed-b-min" class="form-control">
                     </select>
                 </div>
                 <div class="form-group col-md-3">
-                    <label for="filter-moed-b-max">עד תאריך</label>
+                    <label for="filter-moed-b-max" data-i18n="shell.filter.examBUntil">עד תאריך</label>
                     <select id="filter-moed-b-max" class="form-control">
                     </select>
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group col-md-6">
-                    <label for="filter-moed-a-days-min">מספר ימי למידה מינימלי למועד א'</label>
+                    <label for="filter-moed-a-days-min" data-i18n="shell.filter.studyDaysA">מספר ימי למידה מינימלי למועד א'</label>
                     <input type="number" min="0" value="0" class="form-control" id="filter-moed-a-days-min" placeholder="">
                 </div>
                 <div class="form-group col-md-6">
-                    <label for="filter-moed-b-days-min">מספר ימי למידה מינימלי למועד ב'</label>
+                    <label for="filter-moed-b-days-min" data-i18n="shell.filter.studyDaysB">מספר ימי למידה מינימלי למועד ב'</label>
                     <input type="number" min="0" value="0" class="form-control" id="filter-moed-b-days-min" placeholder="">
                 </div>
             </div>
             <div class="form-group">
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" id="filter-with-exam">
-                    <label class="form-check-label" for="filter-with-exam">
+                    <label class="form-check-label" for="filter-with-exam" data-i18n="shell.filter.withExam">
                         אל תציג קורסים עם מבחן
                     </label>
                 </div>
@@ -279,19 +297,19 @@
             <div class="form-group">
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" id="filter-without-exam">
-                    <label class="form-check-label" for="filter-without-exam">
+                    <label class="form-check-label" for="filter-without-exam" data-i18n="shell.filter.withoutExam">
                         אל תציג קורסים ללא מבחן
                     </label>
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group col-md-6">
-                    <label for="filter-courses-limit">הגבל לקורסים</label>
-                    <input type="text" class="form-control" id="filter-courses-limit" placeholder="מספרי קורסים">
+                    <label for="filter-courses-limit" data-i18n="shell.filter.limit">הגבל לקורסים</label>
+                    <input type="text" class="form-control" id="filter-courses-limit" data-i18n-placeholder="shell.filter.courseNumbers" placeholder="מספרי קורסים">
                 </div>
                 <div class="form-group col-md-6">
-                    <label for="filter-courses-exclude">אל תציג קורסים</label>
-                    <input type="text" class="form-control" id="filter-courses-exclude" placeholder="מספרי קורסים">
+                    <label for="filter-courses-exclude" data-i18n="shell.filter.exclude">אל תציג קורסים</label>
+                    <input type="text" class="form-control" id="filter-courses-exclude" data-i18n-placeholder="shell.filter.courseNumbers" placeholder="מספרי קורסים">
                 </div>
             </div>
             <input type="submit" class="d-none">
@@ -299,14 +317,14 @@
     </div>
 
     <!-- For web crawlers -->
-    <a href="?course=all" class="d-none">לרשימת הקורסים</a>
+    <a href="?course=all" id="course-list-crawler-link" class="d-none" data-i18n="shell.crawler.courseList">לרשימת הקורסים</a>
 
     <footer class="pt-4 text-muted text-center text-small">
         <p class="mb-1">
-            <span id="footer-semester" class="d-none">מציג מידע עבור סמסטר <span id="footer-semester-name"></span>.</span>
-            תוכנת על ידי <a href="https://github.com/michael-maltsev" target="_blank" rel="noopener">מיכאל מלצב</a>.
-            <a href="https://cheesefork.cf/PRIVACY.md" target="_blank" rel="noopener">מדיניות פרטיות</a>.
-            <dark-mode-toggle permanent></dark-mode-toggle>
+            <span id="footer-semester" class="d-none"><span data-i18n="shell.footer.semester">מציג מידע עבור סמסטר</span> <span id="footer-semester-name"></span>.</span>
+            <span data-i18n="shell.footer.author">תוכנת על ידי</span> <a href="https://github.com/michael-maltsev" target="_blank" rel="noopener" data-i18n="shell.footer.authorName">מיכאל מלצב</a>.
+            <a href="https://cheesefork.cf/PRIVACY.md" target="_blank" rel="noopener" data-i18n="shell.footer.privacy">מדיניות פרטיות</a>.
+            <dark-mode-toggle permanent data-i18n-aria-label="shell.theme.label" aria-label="מצב תצוגה"></dark-mode-toggle>
         </p>
     </footer>
 </div>
@@ -324,6 +342,7 @@
 <script src="modules/popper/popper.js"></script>
 <script src="modules/bootstrap-rtl/js/bootstrap.min.js"></script>
 <script src="modules/bootstrap4-dialog/js/bootstrap-dialog.min.js"></script>
+<script src="i18n-dialogs.js"></script>
 <script src="modules/OverlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
 <script src="modules/fullcalendar/lib/moment.min.js"></script>
 <script src="modules/fullcalendar/fullcalendar.min.js"></script>
@@ -340,7 +359,9 @@
 <script src="https://www.gstatic.com/firebasejs/12.4.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.4.0/firebase-storage-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/ui/3.3.0/firebase-ui-auth__iw.js"></script>
+<script>
+    document.write('<script src="https://www.gstatic.com/firebasejs/ui/3.3.0/firebase-ui-auth' + (CheeseI18n.isRTL() ? '__iw' : '') + '.js"><\/script>');
+</script>
 <script>
     var availableSemesters = {
         "201701": {"start": "2017-10-22", "end": "2018-01-25"},
@@ -437,7 +458,7 @@
         } else {
             script.src = getSapCoursesUrl(currentSemester);
         }
-        script.setAttribute('onerror', 'alert("Failed to load courses");');
+        script.setAttribute('onerror', 'alert(CheeseI18n.t("shell.error.loadCourses"));');
         document.write(script.outerHTML);
     })();
 </script>

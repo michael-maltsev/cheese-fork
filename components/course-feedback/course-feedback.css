@@ -86,11 +86,54 @@
     background-color: #f9f9f9;
 }
 
+#course-feedback-carousel .feedback-post-text {
+    white-space: pre-line;
+    overflow-wrap: break-word;
+    text-align: start;
+    unicode-bidi: plaintext;
+}
+
+#course-feedback-carousel .feedback-author {
+    display: inline-block;
+    unicode-bidi: isolate;
+}
+
+#course-feedback-carousel .feedback-translation-controls {
+    margin: 0.75rem 0;
+}
+
+#course-feedback-carousel .feedback-translation-status {
+    margin-top: 0.35rem;
+}
+
+#course-feedback-carousel .feedback-translation-status:empty {
+    display: none;
+}
+
+#course-feedback-carousel .feedback-translation-label {
+    margin-bottom: 0.35rem;
+}
+
+#course-feedback-carousel .feedback-report {
+    line-height: 1;
+}
+
 #course-feedback-carousel .box-footer {
     padding: 5px 15px;
     background-color: #ccc;
     text-align: left;
     font-style: italic;
+}
+
+html[dir="ltr"] #course-feedback-carousel .box-footer {
+    text-align: right;
+}
+
+html[dir="ltr"] #course-feedback-carousel .timeline-box {
+    border-top-right-radius: 15px;
+    border-bottom-left-radius: 15px;
+    border-top-left-radius: 0;
+    border-bottom-right-radius: 0;
 }
 
 #course-feedback .course-rank {

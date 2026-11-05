@@ -1,6 +1,6 @@
 'use strict';
 
-/* global HistogramBrowser, CourseFeedback, BootstrapDialog, showBootstrapDialogWithModelessButton, firebase, gtag, currentSemester */
+/* global HistogramBrowser, CourseFeedback, BootstrapDialog, showBootstrapDialogWithModelessButton, firebase, gtag, currentSemester, CheeseI18n */
 
 // eslint-disable-next-line no-unused-vars
 var CourseButtonList = (function () {
@@ -60,7 +60,7 @@ var CourseButtonList = (function () {
         });
 
         whatsappLinks.forEach(function (url, i) {
-            var linkText = 'קבוצת וואטסאפ';
+            var linkText = CheeseI18n.t('courses.whatsappGroup');
             if (i > 0) {
                 linkText += ' ' + (i + 1);
             }
@@ -85,7 +85,7 @@ var CourseButtonList = (function () {
                     target: '_blank',
                     rel: 'noopener',
                     onclick: 'gtag(\'event\', \'info-click-group-link-telegram\')',
-                    text: 'קבוצת טלגרם'
+                    text: CheeseI18n.t('courses.telegramGroup')
                 })
             }));
         }
@@ -99,17 +99,17 @@ var CourseButtonList = (function () {
                     target: '_blank',
                     rel: 'noopener',
                     onclick: 'gtag(\'event\', \'info-click-group-link-discord\')',
-                    text: 'שרת דיסקורד'
+                    text: CheeseI18n.t('courses.discordServer')
                 })
             }));
         }
 
         if (linksFound > 1) {
-            result.prepend('<div>באפשרותכם להצטרף לקבוצות בעזרת הלינקים הבאים:</div>');
+            result.prepend($('<div>').text(CheeseI18n.t('courses.groupsJoinMany')));
         } else if (linksFound > 0) {
-            result.prepend('<div>באפשרותכם להצטרף לקבוצה בעזרת הלינק הבא:</div>');
+            result.prepend($('<div>').text(CheeseI18n.t('courses.groupsJoinOne')));
         } else {
-            result.text('לא קיימים קישורי הצטרפות לקבוצת וואטסאפ/טלגרם/דיסקורד עבור קורס זה. אם יש ברשותכם קישור עדכני, אנא לחצו על כפתור העדכון והזינו אותו.');
+            result.text(CheeseI18n.t('courses.groupsNone'));
         }
 
         return result;
@@ -123,6 +123,7 @@ var CourseButtonList = (function () {
                     value: data.whatsappGroupLink || '',
                     class: 'form-control mt-2 whatsapp-group-link',
                     placeholder: 'https://chat.whatsapp.com/...',
+                    'aria-label': CheeseI18n.t('courses.whatsappGroup'),
                     style: 'direction: ltr;',
                     pattern: 'https://chat\\.whatsapp\\.com/.+'
                 }),
@@ -131,6 +132,7 @@ var CourseButtonList = (function () {
                     value: data.whatsappGroupLink2 || '',
                     class: 'form-control mt-2 whatsapp-group-link2',
                     placeholder: 'https://chat.whatsapp.com/...',
+                    'aria-label': CheeseI18n.t('courses.whatsappGroup'),
                     style: 'direction: ltr;',
                     pattern: 'https://chat\\.whatsapp\\.com/.+'
                 }),
@@ -139,6 +141,7 @@ var CourseButtonList = (function () {
                     value: data.whatsappGroupLink3 || '',
                     class: 'form-control mt-2 whatsapp-group-link3',
                     placeholder: 'https://chat.whatsapp.com/...',
+                    'aria-label': CheeseI18n.t('courses.whatsappGroup'),
                     style: 'direction: ltr;',
                     pattern: 'https://chat\\.whatsapp\\.com/.+'
                 }),
@@ -147,6 +150,7 @@ var CourseButtonList = (function () {
                     value: data.telegramGroupLink || '',
                     class: 'form-control mt-2 telegram-group-link',
                     placeholder: 'https://t.me/...',
+                    'aria-label': CheeseI18n.t('courses.telegramGroup'),
                     style: 'direction: ltr;',
                     pattern: 'https://t\\.me/.+'
                 }),
@@ -155,14 +159,18 @@ var CourseButtonList = (function () {
                     value: data.discordServerLink || '',
                     class: 'form-control mt-2 discord-server-link',
                     placeholder: 'https://discord.gg/...',
+                    'aria-label': CheeseI18n.t('courses.discordServer'),
                     style: 'direction: ltr;',
                     pattern: 'https://(discord\\.gg|discord\\.com/invite)/.+'
                 }),
-                '<div class="invalid-feedback">' +
-                    '<div>קישורים לקבוצות וואטסאפ חייבים להיות מהצורה: <span style="direction: ltr; unicode-bidi: embed;">https://chat.whatsapp.com/...</span></div>' +
-                    '<div>קישורים לקבוצות טלגרם חייבים להיות מהצורה: <span style="direction: ltr; unicode-bidi: embed;">https://t.me/...</span></div>' +
-                    '<div>קישורים לשרתי דיסקורד חייבים להיות מהצורה: <span style="direction: ltr; unicode-bidi: embed;">https://discord.gg/...</span> או <span style="direction: ltr; unicode-bidi: embed;">https://discord.com/invite/...</span></div>' +
-                '</div>'
+                $('<div>', {
+                    class: 'invalid-feedback',
+                    html: [
+                        $('<div>').text(CheeseI18n.t('courses.groupWhatsappFormat', {url: 'https://chat.whatsapp.com/...'})),
+                        $('<div>').text(CheeseI18n.t('courses.groupTelegramFormat', {url: 'https://t.me/...'})),
+                        $('<div>').text(CheeseI18n.t('courses.groupDiscordFormat', {url: 'https://discord.gg/...', alternative: 'https://discord.com/invite/...'}))
+                    ]
+                })
             ]
         });
 
@@ -173,14 +181,14 @@ var CourseButtonList = (function () {
         var groupLinksData = {};
 
         var whatsappGroupDialog = BootstrapDialog.show({
-            title: 'קבוצת וואטסאפ/טלגרם/דיסקורד',
-            message: '<div class="whatsapp-group-link-content">טוען נתונים...</div>',
+            title: CheeseI18n.t('courses.groupsTitle'),
+            message: $('<div>', {class: 'whatsapp-group-link-content', text: CheeseI18n.t('courses.loading')}),
             onshow: function (dialog) {
                 dialog.getButton('update-link').disable();
             },
             buttons: [{
                 id: 'update-link',
-                label: 'עדכן קישורים',
+                label: CheeseI18n.t('courses.updateLinks'),
                 action: function (dialog) {
                     var content = dialog.getModalBody().find('.whatsapp-group-link-content');
 
@@ -233,11 +241,11 @@ var CourseButtonList = (function () {
                             button.enable();
                         }, function (error) {
                             button.enable();
-                            alert('Error writing document: ' + error);
+                            alert(CheeseI18n.t('courses.groupSaveFailed', {error: error}));
                         });
                 }
             }, {
-                label: 'סגור',
+                label: CheeseI18n.t('courses.close'),
                 action: function (dialog) {
                     dialog.close();
                 }
@@ -249,11 +257,13 @@ var CourseButtonList = (function () {
                 .text(errorMessage);
         };
 
-        var authenticated = firebase.auth &&
+        var authenticated = typeof firebase !== 'undefined' && firebase.auth &&
             firebase.auth().currentUser !== null;
-        if (!authenticated) {
-            onError('יש להתחבר לחשבון שלכם במערכת כדי לצפות בקישורים לקבוצות הקורס.');
-        } else if (typeof firebase !== 'undefined') {
+        if (typeof firebase === 'undefined') {
+            onError(CheeseI18n.t('courses.firebaseUnavailable'));
+        } else if (!authenticated) {
+            onError(CheeseI18n.t('courses.groupLoginRequired'));
+        } else {
             firebase.firestore().collection('courseExtraDetails').doc(course).get()
                 .then(function (doc) {
                     if (doc.exists) {
@@ -265,10 +275,8 @@ var CourseButtonList = (function () {
 
                     whatsappGroupDialog.getButton('update-link').enable();
                 }, function (error) {
-                    onError('טעינת הנתונים נכשלה. נסו שוב מאוחר יותר.');
+                    onError(CheeseI18n.t('courses.loadFailed'));
                 });
-        } else {
-            onError('שירות Firebase אינו זמין כרגע.');
         }
     }
 
@@ -278,8 +286,8 @@ var CourseButtonList = (function () {
         var courseTitle = that.courseManager.getTitle(course);
 
         // A wrapper div for proper word wrapping of the content text.
-        var spanAbsolute = $('<div class="content-wrapper"></div>').html($('<span class="content-absolute"></span>').text(courseTitle));
-        var spanBoldHidden = $('<span class="content-bold-hidden"></span>').text(courseTitle);
+        var spanAbsolute = $('<div class="content-wrapper"></div>').html($('<span class="content-absolute"></span>').text(courseTitle).attr({lang: /[א-ת]/.test(courseTitle) ? 'he' : 'en', dir: 'auto'}));
+        var spanBoldHidden = $('<span class="content-bold-hidden"></span>').text(courseTitle).attr({lang: /[א-ת]/.test(courseTitle) ? 'he' : 'en', dir: 'auto'});
 
         // Create drag handle (only visible when not readonly)
         var dragHandle = $('<span class="course-button-list-drag-handle">' +
@@ -342,7 +350,7 @@ var CourseButtonList = (function () {
                 size: BootstrapDialog.SIZE_WIDE,
                 message: '<div class="course-information"></div><br><br>' +
                     '<div class="course-feedback"></div>' +
-                    '<h3 class="text-center">היסטוגרמות</h3><div class="inline-histograms"></div>',
+                    '<h3 class="text-center">' + $('<div>').text(CheeseI18n.t('courses.histograms')).html() + '</h3><div class="inline-histograms"></div>',
                 onshow: function (dialog) {
                     that.infoDialogs.push(dialog);
 
@@ -368,7 +376,7 @@ var CourseButtonList = (function () {
 
         var tooltipHtml = courseDescriptionHtml;
         if (showFirstTimeTooltip) {
-            tooltipHtml = 'לחצו כאן להצגת היסטוגרמות וחוות דעת על הקורס';
+            tooltipHtml = $('<div>').text(CheeseI18n.t('courses.histogramsReviewsTip')).html();
         }
 
         addTooltipToBadge(badge, tooltipHtml, showFirstTimeTooltip);
@@ -575,7 +583,7 @@ var CourseButtonList = (function () {
 
         // Put links on course numbers.
         // Replace only text inside element: https://stackoverflow.com/a/11867485
-        courseInfo.contents().filter(function () {
+        courseInfo.find('.source-content').addBack().contents().filter(function () {
             return this.nodeType === Node.TEXT_NODE;
         }).each(function () {
             var replaced = false;
@@ -600,7 +608,8 @@ var CourseButtonList = (function () {
 
                     var currentSemesterYear = currentSemester.slice(0, 4);
                     var currentSemesterSapSemester = parseInt(currentSemester.slice(4), 10) - 1 + 200;
-                    url = 'https://portalex.technion.ac.il/ovv/?sap-theme=sap_belize&sap-language=HE&sap-ui-language=HE#/details/' + currentSemesterYear + '/' + currentSemesterSapSemester + '/SM/' + matchCourse;
+                    var sapLanguage = CheeseI18n.getLocale() === 'en' ? 'EN' : 'HE';
+                    url = 'https://portalex.technion.ac.il/ovv/?sap-theme=sap_belize&sap-language=' + sapLanguage + '&sap-ui-language=' + sapLanguage + '#/details/' + currentSemesterYear + '/' + currentSemesterSapSemester + '/SM/' + matchCourse;
                 }
 
                 var tooltipTitle;
@@ -608,14 +617,14 @@ var CourseButtonList = (function () {
                 if (courseManager.doesExist(matchCourse)) {
                     tooltipTitle = courseManager.getTitle(matchCourse);
                 } else {
-                    tooltipTitle = '(לא מועבר בסמסטר)';
+                    tooltipTitle = CheeseI18n.t('courses.notOffered');
 
                     var courseNameUrl = 'https://michael-maltsev.github.io/technion-course-names/num/' + matchCourse;
                     onmouseover = 'var that = this;' +
                         'if (!$(that).attr("data-name-loading")) {' +
                             '$(that).attr("data-name-loading", true);' +
                             '$.get("' + courseNameUrl + '", function (name) {' +
-                                '$(that).attr("data-original-title", "' + matchCourse + ' - " + name + " (לא מועבר בסמסטר)");' +
+                                '$(that).attr("data-original-title", "' + matchCourse + ' - " + name + ' + JSON.stringify(' ' + CheeseI18n.t('courses.notOffered')) + ');' +
                                 'if ($(that).is(":hover")) { $(that).tooltip("show"); }' +
                             '});' +
                         '}';
@@ -695,7 +704,11 @@ var CourseButtonList = (function () {
         var listGroupTextItem = this.badgeContainer.find(selector);
 
         if (lessonTypesHidden.length > 0) {
-            var title = 'אירועים מהסוגים הבאים הוסתרו מהמערכת:\n' + lessonTypesHidden.sort().join(', ');
+            var courseManager = this.courseManager;
+            var types = lessonTypesHidden.slice().sort().map(function (type) {
+                return courseManager.getLessonTypeLabel(type);
+            });
+            var title = CheeseI18n.t('courses.hiddenLessonTypes', {types: types.join(', ')});
             var titleHtml = $('<div>').text(title).html().replace(/\n/g, '<br>');
 
             listGroupTextItem.addClass('course-button-list-content-has-hidden')

@@ -1,14 +1,39 @@
 'use strict';
 
-/* global BootstrapDialog, firebase, currentSemester */
+/* global BootstrapDialog, CheeseI18n, firebase, currentSemester */
 
 // eslint-disable-next-line no-unused-vars
 var CourseFeedback = (function () {
+    var templateLabels = [
+        'שם המרצה:',
+        'חוות דעת - הרצאות:',
+        'שם המתרגל/ת:',
+        'חוות דעת - תרגולים:',
+        'שעורי הבית:',
+        'המבחן:',
+        'השורה התחתונה:',
+        'Lecturer name:',
+        'Lecture feedback:',
+        'Teaching assistant name:',
+        'Tutorial feedback:',
+        'Homework:',
+        'Exam:',
+        'The bottom line:'
+    ];
+
+    function t(key, params) {
+        return CheeseI18n.t('feedback.' + key, params);
+    }
+
+    function translatedHtml(key, params) {
+        return $('<div>').text(t(key, params)).html().replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
     function CourseFeedback(element, options) {
         this.element = element;
         this.columnGrid = options.columnGrid;
         this.openNewFeedbackDialog = options.openNewFeedbackDialog;
-        this.loginUrl = options.loginUrl;
+        this.loginUrl = options.loginUrl ? CheeseI18n.withLocale(options.loginUrl) : null;
     }
 
     var authReady = false;
@@ -54,91 +79,85 @@ var CourseFeedback = (function () {
         var authenticated = firebase.auth &&
             firebase.auth().currentUser !== null;
 
-        var defaultText = 'שם המרצה: \n' +
-            'חוות דעת - הרצאות: \n' +
-            '\n' +
-            'שם המתרגל/ת: \n' +
-            'חוות דעת - תרגולים: \n' +
-            '\n' +
-            'שעורי הבית: \n' +
-            '\n' +
-            'המבחן: \n' +
-            '\n' +
-            'השורה התחתונה: ';
+        var defaultText = t('form.template');
 
         var formHtml = authenticated
             ? ('<form>' +
                 '<div class="form-row">' +
                     '<div class="form-group col-md-6">' +
-                        '<label for="feedback-form-author">שם או כינוי</label>' +
-                        '<input type="text" class="form-control" id="feedback-form-author" required pattern=".*\\S.*">' +
+                        '<label for="feedback-form-author">' + translatedHtml('form.author') + '</label>' +
+                        '<input type="text" class="form-control" id="feedback-form-author" dir="auto" required pattern=".*\\S.*">' +
                         '<div class="invalid-feedback">' +
-                            'יש להכניס שם או כינוי' +
+                            translatedHtml('form.authorRequired') +
                         '</div>' +
                     '</div>' +
                     '<div class="form-group col-md-6">' +
-                        '<label for="feedback-form-semester">סמסטר</label>' +
+                        '<label for="feedback-form-semester">' + translatedHtml('form.semester') + '</label>' +
                         '<select class="form-control" id="feedback-form-semester" required>' +
                         '</select>' +
                         '<div class="invalid-feedback">' +
-                            'יש לבחור סמסטר' +
+                            translatedHtml('form.semesterRequired') +
                         '</div>' +
                     '</div>' +
                 '</div>' +
                 '<div class="form-row">' +
                     '<div class="form-group col-md-12">' +
-                        '<label for="feedback-form-text">חוות דעת</label>' +
-                        '<textarea class="form-control" id="feedback-form-text" rows="12" required>' +
-                            defaultText +
+                        '<label for="feedback-form-text">' + translatedHtml('form.text') + '</label>' +
+                        '<textarea class="form-control" id="feedback-form-text" dir="auto" rows="12" required>' +
+                            $('<div>').text(defaultText).html() +
                         '</textarea>' +
                         '<div class="invalid-feedback">' +
-                            'איכות חוות הדעת חשובה לנו, אנא הוסיפו פרטים על הקורס שיכולים לעזור לסטודנטים אחרים' +
+                            translatedHtml('form.textRequired') +
                         '</div>' +
                     '</div>' +
                 '</div>' +
                 '<div class="form-row">' +
                     '<div class="form-group col-md-6">' +
-                        '<label for="feedback-form-difficulty">עומס הקורס</label>' +
+                        '<label for="feedback-form-difficulty">' + translatedHtml('form.difficulty') + '</label>' +
                         '<select class="form-control" id="feedback-form-difficulty" required>' +
-                            '<option value="">לחצו לבחירה...</option>' +
-                            '<option value="5">עמוס מאוד</option>' +
-                            '<option value="4">עמוס</option>' +
-                            '<option value="3">בינוני</option>' +
-                            '<option value="2">טיפה עמוס</option>' +
-                            '<option value="1">לא עמוס כלל</option>' +
+                            '<option value="">' + translatedHtml('form.choose') + '</option>' +
+                            '<option value="5">' + translatedHtml('form.workload5') + '</option>' +
+                            '<option value="4">' + translatedHtml('form.workload4') + '</option>' +
+                            '<option value="3">' + translatedHtml('form.workload3') + '</option>' +
+                            '<option value="2">' + translatedHtml('form.workload2') + '</option>' +
+                            '<option value="1">' + translatedHtml('form.workload1') + '</option>' +
                         '</select>' +
                         '<div class="invalid-feedback">' +
-                            'יש לבחור אפשרות מתאימה' +
+                            translatedHtml('form.choiceRequired') +
                         '</div>' +
                     '</div>' +
                     '<div class="form-group col-md-6">' +
-                        '<label for="feedback-form-general">דירוג כללי</label>' +
+                        '<label for="feedback-form-general">' + translatedHtml('form.general') + '</label>' +
                         '<select class="form-control" id="feedback-form-general" required>' +
-                            '<option value="">לחצו לבחירה...</option>' +
-                            '<option value="5">מומלץ מאוד</option>' +
-                            '<option value="4">מומלץ</option>' +
-                            '<option value="3">בינוני</option>' +
-                            '<option value="2">פחות מומלץ</option>' +
-                            '<option value="1">לא מומלץ כלל</option>' +
+                            '<option value="">' + translatedHtml('form.choose') + '</option>' +
+                            '<option value="5">' + translatedHtml('form.recommendation5') + '</option>' +
+                            '<option value="4">' + translatedHtml('form.recommendation4') + '</option>' +
+                            '<option value="3">' + translatedHtml('form.recommendation3') + '</option>' +
+                            '<option value="2">' + translatedHtml('form.recommendation2') + '</option>' +
+                            '<option value="1">' + translatedHtml('form.recommendation1') + '</option>' +
                         '</select>' +
                         '<div class="invalid-feedback">' +
-                            'יש לבחור אפשרות מתאימה' +
+                            translatedHtml('form.choiceRequired') +
                         '</div>' +
                     '</div>' +
                 '</div>' +
                 '<div>' +
-                    '<strong>שימו לב:</strong> ' +
-                    'חוות הדעת אנונימיות, אך זהותכם תישמר במערכת לצרכי בקרה. ' +
-                    'חוות דעת שיכילו תוכן לא ראוי (כגון שפה בוטה, תוכן שאינו קשור לקורס, התייחסות אישית ולא עניינית לאיש סגל) יוסרו מהמערכת.' +
+                    '<strong>' + translatedHtml('form.noticeTitle') + '</strong> ' +
+                    translatedHtml('form.noticeText') +
                 '</div>' +
             '</form>')
             : ('<div>' +
-                'כדי לפרסם חוות דעת יש להתחבר לחשבון שלכם במערכת.' +
+                translatedHtml('form.loginRequired') +
                 // Pages without a login flow of their own point at one that has it.
                 (options.loginUrl
                     ? '<br>' +
-                        '<a href="' + options.loginUrl + '" target="_blank">התחברו באתר CheeseFork</a>' +
-                        ' ולאחר מכן רעננו עמוד זה.'
+                        $('<a>', {
+                            href: CheeseI18n.withLocale(options.loginUrl),
+                            target: '_blank',
+                            rel: 'noopener',
+                            text: t('form.loginLink')
+                        }).prop('outerHTML') +
+                        ' ' + translatedHtml('form.loginRefresh')
                     : '') +
             '</div>');
 
@@ -148,7 +167,7 @@ var CourseFeedback = (function () {
 
         if (authenticated) {
             buttons.push({
-                label: 'פרסם',
+                label: t('form.submit'),
                 cssClass: 'btn-primary',
                 action: function (dialog) {
                     var body = dialog.getModalBody();
@@ -185,7 +204,7 @@ var CourseFeedback = (function () {
                         .then(function () {
                             options.onSubmit();
                         }, function (error) {
-                            alert('Error writing document: ' + error);
+                            alert(t('writeError', {error: error}));
                         });
 
                     dialog.close();
@@ -195,7 +214,7 @@ var CourseFeedback = (function () {
 
         if (authenticated && options.skipButton) {
             buttons.push({
-                label: 'דלג על הקורס',
+                label: t('form.skip'),
                 action: function (dialog) {
                     dialog.close();
                     options.onSubmit();
@@ -204,14 +223,14 @@ var CourseFeedback = (function () {
         }
 
         buttons.push({
-            label: 'סגור',
+            label: t('close'),
             action: function (dialog) {
                 dialog.close();
             }
         });
 
         BootstrapDialog.show({
-            title: 'פרסום חוות דעת',
+            title: t('form.title'),
             message: messageElement,
             buttons: buttons,
             onshow: function (dialog) {
@@ -242,33 +261,31 @@ var CourseFeedback = (function () {
                         done = semesterEnd > monthNow;
                     }
                 }
-                selectSemester.prepend($('<option value="">לחצו לבחירת סמסטר...</option>')).val(selectValue);
+                selectSemester.prepend($('<option>', {
+                    value: '',
+                    text: t('form.semesterChoose')
+                })).val(selectValue);
 
-                var displayName = localStorage.getItem('feedbackDisplayName');
+                var displayName;
+                try {
+                    displayName = localStorage.getItem('feedbackDisplayName');
+                } catch (e) {
+                    // A display name can still be entered when browser storage is unavailable.
+                }
                 if (displayName) {
                     body.find('#feedback-form-author').val(displayName);
                 }
 
                 var validateFeedbackText = function () {
-                    var templateParts = [
-                        'שם המרצה:',
-                        'חוות דעת - הרצאות:',
-                        'שם המתרגל/ת:',
-                        'חוות דעת - תרגולים:',
-                        'שעורי הבית:',
-                        'המבחן:',
-                        'השורה התחתונה:'
-                    ];
-
                     var value = this.value;
-                    templateParts.forEach(function (templatePart) {
-                        value = value.replace(templatePart, '');
+                    templateLabels.forEach(function (templatePart) {
+                        value = value.split(templatePart).join('');
                     });
 
                     var words = value.trim().split(/\s+/);
 
                     if (words.length <= 3) {
-                        this.setCustomValidity('איכות חוות הדעת חשובה לנו, אנא הוסיפו פרטים על הקורס שיכולים לעזור לסטודנטים אחרים');
+                        this.setCustomValidity(t('form.textRequired'));
                     } else {
                         this.setCustomValidity('');
                     }
@@ -284,37 +301,37 @@ var CourseFeedback = (function () {
         var contentHtml =
             '<div>' +
                 '<div>' +
-                    'טופס זה מאפשר לדווח על חוות דעת שמכילה תוכן לא ראוי.' +
+                    translatedHtml('report.intro') +
                     '<br>' +
                     '<br>' +
-                    'דוגמאות לתוכן לא ראוי:' +
+                    translatedHtml('report.inappropriateExamples') +
                     '<ul>' +
-                        '<li>שפה בוטה</li>' +
-                        '<li>תוכן שאינו קשור לקורס (למשל: אמירות פוליטיות)</li>' +
-                        '<li>התייחסות אישית ולא עניינית לאיש סגל (למשל: המרצה שונא את הסטודנטים ושמח לראות אותם נכשלים)</li>' +
+                        '<li>' + translatedHtml('report.offensiveLanguage') + '</li>' +
+                        '<li>' + translatedHtml('report.unrelatedContent') + '</li>' +
+                        '<li>' + translatedHtml('report.personalRemarks') + '</li>' +
                     '</ul>' +
-                    'דוגמאות לתוכן שאינו תוכן לא ראוי:' +
+                    translatedHtml('report.appropriateExamples') +
                     '<ul>' +
-                        '<li>ביקורת עניינית נוקבת (למשל: המרצה מבולגן וקשה לעקוב אחרי ההסברים שלו)</li>' +
+                        '<li>' + translatedHtml('report.constructiveCriticism') + '</li>' +
                     '</ul>' +
                 '</div>' +
                 '<form>' +
                     '<div class="form-row">' +
                         '<div class="form-group col-md-6">' +
-                            '<label for="report-form-email">כתובת דואר אלקטרוני</label>' +
-                            '<input type="email" class="form-control" id="report-form-email" required>' +
+                            '<label for="report-form-email">' + translatedHtml('report.email') + '</label>' +
+                            '<input type="email" class="form-control" id="report-form-email" dir="ltr" required>' +
                             '<div class="invalid-feedback">' +
-                                'יש להזין כתובת דואר אלקטרוני חוקית' +
+                                translatedHtml('report.emailInvalid') +
                             '</div>' +
                         '</div>' +
                     '</div>' +
                     '<div class="form-row">' +
                         '<div class="form-group col-md-12">' +
-                            '<label for="report-form-reason">סיבת הדיווח</label>' +
-                            '<textarea class="form-control" id="report-form-reason" rows="6" required>' +
+                            '<label for="report-form-reason">' + translatedHtml('report.reason') + '</label>' +
+                            '<textarea class="form-control" id="report-form-reason" dir="auto" rows="6" required>' +
                             '</textarea>' +
                             '<div class="invalid-feedback">' +
-                                'יש להזין את סיבת הדיווח' +
+                                translatedHtml('report.reasonRequired') +
                             '</div>' +
                         '</div>' +
                     '</div>' +
@@ -322,7 +339,7 @@ var CourseFeedback = (function () {
             '</div>';
 
         var buttons = [{
-            label: 'דווח',
+            label: t('report.submit'),
             cssClass: 'btn-primary',
             action: function (dialog) {
                 var body = dialog.getModalBody();
@@ -352,20 +369,20 @@ var CourseFeedback = (function () {
                     .then(function () {
                         options.onSubmit();
                     }, function (error) {
-                        alert('Error writing document: ' + error);
+                        alert(t('writeError', {error: error}));
                     });
 
                 dialog.close();
             }
         }, {
-            label: 'סגור',
+            label: t('close'),
             action: function (dialog) {
                 dialog.close();
             }
         }];
 
         BootstrapDialog.show({
-            title: 'דיווח על תוכן לא ראוי',
+            title: t('report.title'),
             message: contentHtml,
             buttons: buttons
         });
@@ -417,19 +434,23 @@ var CourseFeedback = (function () {
 
         return '<div class="row course-ranks">' +
                 '<div class="col-' + columnGrid + ' course-rank">' +
-                    '<div class="course-rank-title">כללי</div>' +
-                    '<div class="course-rank-icons">' +
+                    '<div class="course-rank-title">' + translatedHtml('rank.general') + '</div>' +
+                    '<div role="img" aria-label="' + translatedHtml('rank.generalLabel', {rating: Math.round(generalRank * 10) / 10}) + '">' +
+                        '<span aria-hidden="true" class="course-rank-icons">' +
                         '<i class="fas fa-2x fa-thumbs-down"></i>' +
                         makeStars(generalRank) +
                         '<i class="fas fa-2x fa-thumbs-up"></i>' +
+                        '</span>' +
                     '</div>' +
                 '</div>' +
                 '<div class="col-' + columnGrid + ' course-rank">' +
-                    '<div class="course-rank-title">עומס</div>' +
-                    '<div class="course-rank-icons">' +
+                    '<div class="course-rank-title">' + translatedHtml('rank.workload') + '</div>' +
+                    '<div role="img" aria-label="' + translatedHtml('rank.workloadLabel', {rating: Math.round(difficultyRank * 10) / 10}) + '">' +
+                        '<span aria-hidden="true" class="course-rank-icons">' +
                         '<i class="fas fa-2x fa-feather-alt"></i>' +
                         makeWeights(difficultyRank) +
                         '<i class="fas fa-2x fa-dumbbell"></i>' +
+                        '</span>' +
                     '</div>' +
                 '</div>' +
             '</div>';
@@ -438,11 +459,11 @@ var CourseFeedback = (function () {
     function makeFeedbackSummaryHtml(posts, columnGrid) {
         var content = $('<div id="course-feedback-summary"></div>');
 
-        var title = 'חוות דעת';
+        var title = t('summary.title');
         if (posts.length === 1) {
-            title = 'חוות דעת אחת';
+            title = t('summary.one');
         } else if (posts.length > 1) {
-            title = posts.length + ' חוות דעת';
+            title = t('summary.many', {count: posts.length});
         }
 
         content.append($('<h3>', {
@@ -474,31 +495,258 @@ var CourseFeedback = (function () {
     }
 
     function preprocessPostText(text) {
-        // Remove non-filled template parts.
-        var templateParts = [
-            'שם המרצה:',
-            'חוות דעת - הרצאות:',
-            'שם המתרגל/ת:',
-            'חוות דעת - תרגולים:',
-            'שעורי הבית:',
-            'המבחן:',
-            'השורה התחתונה:'
-        ].filter(function (templatePart) {
-            return text.indexOf(templatePart) !== -1;
+        var labelPattern = templateLabels.map(function (label) {
+            return label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }).join('|');
+        var pattern = new RegExp('(^|\\n)[\\t ]*(?:' + labelPattern + ')', 'g');
+        var sections = [];
+        var match;
+        while ((match = pattern.exec(text)) !== null) {
+            sections.push({start: match.index + match[1].length, end: pattern.lastIndex});
+        }
+        var result = '';
+        var cursor = 0;
+        sections.forEach(function (section, index) {
+            var end = index + 1 < sections.length ? sections[index + 1].start : text.length;
+            if (!text.slice(section.end, end).trim()) {
+                result += text.slice(cursor, section.start);
+                cursor = end;
+            }
         });
+        return (result + text.slice(cursor)).trim();
+    }
 
-        for (var i = 0; i + 1 < templateParts.length; i++) {
-            var t1 = templateParts[i];
-            var t2 = templateParts[i + 1];
-            var regex = new RegExp(t1 + '\\s*' + t2);
-            text = text.replace(regex, t2);
+    function addPostTranslation(postContent, originalText) {
+        var api = window.Translator;
+        var supported = api && typeof api.availability === 'function' && typeof api.create === 'function';
+        var state = supported ? 'idle' : 'fallback';
+        var availabilityState = '';
+        var translatedValue = null;
+        var translator = null;
+        var requestOptions = {sourceLanguage: 'he', targetLanguage: 'en'};
+        var translatedText = $('<div>', {
+            class: 'feedback-post-text feedback-translated-text',
+            lang: 'en',
+            dir: 'ltr'
+        });
+        var translatedContent = $('<div>', {
+            class: 'feedback-translated-review',
+            lang: 'en',
+            dir: 'ltr'
+        }).append($('<div>', {
+            class: 'feedback-translation-label small font-weight-bold',
+            text: t('translation.machineLabel')
+        }), translatedText).hide();
+        var controls = $('<div>', {class: 'feedback-translation-controls'});
+        var status = $('<div>', {
+            class: 'feedback-translation-status small',
+            role: 'status',
+            'aria-live': 'polite',
+            'aria-atomic': 'true'
+        });
+        var button = $('<button>', {
+            type: 'button',
+            class: 'btn btn-sm btn-outline-secondary feedback-translate',
+            text: t(supported ? 'translation.translate' : 'translation.select')
+        });
+        var selectionButton = $('<button>', {
+            type: 'button',
+            class: 'btn btn-sm btn-link feedback-select-original',
+            text: t('translation.select')
+        }).hide();
+
+        function stopWaiting() {
+            controls.removeAttr('aria-busy');
+            button.prop('disabled', false);
         }
 
-        var t1Last = templateParts[templateParts.length - 1];
-        var regexLast = new RegExp(t1Last + '\\s*$');
-        text = text.replace(regexLast, '');
+        function releaseTranslator() {
+            if (translator && typeof translator.destroy === 'function') {
+                try {
+                    translator.destroy();
+                } catch (e) {
+                    // Translation results remain usable when model cleanup is unavailable.
+                }
+            }
+            translator = null;
+        }
 
-        return text.trim();
+        function selectOriginal() {
+            originalText.show();
+            translatedContent.hide();
+            if (translatedValue !== null) {
+                state = 'original';
+                button.text(t('translation.showEnglish'));
+            }
+            try {
+                if (typeof window.getSelection === 'function' && typeof document.createRange === 'function') {
+                    var selection = window.getSelection();
+                    var range = document.createRange();
+                    if (selection) {
+                        range.selectNodeContents(originalText.get(0));
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                        status.text(t('translation.selected') + ' ' + t('translation.browserHelp'));
+                        return;
+                    }
+                }
+            } catch (e) {
+                // The browser menu remains available when text selection is restricted.
+            }
+            status.text(t('translation.browserHelp'));
+        }
+
+        function showFallback() {
+            state = 'fallback';
+            stopWaiting();
+            button.text(t('translation.select'));
+            selectOriginal();
+            status.text(t('translation.unavailable') + ' ' + status.text());
+        }
+
+        function onError() {
+            releaseTranslator();
+            state = 'idle';
+            stopWaiting();
+            button.text(t('translation.retry'));
+            selectionButton.show();
+            status.text(t('translation.error') + ' ' + t('translation.browserHelp'));
+        }
+
+        function showTranslation(value) {
+            if (typeof value !== 'string' || !value.trim()) {
+                onError();
+                return;
+            }
+            translatedValue = value;
+            translatedText.text(value);
+            originalText.hide();
+            translatedContent.show();
+            selectionButton.hide();
+            state = 'translated';
+            stopWaiting();
+            button.text(t('translation.showOriginal'));
+            status.text(t('translation.complete'));
+            releaseTranslator();
+        }
+
+        function createTranslator() {
+            if (window.navigator.userActivation && window.navigator.userActivation.isActive === false) {
+                state = 'ready';
+                stopWaiting();
+                button.text(t('translation.continue'));
+                status.text(t('translation.activationRequired'));
+                return;
+            }
+            status.text(t(availabilityState === 'available' ? 'translation.translating' : 'translation.downloading'));
+            var created;
+            try {
+                created = api.create({
+                    sourceLanguage: requestOptions.sourceLanguage,
+                    targetLanguage: requestOptions.targetLanguage,
+                    monitor: function (monitor) {
+                        if (monitor && typeof monitor.addEventListener === 'function') {
+                            monitor.addEventListener('downloadprogress', function (event) {
+                                if (state === 'pending' && typeof event.loaded === 'number' && isFinite(event.loaded)) {
+                                    status.text(t('translation.downloadProgress', {
+                                        percent: Math.max(0, Math.min(100, Math.round(event.loaded * 100)))
+                                    }));
+                                }
+                            });
+                        }
+                    }
+                });
+            } catch (e) {
+                onError();
+                return;
+            }
+            if (!created || typeof created.then !== 'function') {
+                onError();
+                return;
+            }
+            created.then(function (createdTranslator) {
+                translator = createdTranslator;
+                if (!translator || typeof translator.translate !== 'function') {
+                    onError();
+                    return;
+                }
+                status.text(t('translation.translating'));
+                var result;
+                try {
+                    result = translator.translate(originalText.text());
+                } catch (e) {
+                    onError();
+                    return;
+                }
+                if (!result || typeof result.then !== 'function') {
+                    onError();
+                    return;
+                }
+                result.then(showTranslation, onError);
+            }, onError);
+        }
+
+        button.on('click', function () {
+            if (state === 'pending') {
+                return;
+            }
+            if (state === 'fallback') {
+                selectOriginal();
+                return;
+            }
+            if (state === 'translated') {
+                originalText.show();
+                translatedContent.hide();
+                state = 'original';
+                button.text(t('translation.showEnglish'));
+                status.text(t('translation.originalShown'));
+                return;
+            }
+            if (state === 'original') {
+                showTranslation(translatedValue);
+                return;
+            }
+            if (window.navigator.userActivation && window.navigator.userActivation.isActive === false) {
+                button.text(t('translation.continue'));
+                status.text(t('translation.activationRequired'));
+                return;
+            }
+            var ready = state === 'ready';
+            state = 'pending';
+            button.prop('disabled', true);
+            controls.attr('aria-busy', 'true');
+            status.text(t('translation.checking'));
+            if (ready) {
+                createTranslator();
+                return;
+            }
+            var availability;
+            try {
+                availability = api.availability(requestOptions);
+            } catch (e) {
+                onError();
+                return;
+            }
+            if (!availability || typeof availability.then !== 'function') {
+                onError();
+                return;
+            }
+            availability.then(function (value) {
+                if (value !== 'available' && value !== 'downloadable' && value !== 'downloading') {
+                    showFallback();
+                    return;
+                }
+                availabilityState = value;
+                createTranslator();
+            }, onError);
+        });
+
+        selectionButton.on('click', selectOriginal);
+        if (!supported) {
+            status.text(t('translation.unavailable') + ' ' + t('translation.browserHelp'));
+        }
+        controls.append(button, selectionButton, status);
+        postContent.append(translatedContent, controls);
     }
 
     function makeFeedbackSinglePostHtml(course, post, columnGrid) {
@@ -506,15 +754,22 @@ var CourseFeedback = (function () {
 
         content.append($('<div>', {
             class: 'box-title',
-            text: 'סמסטר ' + semesterFriendlyName(post.semester)
+            text: t('post.semester', {semester: semesterFriendlyName(post.semester)})
         }));
 
         var postText = preprocessPostText(post.text);
 
-        var postContent = $('<div>', {
-            class: 'box-content',
-            html: $('<div>').text(postText).html().replace(/\n/g, '<br>')
+        var originalText = $('<div>', {
+            class: 'feedback-post-text feedback-original-text',
+            lang: /[\u0590-\u05ff]/.test(postText) ? 'he' : 'en',
+            dir: 'auto',
+            text: postText
         });
+        var postContent = $('<div>', {class: 'box-content'}).append(originalText);
+
+        if (CheeseI18n.getLocale() === 'en' && /[\u0590-\u05ff]/.test(postText)) {
+            addPostTranslation(postContent, originalText);
+        }
 
         if (post.generalRank && post.difficultyRank) {
             postContent.append(makeRanksHtml(post.generalRank, post.difficultyRank, columnGrid));
@@ -522,37 +777,42 @@ var CourseFeedback = (function () {
 
         content.append(postContent);
 
-        var prettyDate = new Date(post.timestamp).toLocaleDateString('he-IL', {
+        var prettyDate = new Date(post.timestamp).toLocaleDateString(CheeseI18n.getLocale() === 'en' ? 'en-GB' : 'he-IL', {
             year: 'numeric',
             month: 'long',
             day: 'numeric'
         });
 
-        var flagButton = $('<a>', {
-            href: '#'
+        var flagButton = $('<button>', {
+            type: 'button',
+            class: 'btn btn-link p-0 feedback-report',
+            'aria-label': t('report.title'),
+            title: t('report.title'),
+            'data-toggle': 'tooltip'
         }).append($('<i>', {
             class: 'fas fa-flag',
-            title: 'דיווח על תוכן לא ראוי',
-            'data-toggle': 'tooltip'
-        }).tooltip().click(function (event) {
+            'aria-hidden': 'true'
+        })).tooltip().click(function (event) {
             reportFeedbackDialog(course, post.timestamp, post.text, post.author, {
                 onSubmit: function () {
                     BootstrapDialog.show({
-                        title: 'הדיווח נשלח בהצלחה',
-                        message: 'תודה על הדיווח! נטפל בו בהקדם האפשרי.',
+                        title: t('report.successTitle'),
+                        message: t('report.successText'),
                         size: BootstrapDialog.SIZE_SMALL
                     });
                 }
             });
             return false;
-        }));
+        });
 
         var footerBox = $('<div>', {
             class: 'box-footer'
         }).append($('<span>', {
             text: '- '
         }), $('<span>', {
-            style: 'unicode-bidi: embed;', // prevent RTL mixing: https://stackoverflow.com/a/28257435
+            class: 'feedback-author',
+            dir: 'auto',
+            lang: /[\u0590-\u05ff]/.test(post.author) ? 'he' : 'en',
             text: post.author
         }), $('<span>', {
             text: ', ' + prettyDate
@@ -564,18 +824,19 @@ var CourseFeedback = (function () {
     }
 
     function makeFeedbackPostsHtml(course, posts, columnGrid) {
-        var content = $('<div id="course-feedback-carousel" class="carousel slide carousel-fade" data-ride="carousel" data-interval="false">' +
+        var content = $('<div id="course-feedback-carousel" class="carousel slide carousel-fade" data-ride="carousel" data-interval="false" role="region">' +
                 '<ol class="carousel-indicators"></ol>' +
                 '<div class="carousel-inner"></div>' +
                 '<a class="carousel-control-prev" href="#course-feedback-carousel" role="button" data-slide="prev">' +
                     '<span class="carousel-control-prev-icon" aria-hidden="true"></span>' +
-                    '<span class="sr-only">Previous</span>' +
+                    '<span class="sr-only">' + translatedHtml('carousel.previous') + '</span>' +
                 '</a>' +
                 '<a class="carousel-control-next" href="#course-feedback-carousel" role="button" data-slide="next">' +
                     '<span class="carousel-control-next-icon" aria-hidden="true"></span>' +
-                    '<span class="sr-only">Next</span>' +
+                    '<span class="sr-only">' + translatedHtml('carousel.next') + '</span>' +
                 '</a>' +
             '</div>');
+        content.attr('aria-label', t('carousel.label'));
 
         var carouselIndicators = content.find('.carousel-indicators');
         var carouselInner = content.find('.carousel-inner');
@@ -583,16 +844,35 @@ var CourseFeedback = (function () {
         posts.forEach(function (post, i) {
             var active = i === posts.length - 1;
 
-            var indicator = '<li data-target="#course-feedback-carousel" data-slide-to="' + i + '"' + (active ? ' class="active"' : '') + '></li>';
+            var reviewLabel = t('carousel.reviewNumber', {number: i + 1, count: posts.length});
+            var indicator = $('<li>', {
+                'data-target': '#course-feedback-carousel',
+                'data-slide-to': i,
+                class: active ? 'active' : '',
+                role: 'button',
+                tabindex: '0',
+                'aria-label': reviewLabel,
+                'aria-current': active ? 'true' : 'false'
+            }).on('keydown', function (event) {
+                if (event.which === 13 || event.which === 32) {
+                    event.preventDefault();
+                    $(this).click();
+                }
+            });
             carouselIndicators.append(indicator);
 
             var carouselItemContents = $('<div class="carousel-item-contents"></div>')
                 .append(makeFeedbackSinglePostHtml(course, post, columnGrid));
 
             var carouselItem = $('<div class="carousel-item' + (active ? ' active' : '') + '"></div>')
+                .attr({role: 'group', 'aria-label': reviewLabel})
                 .append(carouselItemContents);
 
             carouselInner.append(carouselItem);
+        });
+
+        content.on('slid.bs.carousel', function () {
+            carouselIndicators.children().attr('aria-current', 'false').filter('.active').attr('aria-current', 'true');
         });
 
         return content;
@@ -611,16 +891,20 @@ var CourseFeedback = (function () {
         } else {
             content.append($('<div>', {
                 class: 'mb-2',
-                text: 'לא קיימות חוות דעת לקורס זה.'
+                text: t('empty')
             }));
         }
 
-        var newFeedbackButton = $('<button type="button" class="btn btn-primary">פרסום חוות דעת</button>')
+        var newFeedbackButton = $('<button>', {
+            type: 'button',
+            class: 'btn btn-primary',
+            text: t('form.title')
+        })
             .click(function (event) {
-                var button = $(this).prop('disabled', true);
+                var button = $(this).prop('disabled', true).text(t('form.checkingAuth'));
 
                 whenAuthReady(function () {
-                    button.prop('disabled', false);
+                    button.prop('disabled', false).text(t('form.title'));
 
                     newFeedbackDialog(course, {
                         onSubmit: function () {
@@ -648,13 +932,13 @@ var CourseFeedback = (function () {
 
         switch (semesterCode) {
         case '01':
-            return 'חורף ' + year + '-' + (year + 1);
+            return t('semester.winter', {year: year, nextYear: year + 1});
 
         case '02':
-            return 'אביב ' + (year + 1);
+            return t('semester.spring', {year: year + 1});
 
         case '03':
-            return 'קיץ ' + (year + 1);
+            return t('semester.summer', {year: year + 1});
 
         default:
             return semester;
@@ -666,11 +950,11 @@ var CourseFeedback = (function () {
         var that = this;
 
         if (loadingMessage === undefined || loadingMessage) {
-            element.text('טוען נתונים...');
+            element.text(t('loading'));
         }
 
         var onError = function () {
-            element.text('טעינת הנתונים נכשלה. נסו שוב מאוחר יותר.');
+            element.text(t('loadError'));
         };
 
         if (typeof firebase !== 'undefined') {
@@ -701,7 +985,9 @@ var CourseFeedback = (function () {
                 i++;
 
                 var perHtml = $('<div>').append(options.dialogHtml, $('<h3>', {
-                    text: courseTitle
+                    text: courseTitle,
+                    lang: 'he',
+                    dir: 'auto'
                 }));
 
                 newFeedbackDialog(course, {

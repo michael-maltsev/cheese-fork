@@ -2,12 +2,16 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="utf-8">
+    <script src="i18n.js"></script>
+    <script src="locales/he.js"></script>
+    <script src="locales/en.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>CheeseFork - שיתוף היסטוגרמות</title>
+    <title data-i18n="sharing.pageTitle">CheeseFork - שיתוף היסטוגרמות</title>
     <link rel="shortcut icon" href="favicon.ico">
     <link rel="stylesheet" href="modules/bootstrap-rtl/css/bootstrap.min.css">
     <link rel="stylesheet" href="modules/fontawesome/css/all.min.css">
     <link rel="stylesheet" href="cheesefork.css">
+    <link rel="stylesheet" href="i18n.css">
     <style>
         p {
             margin-bottom: .5rem;
@@ -28,94 +32,31 @@
                 <li id="top-navbar-home" class="nav-item">
                     <a class="nav-link" href=".">
                         <i class="fas fa-home"></i>
-                        המערכת שלי
+                        <span data-i18n="sharing.nav.home">המערכת שלי</span>
                     </a>
                 </li>
             </ul>
         </div>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#top-navbar-supported-content" aria-controls="top-navbar-supported-content" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#top-navbar-supported-content" aria-controls="top-navbar-supported-content" aria-expanded="false" aria-label="תפריט ניווט" data-i18n-aria-label="sharing.nav.toggle">
             <span class="navbar-toggler-icon"></span>
         </button>
         <a class="navbar-brand" href=".">
-            <img src="logo.png" alt="logo" height="30">
+            <img src="logo.png" alt="CheeseFork" height="30">
             <span class="font-weight-bold">CheeseFork</span>
         </a>
     </nav>
 
     <div id="content-container">
         <div class="my-2 my-md-0">
-            <h1>שיתוף היסטוגרמות</h1>
-
-            <p>עקבו אחרי השלבים הבאים בשביל לשתף את ההיסטוגרמות הנגישות לכם באתר הציונים של הטכניון.</p>
-            <p>ביצוע השלבים יגרום לקוד של שיתוף ההיסטוגרמות לרוץ בסביבת אתר הציונים של הטכניון. את הקוד ניתן לראות <a href="share-histograms.js" target="_blank"> כאן</a>.</p>
-            <p>המידע יישלח למאגר שמאוחסן ב-GitHub <a href="https://github.com/michael-maltsev/technion-histograms" target="_blank" rel="noopener">כאן</a>.</p>
-            <p>ישותף מידע כללי בלבד, כגון מספר הסטודנטים וממוצעי המבחנים. המידע ישותף רק לאחר לחיצה על כפתור השיתוף. לא ישותף מידע אישי.</p>
-            <p>את השיתוף ניתן לבצע גם מהפלאפון, לפחות דרך Chrome, וייתכן גם דרך דפדפנים אחרים שלא בדקנו.</p>
-
-            <h3>שלבי השיתוף עם התוסף <a href="https://chromewebstore.google.com/detail/technion-plus-plus/pfhjnidbfndnjhpcpfecngcigdjebemk" target="_blank" rel="noopener">Technion Plus Plus</a></h3>
-            <ol>
-                <li class="mb-0">
-                    היכנסו
-                    <a href="https://grades.technion.ac.il/" target="_blank" rel="noopener">לאתר הציונים של הטכניון</a>
-                    והתחברו במידת הצורך.
-                </li>
-                <li class="mb-0">
-                    לחצו על <a href="assets/share-histograms-guide-technionplus-1.png" target="_blank">כפתור שיתוף ההיסטוגרמות</a>.
-                </li>
-                <li>
-                    דלגו לשלב 4 בהמשך עמוד זה.
-                </li>
-            </ol>
-
-            <h3>שלבי השיתוף ללא התוסף</h3>
-            <ol>
-                <li>
-                    העתיקו את הקוד הבא:
-                    <div class="form-row mt-2">
-                        <div class="form-group mb-0 col-md-6">
-                            <textarea dir="ltr" class="form-control" id="javascript-code-container" rows="4" onfocus="this.select();" onmouseup="return false;" readonly>avascript:var url='https://cheesefork.cf/share-histograms.js';var script=document.createElement('script');script.src=url;document.head.appendChild(script);</textarea>
-                            <button type="button" class="btn btn-primary mt-2" id="javascript-code-copy-button">העתקת הקוד</button>
-                        </div>
-                    </div>
-                </li>
-                <li>
-                    היכנסו לאתר הציונים של הטכניון והתחברו במידת הצורך.
-                    <div class="form-group">
-                        <a class="btn btn-primary mt-2" href="https://grades.technion.ac.il/" role="button" target="_blank" rel="noopener">כניסה לאתר הציונים</a>
-                    </div>
-                </li>
-                <li>
-                    <p>
-                        <strong>עבור Chrome:</strong> הכניסו בשורת הכתובת את האות j, ולאחריה הדביקו את הקוד שהעתקתם בשלב 1. לבסוף לחצו Enter.<br>
-                        <img class="border border-primary mt-2 img-fluid d-none d-sm-block" src="assets/share-histograms-guide-1.png" alt="הדביקו את הקוד כך">
-                        <img class="border border-primary mt-2 img-fluid d-block d-sm-none" src="assets/share-histograms-guide-mobile-1.png" alt="הדביקו את הקוד כך">
-                    </p>
-                    <p>
-                        <strong>עבור דפדפנים אחרים:</strong> תנסו לבצע את הנ"ל.
-                        אם זה לא עובד (למשל האפשרות חסומה בגרסאות חדשות של Firefox)
-                        תפתחו את ה-Developer Tools בדפדפן שלכם, עברו ללשונית Console,
-                        הכניסו בשורת הקוד את האות j, ולאחריה הדביקו את הקוד שהעתקתם בשלב 1. לבסוף לחצו Enter.
-                    </p>
-                </li>
-                <li>
-                    <p>
-                        המתינו לטעינת המידע, ולחצו על כפתור השיתוף הירוק לשיתוף ההיסטוגרמות.<br>
-                        <strong>חשוב:</strong> אל תגלשו באתר הציונים בזמן הטעינה, גם לא בחלון אחר של הדפדפן.<br>
-                        <img class="border border-primary mt-2 img-fluid d-none d-sm-block" src="assets/share-histograms-guide-2.png" alt="לחצו לשיתוף ההיסטוגרמות כך">
-                        <img class="border border-primary mt-2 img-fluid d-block d-sm-none" src="assets/share-histograms-guide-mobile-2.png" alt="לחצו לשיתוף ההיסטוגרמות כך">
-                    </p>
-                </li>
-                <li>
-                    המתינו להשלמת השיתוף. גם בזמן השיתוף, אל תגלשו באתר הציונים, גם לא בחלון אחר של הדפדפן.
-                </li>
-            </ol>
+            <h1 data-i18n="histogram.share">שיתוף היסטוגרמות</h1>
+            <div id="share-guide"></div>
         </div>
     </div>
 
     <footer class="pt-4 text-muted text-center text-small">
         <p class="mb-1">
-            תוכנת על ידי <a href="https://github.com/michael-maltsev" target="_blank" rel="noopener">מיכאל מלצב</a>.
-            <a href="https://cheesefork.cf/PRIVACY.md" target="_blank" rel="noopener">מדיניות פרטיות</a>.
+            <span data-i18n="sharing.footer.createdBy">תוכנת על ידי</span> <a href="https://github.com/michael-maltsev" target="_blank" rel="noopener" data-i18n="sharing.footer.author">מיכאל מלצב</a>.
+            <a href="https://cheesefork.cf/PRIVACY.md" target="_blank" rel="noopener" data-i18n="sharing.footer.privacy">מדיניות פרטיות</a>.
         </p>
     </footer>
 </div>
@@ -130,54 +71,10 @@
 </script>
 <script src="modules/fullcalendar/lib/jquery.min.js"></script>
 <script src="modules/bootstrap-rtl/js/bootstrap.min.js"></script>
+<script src="components/histogram-browser/histogram-browser.js"></script>
 <script>
-    $('#javascript-code-copy-button').click(function () {
-        var button = $(this);
-        var code = $('#javascript-code-container').val();
-        copyToClipboard(code, function () {
-            var text = button.text();
-            button.text(text + ' ✓').prop('disabled', true);
-            setTimeout(function () {
-                button.text(text).prop('disabled', false);
-            }, 500);
-        }, function () {
-            alert('ההעתקה נכשלה');
-        });
-    });
-
-    // https://stackoverflow.com/a/30810322
-    function copyToClipboard(text, onSuccess, onFailure) {
-        if (!navigator.clipboard) {
-            fallbackCopyTextToClipboard(text);
-            return;
-        }
-        navigator.clipboard.writeText(text).then(function () {
-            onSuccess();
-        }, function (err) {
-            onFailure();
-        });
-
-        function fallbackCopyTextToClipboard(text) {
-            var textArea = document.createElement('textarea');
-            textArea.value = text;
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-
-            var successful = false;
-            try {
-                successful = document.execCommand('copy');
-            } catch (err) { }
-
-            document.body.removeChild(textArea);
-
-            if (successful) {
-                onSuccess();
-            } else {
-                onFailure();
-            }
-        }
-    }
+    $('#share-guide').append(HistogramBrowser.createShareGuide());
+    $('#top-navbar a[href="."]').attr('href', CheeseI18n.withLocale('.'));
 </script>
 </body>
 </html>

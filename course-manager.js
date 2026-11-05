@@ -1,6 +1,6 @@
 'use strict';
 
-/* global moment, BooleanExpression, currentSemester */
+/* global moment, BooleanExpression, currentSemester, CheeseI18n */
 
 function CourseManager(allCourses) {
     var that = this;
@@ -214,133 +214,293 @@ CourseManager.prototype.getTitle = function (course) {
     return general['מספר מקצוע'] + ' - ' + general['שם מקצוע'];
 };
 
+CourseManager.prototype.getFieldLabel = function (key) {
+    var keys = {
+        "מספר מקצוע": 'courses.fields.number',
+        "שם מקצוע": 'courses.fields.name',
+        "פקולטה": 'courses.fields.faculty',
+        "מסגרת לימודים": 'courses.fields.framework',
+        "נקודות": 'courses.fields.credits',
+        "סילבוס": 'courses.fields.syllabus',
+        "מקצועות קדם": 'courses.fields.prerequisites',
+        "מקצועות צמודים": 'courses.fields.corequisites',
+        "מקצועות זהים": 'courses.fields.equivalentCourses',
+        "מקצועות ללא זיכוי נוסף (מוכלים)": 'courses.fields.noAdditionalCreditIncluded',
+        "מקצועות ללא זיכוי נוסף (מכילים)": 'courses.fields.noAdditionalCreditIncluding',
+        "מקצועות ללא זיכוי נוסף": 'courses.fields.noAdditionalCredit',
+        "אחראים": 'courses.fields.coordinators',
+        "הערות": 'courses.fields.remarks',
+        "מרצה/מתרגל": 'courses.fields.staff',
+        "יום": 'courses.fields.day',
+        "שעה": 'courses.fields.time',
+        "בניין": 'courses.fields.building',
+        "חדר": 'courses.fields.room',
+        "קבוצה": 'courses.fields.group',
+        "מס.": 'courses.fields.lessonNumber',
+        "סוג": 'courses.fields.lessonType',
+        "אתר הקורס": 'courses.fields.website',
+        "עבור לסמסטר": 'courses.fields.semester',
+        "מיקום": 'courses.fields.location',
+        "מועד הבחינה": 'courses.fields.examDate',
+        "הרצאה": 'courses.fields.lectureHours',
+        "תרגיל": 'courses.fields.tutorialHours',
+        "מעבדה": 'courses.fields.laboratoryHours',
+        "סמינר/פרויקט": 'courses.fields.seminarProjectHours',
+        "בוחן מועד א": 'courses.fields.testSession1',
+        "בוחן מועד ב": 'courses.fields.testSession2',
+        "בוחן מועד ג": 'courses.fields.testSession3',
+        "בוחן מועד ד": 'courses.fields.testSession4',
+        "בוחן מועד ה": 'courses.fields.testSession5',
+        "בוחן מועד ו": 'courses.fields.testSession6',
+        "מועד א": 'courses.fields.examSession1',
+        "מועד ב": 'courses.fields.examSession2',
+        "מועד ג": 'courses.fields.examSession3'
+    };
+    return Object.prototype.hasOwnProperty.call(keys, key) ? CheeseI18n.t(keys[key]) : key;
+};
+
+CourseManager.prototype.getLessonTypeLabel = function (value) {
+    if (CheeseI18n.getLocale() !== 'en' && value !== 'sadna') {
+        return value;
+    }
+    var keys = {
+        "הרצאה": 'courses.lessonTypes.lecture',
+        "תרגול": 'courses.lessonTypes.tutorial',
+        "תרגיל": 'courses.lessonTypes.tutorial',
+        "מעבדה": 'courses.lessonTypes.laboratory',
+        "סמינר": 'courses.lessonTypes.seminar',
+        "פרויקט": 'courses.lessonTypes.project',
+        "סמינר/פרויקט": 'courses.lessonTypes.seminarProject',
+        "סדנה": 'courses.lessonTypes.workshop',
+        "sadna": 'courses.lessonTypes.workshop'
+    };
+    return Object.prototype.hasOwnProperty.call(keys, value) ? CheeseI18n.t(keys[value]) : value;
+};
+
+CourseManager.prototype.getDayLabel = function (value) {
+    if (CheeseI18n.getLocale() !== 'en') {
+        return value;
+    }
+    var keys = {
+        "ראשון": 'calendar.days.sunday',
+        "שני": 'calendar.days.monday',
+        "שלישי": 'calendar.days.tuesday',
+        "רביעי": 'calendar.days.wednesday',
+        "חמישי": 'calendar.days.thursday',
+        "שישי": 'calendar.days.friday',
+        "שבת": 'calendar.days.saturday',
+        "א": 'calendar.days.sunday',
+        "ב": 'calendar.days.monday',
+        "ג": 'calendar.days.tuesday',
+        "ד": 'calendar.days.wednesday',
+        "ה": 'calendar.days.thursday',
+        "ו": 'calendar.days.friday',
+        "ש": 'calendar.days.saturday'
+    };
+    return Object.prototype.hasOwnProperty.call(keys, value) ? CheeseI18n.t(keys[value]) : value;
+};
+
+CourseManager.prototype.getFacultyLabel = function (value) {
+    if (CheeseI18n.getLocale() !== 'en') {
+        return value;
+    }
+    var keys = {
+        "המחלקה ללימודים הומניסטיים ואמנות": 'courses.faculties.humanities',
+        "הנדסה ימית": 'courses.faculties.marineEngineering',
+        "הפקולטה לארכיטקטורה ובינוי ערים": 'courses.faculties.architecture',
+        "הפקולטה לביולוגיה": 'courses.faculties.biology',
+        "הפקולטה להנדסה אזרחית וסביבתית": 'courses.faculties.civilEnvironmental',
+        "הפקולטה להנדסה ביו-רפואית": 'courses.faculties.biomedical',
+        "הפקולטה להנדסה כימית": 'courses.faculties.chemical',
+        "הפקולטה להנדסת אווירונוטיקה וחלל": 'courses.faculties.aerospace',
+        "הפקולטה להנדסת ביוטכנולוגיה ומזון": 'courses.faculties.biotechnologyFood',
+        "הפקולטה להנדסת חשמל ומחשבים": 'courses.faculties.electricalComputer',
+        "הפקולטה להנדסת מכונות": 'courses.faculties.mechanical',
+        "הפקולטה לכימיה": 'courses.faculties.chemistry',
+        "הפקולטה למדע והנדסה של חומרים": 'courses.faculties.materials',
+        "הפקולטה למדעי המחשב": 'courses.faculties.computerScience',
+        "הפקולטה למדעי הנתונים וההחלטות": 'courses.faculties.dataDecision',
+        "הפקולטה למתמטיקה": 'courses.faculties.mathematics',
+        "הפקולטה לפיזיקה": 'courses.faculties.physics',
+        "הפקולטה לרפואה": 'courses.faculties.medicine',
+        "חינוך למדע וטכנולוגיה": 'courses.faculties.education',
+        "מדע יישומי (ג'ייקובס-קורנל)": 'courses.faculties.appliedScience',
+        "מערכות אוטונומיות ורובוטיקה": 'courses.faculties.autonomousRobotics',
+        "מתמטיקה שימושית": 'courses.faculties.appliedMathematics',
+        "ננו-מדעים וננו-טכנולוגיה": 'courses.faculties.nanoscience',
+        "תוכנית האנרגיה ע\"ש גרנד": 'courses.faculties.energy',
+        "הפקולטה להנדסת חשמל": 'courses.faculties.electrical',
+        "הפקולטה להנדסת תעשייה וניהול": 'courses.faculties.industrialManagement',
+        "הפקולטה להנדסת חומרים": 'courses.faculties.materials',
+        "המחלקה לחינוך למדע וטכנולוגיה": 'courses.faculties.education'
+    };
+    return Object.prototype.hasOwnProperty.call(keys, value) ? CheeseI18n.t(keys[value]) : value;
+};
+
+CourseManager.prototype.getFrameworkLabel = function (value) {
+    if (CheeseI18n.getLocale() !== 'en') {
+        return value;
+    }
+    var keys = {
+        "לימודי הסמכה": 'courses.frameworks.undergraduate',
+        "מקצוע משותף": 'courses.frameworks.shared',
+        "תארים מתקדמים": 'courses.frameworks.graduate'
+    };
+    return Object.prototype.hasOwnProperty.call(keys, value) ? CheeseI18n.t(keys[value]) : value;
+};
+
 CourseManager.prototype.getDescription = function (course, options) {
-    var general = this.coursesHashmap[course].general;
+    var that = this;
+    var general = that.coursesHashmap[course].general;
     var header = general['מספר מקצוע'] + ' - ' + general['שם מקצוע'];
+    var headerHtml = options.html ? sourceHtml(header) : '';
+    var content = '';
+    var contentHtml = '';
+
+    function escapeHtml(value) {
+        return $('<div>').text(value).html();
+    }
+
+    function sourceHtml(value) {
+        return $('<span>', {
+            class: 'source-content',
+            lang: /[א-ת]/.test(value) ? 'he' : 'en',
+            dir: 'auto',
+            text: value
+        })[0].outerHTML.replace(/\n/g, '<br>');
+    }
+
+    function addHeader(key, value) {
+        var label = that.getFieldLabel(key) + ': ';
+        header += '\n' + label + value;
+        if (options.html) {
+            headerHtml += '<br>' + escapeHtml(label) + (/[א-ת]/.test(value) ? sourceHtml(value) : escapeHtml(value));
+        }
+    }
+
+    function addContent(key, value, separator) {
+        var label = key ? that.getFieldLabel(key) + ': ' : '';
+        content += separator + label + value;
+        if (options.html) {
+            contentHtml += separator.replace(/\n/g, '<br>') + escapeHtml(label) + sourceHtml(value);
+        }
+    }
 
     if (general['פקולטה']) {
-        header += '\nפקולטה: ' + general['פקולטה'];
+        addHeader('פקולטה', that.getFacultyLabel(general['פקולטה']));
     }
 
     if (general['מסגרת לימודים']) {
-        header += '\nמסגרת לימודים: ' + general['מסגרת לימודים'].replace(/\n/g, ', ');
+        addHeader('מסגרת לימודים', general['מסגרת לימודים'].split('\n').map(function (framework) {
+            return that.getFrameworkLabel(framework);
+        }).join(', '));
     }
 
     if (general['נקודות']) {
-        header += '\nנקודות: ' + general['נקודות'];
+        addHeader('נקודות', general['נקודות']);
     }
 
-    var content = '';
-
     if (general['סילבוס']) {
-        content += '\n\n' + general['סילבוס'];
+        addContent(null, general['סילבוס'], '\n\n');
     }
 
     if (options.relatedCourseInfo) {
-        var relatedCourseKeys = [
+        [
             'מקצועות קדם',
             'מקצועות צמודים',
             'מקצועות זהים',
             'מקצועות ללא זיכוי נוסף (מוכלים)',
             'מקצועות ללא זיכוי נוסף (מכילים)',
             'מקצועות ללא זיכוי נוסף'
-        ];
-        relatedCourseKeys.forEach(function (key) {
+        ].forEach(function (key) {
             if (general[key]) {
-                var value = general[key];
-                value = value
+                var value = general[key]
                     .replace(/(ו-)\s+/g, '$1')
                     .replace(/(\()\s+/g, '$1')
                     .replace(/\s+(\))/g, '$1')
-                    .replace(/\s+/g, ' ') // replaces &nbsp; and multiple spaces with a single space
+                    .replace(/\s+/g, ' ')
                     .trim();
-                content += '\n\n' + key + ': ' + value;
+                if (CheeseI18n.getLocale() === 'en') {
+                    value = value
+                        .replace(/(^|[\s(])או(?=$|[\s()])/g, '$1or')
+                        .replace(/(^|[\s(])ו-\s*(?=\d|\()/g, '$1and ');
+                }
+                addContent(key, value, '\n\n');
             }
         });
     }
 
     if (general['אחראים']) {
-        content += '\n\nאחראים: ' + general['אחראים'];
+        addContent('אחראים', general['אחראים'], '\n\n');
     }
 
-    var pre_exam_content = '';
     [
-        'בוחן מועד א',
-        'בוחן מועד ב',
-        'בוחן מועד ג',
-        'בוחן מועד ד',
-        'בוחן מועד ה',
-        'בוחן מועד ו'
-    ].forEach(function (key) {
-        if (general[key]) {
-            pre_exam_content += '\n' + key + '\': ' + general[key].replace(/\n\n/g, '\n========\n');
-        }
+        ['בוחן מועד א', 'בוחן מועד ב', 'בוחן מועד ג', 'בוחן מועד ד', 'בוחן מועד ה', 'בוחן מועד ו'],
+        ['מועד א', 'מועד ב', 'מועד ג']
+    ].forEach(function (keys) {
+        var first = true;
+        keys.forEach(function (key) {
+            if (general[key]) {
+                var value = general[key].replace(/\n\n/g, '\n========\n');
+                if (CheeseI18n.getLocale() === 'en') {
+                    value = value.split('\n').map(function (line) {
+                        return line.replace(/^בתאריך (\d+)\.(\d+)\.(\d+)(?: יום ([א-ו]) משעה (\d+(?::\d+)?) עד השעה (\d+(?::\d+)?))?/, function (match, day, month, year, weekday, start, end) {
+                            var label = day + '/' + month + '/' + year;
+                            if (weekday) {
+                                label += ' ' + that.getDayLabel(weekday) + ' ' + start + ' - ' + end;
+                            }
+                            return label;
+                        });
+                    }).join('\n');
+                }
+                addContent(key, value, first ? '\n\n' : '\n');
+                first = false;
+            }
+        });
     });
-
-    if (pre_exam_content) {
-        content += '\n' + pre_exam_content;
-    }
-
-    var exam_content = '';
-    [
-        'מועד א',
-        'מועד ב',
-        'מועד ג'
-    ].forEach(function (key) {
-        if (general[key]) {
-            exam_content += '\n' + key + '\': ' + general[key].replace(/\n\n/g, '\n========\n');
-        }
-    });
-
-    if (exam_content) {
-        content += '\n' + exam_content;
-    }
 
     if (general['הערות']) {
-        content += '\n\nהערות: ' + general['הערות'];
+        addContent('הערות', general['הערות'], '\n\n');
     }
 
     if (!options.html) {
         return header + content;
     }
 
-    var headerHtml = $('<div>').text(header).html().replace(/\n/g, '<br>');
     var linksHtml = '';
-    var contentHtml = $('<div>').text(content).html().replace(/\n/g, '<br>');
-
     if (options.links) {
         var loggingProps;
-
         if (currentSemester < '202401') {
             loggingProps = options.logging ? ' onclick="gtag(\'event\', \'info-click-link-rishum\')"' : '';
             linksHtml += '<br><br><a href="https://students.technion.ac.il/local/technionsearch/course/' + course + '" target="_blank" rel="noopener"' + loggingProps + '>' +
-                '<img src="assets/icon-students.png" alt="icon" width="16" height="16"> פורטל הסטודנטים</a>';
+                '<img src="assets/icon-students.png" alt="" width="16" height="16"> ' + escapeHtml(CheeseI18n.t('courses.links.studentPortal')) + '</a>';
         } else {
             var currentSemesterYear = currentSemester.slice(0, 4);
             var currentSemesterSapSemester = parseInt(currentSemester.slice(4), 10) - 1 + 200;
+            var sapLanguage = CheeseI18n.getLocale() === 'en' ? 'EN' : 'HE';
             loggingProps = options.logging ? ' onclick="gtag(\'event\', \'info-click-link-sap\')"' : '';
-            linksHtml += '<br><br><a href="https://portalex.technion.ac.il/ovv/?sap-theme=sap_belize&sap-language=HE&sap-ui-language=HE#/details/' + currentSemesterYear + '/' + currentSemesterSapSemester + '/SM/' + course + '" target="_blank" rel="noopener"' + loggingProps + '>' +
-                '<img src="assets/icon-sap.png" alt="icon" width="16" height="16"> קטלוג מקצועות מקוון</a>';
+            linksHtml += '<br><br><a href="https://portalex.technion.ac.il/ovv/?sap-theme=sap_belize&sap-language=' + sapLanguage + '&sap-ui-language=' + sapLanguage + '#/details/' + currentSemesterYear + '/' + currentSemesterSapSemester + '/SM/' + course + '" target="_blank" rel="noopener"' + loggingProps + '>' +
+                '<img src="assets/icon-sap.png" alt="" width="16" height="16"> ' + escapeHtml(CheeseI18n.t('courses.links.catalog')) + '</a>';
         }
 
-        if (this.isComputerScienceCourse(course)) {
+        if (that.isComputerScienceCourse(course)) {
             loggingProps = options.logging ? ' onclick="gtag(\'event\', \'info-click-link-webcourse\')"' : '';
             linksHtml += '<br><a href="https://webcourse.cs.technion.ac.il/' + course + '/" target="_blank" rel="noopener"' + loggingProps + '>' +
-                '<img src="assets/icon-webcourse.png" alt="icon" width="16" height="16"> אתר ה-WebCourse</a>';
+                '<img src="assets/icon-webcourse.png" alt="" width="16" height="16"> ' + escapeHtml(CheeseI18n.t('courses.links.webcourse')) + '</a>';
         }
 
         loggingProps = options.logging ? ' onclick="gtag(\'event\', \'info-click-link-facebook\')"' : '';
-        linksHtml += '<br><a href="https://www.facebook.com/search/groups/?q=' + this.toOldCourseNumber(course) + '" target="_blank" rel="noopener"' + loggingProps + '>' +
-            '<img src="assets/icon-facebook.png" alt="icon" width="16" height="16"> חיפוש קבוצה בפייסבוק</a>';
+        linksHtml += '<br><a href="https://www.facebook.com/search/groups/?q=' + that.toOldCourseNumber(course) + '" target="_blank" rel="noopener"' + loggingProps + '>' +
+            '<img src="assets/icon-facebook.png" alt="" width="16" height="16"> ' + escapeHtml(CheeseI18n.t('courses.links.facebook')) + '</a>';
 
         loggingProps = options.logging ? ' onclick="gtag(\'event\', \'info-click-link-tscans\')"' : '';
         linksHtml += '<br><a href="https://scans.cheesefork.cf/?course=' + course + '" target="_blank" rel="noopener"' + loggingProps + '>' +
-            '<img src="assets/icon-scans.png" alt="icon" width="16" height="16"> סריקות מבחנים</a>';
+            '<img src="assets/icon-scans.png" alt="" width="16" height="16"> ' + escapeHtml(CheeseI18n.t('courses.links.examScans')) + '</a>';
 
         if (options.whatsappGroupLink) {
             loggingProps = options.logging ? ' onclick="gtag(\'event\', \'info-click-link-whatsapp\')"' : '';
             linksHtml += '<br><a href="#" class="whatsapp-group-link"' + loggingProps + '>' +
-                '<img src="assets/icon-whatsapp.png" alt="icon" width="16" height="16"> קבוצת וואטסאפ/טלגרם</a>';
+                '<img src="assets/icon-whatsapp.png" alt="" width="16" height="16"> ' + escapeHtml(CheeseI18n.t('courses.links.groups')) + '</a>';
         }
     }
 
@@ -358,9 +518,9 @@ CourseManager.prototype.getLessonTypeAndNumber = function (lesson) {
     if (lesson['סוג'] === 'sadna') {
         // No number since that's our addition to the schedule.
         // We assume only one workshop can be selected.
-        return 'סדנה';
+        return this.getLessonTypeLabel('sadna');
     }
-    return lesson['סוג'] + ' ' + lesson['מס.'];
+    return this.getLessonTypeLabel(lesson['סוג']) + ' ' + lesson['מס.'];
 };
 
 CourseManager.prototype.parseExamDateTime = function (strDate) {
