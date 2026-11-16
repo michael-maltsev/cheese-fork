@@ -82,6 +82,31 @@
     border-color: #6c757d;
 }
 
+.calendar-item-color-button {
+    display: none;
+    position: absolute;
+    /* Place above the text which has the z-index value of 2 */
+    z-index: 3;
+    top: 5px;
+    left: calc(min(5px, 20%));
+    padding: 0 3px;
+    color: black;
+    background-color: white;
+    border: 1px solid black;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.fc-event:hover .calendar-item-color-button {
+    display: block;
+}
+
+.calendar-item-color-button:hover {
+    color: white;
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+
 .calendar-item-previewed {
     border: 3px solid #1565C0 !important;
 }

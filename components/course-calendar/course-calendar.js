@@ -18,6 +18,7 @@ var CourseCalendar = (function () {
         this.onCustomEventAdded = options.onCustomEventAdded;
         this.onCustomEventUpdated = options.onCustomEventUpdated;
         this.onCustomEventRemoved = options.onCustomEventRemoved;
+        this.onColorPickerClick = options.onColorPickerClick;
 
         var that = this;
 
@@ -590,7 +591,7 @@ var CourseCalendar = (function () {
             title: eventTitle,
             start: start,
             end: end,
-            backgroundColor: courseCalendar.colorGenerator(eventTitle),
+            backgroundColor: courseCalendar.colorGenerator(eventTitle, eventId),
             textColor: 'white',
             borderColor: 'white',
             editable: !courseCalendar.readonly,
@@ -724,6 +725,16 @@ var CourseCalendar = (function () {
             return;
         }
 
+        // The ':hover' check is for mobile, same as for the hide button above.
+        var colorButton = $(jsEvent.target).closest('.calendar-item-color-button');
+        if (colorButton.length > 0 && colorButton.is(':hover')) {
+            gtag('event', 'calendar-color-click');
+
+            // Courses are identified by the course number, custom events by the event id.
+            that.onColorPickerClick(event.courseNumber !== null ? event.courseNumber : event.id);
+            return;
+        }
+
         if (event.courseNumber === null) {
             BootstrapDialog.show({
                 title: 'עריכת אירוע מותאם אישית',
@@ -743,7 +754,7 @@ var CourseCalendar = (function () {
                         }
 
                         event.title = eventTitle;
-                        event.backgroundColor = that.colorGenerator(eventTitle);
+                        event.backgroundColor = that.colorGenerator(eventTitle, event.id);
                         calendar.fullCalendar('updateEvent', event);
 
                         that.onCustomEventUpdated(event.id.replace(/^custom_event_/, ''), {
@@ -889,6 +900,10 @@ var CourseCalendar = (function () {
                     element.append('<div class="calendar-item-unselected-hide-button">הסתר</div>');
                 }
             }
+        }
+
+        if (!this.readonly && !event.temporary) {
+            element.append('<div class="calendar-item-color-button" title="בחירת צבע"><i class="fas fa-palette"></i></div>');
         }
     }
 
@@ -1112,6 +1127,29 @@ var CourseCalendar = (function () {
                 that.onLessonTypesHidden(course, lessonTypesHidden);
             }
         });
+    };
+
+    // Re-applies colorGenerator to all events, call after a custom color changes.
+    CourseCalendar.prototype.updateColors = function () {
+        var that = this;
+        var calendar = that.element;
+
+        var lessonEvents = [];
+        var customEvents = [];
+
+        calendar.fullCalendar('clientEvents', function (event) {
+            var color = event.courseNumber !== null ?
+                that.colorGenerator(event.courseNumber) :
+                that.colorGenerator(event.title, event.id);
+            if (event.backgroundColor !== color) {
+                event.backgroundColor = color;
+                (event.courseNumber !== null ? lessonEvents : customEvents).push(event);
+            }
+            return false;
+        });
+
+        updateLessonEvents(calendar, lessonEvents);
+        calendar.fullCalendar('updateEvents', customEvents);
     };
 
     CourseCalendar.prototype.saveAsIcs = function (icsCal, dateFrom, dateTo, daysOff) {

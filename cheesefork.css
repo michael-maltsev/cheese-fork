@@ -151,6 +151,29 @@ html.os-html>.os-host>.os-scrollbar {
     overflow: auto;
 }
 
+/* Color picker dialog */
+.color-picker {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+}
+
+.color-picker-item {
+    height: 40px;
+    padding: 0;
+    border: 2px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.color-picker-item:hover,
+.color-picker-item:focus,
+.color-picker-item-selected {
+    border-color: #1565C0;
+    outline: none;
+    box-shadow: 0 0 0 2px #fff inset;
+}
+
 /* dark-mode-toggle customizations */
 footer dark-mode-toggle {
     display: inline-block;
