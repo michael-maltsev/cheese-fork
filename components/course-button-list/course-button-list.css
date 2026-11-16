@@ -194,3 +194,93 @@
     color: rgba(220, 53, 69, 1);
     transform: scale(1.1);
 }
+
+/* Drop areas, shown while dragging */
+.course-button-list-drop-areas {
+    display: flex;
+    justify-content: center;
+}
+
+.course-button-list-drop-areas .course-button-list-delete-area,
+.course-button-list-drop-areas .course-button-list-new-layer-area {
+    margin: 10px 8px;
+}
+
+/* New layer area for moving a course to a new layer */
+.course-button-list-new-layer-area {
+    background-color: rgba(0, 123, 255, 0.15);
+    color: rgba(0, 123, 255, 0.6);
+    padding: 12px;
+    text-align: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+    cursor: pointer;
+    border: 2px dashed rgba(0, 123, 255, 0.3);
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.course-button-list-new-layer-area i {
+    font-size: 20px;
+}
+
+.course-button-list-new-layer-area.ui-droppable-hover {
+    background-color: rgba(0, 123, 255, 0.3);
+    border-color: rgba(0, 123, 255, 0.8);
+    color: rgba(0, 123, 255, 1);
+    transform: scale(1.1);
+}
+
+/* Layers, only if layers are used */
+.course-button-list-layer-header {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+    padding: 4px 0;
+    border-right: 3px solid transparent;
+    cursor: pointer;
+}
+
+.course-button-list-readonly .course-button-list-layer-header {
+    cursor: default;
+}
+
+.course-button-list-layer-header:first-child {
+    margin-top: 20px;
+}
+
+/* The layer to which new courses and events are added */
+.course-button-list-layer-active {
+    border-right-color: #007bff;
+    font-weight: bold;
+}
+
+.course-button-list-layer-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.course-button-list-layer-visibility,
+.course-button-list-layer-menu-button {
+    padding: 0 8px;
+    cursor: pointer;
+}
+
+.course-button-list-readonly .course-button-list-layer-visibility {
+    cursor: default;
+}
+
+.course-button-list-with-layers .course-button-list-badge-container {
+    margin-top: 0;
+    /* Leave room for dragging a course to an empty layer */
+    min-height: 12px;
+}
+
+.course-button-list-layer-hidden .course-button-list-item {
+    opacity: 0.5;
+}
