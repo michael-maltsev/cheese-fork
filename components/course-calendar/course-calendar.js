@@ -18,6 +18,7 @@ var CourseCalendar = (function () {
         this.onCustomEventAdded = options.onCustomEventAdded;
         this.onCustomEventUpdated = options.onCustomEventUpdated;
         this.onCustomEventRemoved = options.onCustomEventRemoved;
+        this.getActiveLayerId = options.getActiveLayerId;
 
         var that = this;
 
@@ -260,6 +261,18 @@ var CourseCalendar = (function () {
         return getLessonType(event.courseNumber, event.lessonData);
     }
 
+    // Layers: each event belongs to a layer, and courses of different layers are independent of
+    // each other, so the same course can be in several layers with different lessons selected.
+    // The id of the first layer is an empty string, which keeps ids and class names as they
+    // were before layers were introduced.
+    function isSameCourse(event, course, layerId) {
+        return event.courseNumber === course && event.layerId === layerId;
+    }
+
+    function getCourseClassName(course, layerId) {
+        return 'calendar-item-' + (layerId ? 'layer-' + layerId + '-' : '') + 'course-' + course;
+    }
+
     function updateLessonEvents(calendar, events) {
         events = events.slice(); // make a copy
         events.forEach(function (value, index) {
@@ -276,12 +289,12 @@ var CourseCalendar = (function () {
         updateLessonEvents(calendar, [event]);
     }
 
-    function getCourseConflictedStatus(calendar, course) {
+    function getCourseConflictedStatus(calendar, course, layerId) {
         var lessonTypesAvailable = {};
         var lessonTypesVisible = {};
 
         calendar.fullCalendar('clientEvents', function (event) {
-            if (event.courseNumber !== course || event.lessonTypeHidden) {
+            if (!isSameCourse(event, course, layerId) || event.lessonTypeHidden) {
                 return false;
             }
 
@@ -299,11 +312,11 @@ var CourseCalendar = (function () {
         });
     }
 
-    function getCourseHiddenLessonTypes(calendar, course, courseManager) {
+    function getCourseHiddenLessonTypes(calendar, course, courseManager, layerId) {
         var lessonTypesHidden = {};
 
         calendar.fullCalendar('clientEvents', function (event) {
-            if (event.courseNumber !== course || !event.lessonTypeHidden) {
+            if (!isSameCourse(event, course, layerId) || !event.lessonTypeHidden) {
                 return false;
             }
 
@@ -429,7 +442,7 @@ var CourseCalendar = (function () {
         return startTime1.isBefore(endTime2) && endTime1.isAfter(startTime2);
     }
 
-    function makeLessonEvent(courseCalendar, course, lesson) {
+    function makeLessonEvent(courseCalendar, course, lesson, layerId) {
         var lessonType = getLessonType(course, lesson);
         var lessonStartEnd = courseCalendar.courseManager.parseLessonTime(lesson['שעה']);
 
@@ -459,7 +472,8 @@ var CourseCalendar = (function () {
             end: courseCalendar.element.fullCalendar('getCalendar').moment('2017-01-0' + lessonEndDay + 'T' + lessonStartEnd.end + ':00')
         };
 
-        var eventId = course + '.' + lesson['מס.'] + '.' + lessonType;
+        var eventId = (layerId ? layerId + '.' : '') + course + '.' + lesson['מס.'] + '.' + lessonType;
+        var courseClassName = getCourseClassName(course, layerId);
 
         var general = courseCalendar.courseManager.getGeneralInfo(course);
 
@@ -490,17 +504,18 @@ var CourseCalendar = (function () {
             backgroundColor: courseCalendar.colorGenerator(course),
             textColor: 'white',
             borderColor: 'white',
-            className: 'calendar-item-course-' + course +
-                ' calendar-item-course-' + course + '-type-' + lessonType +
-                ' calendar-item-course-' + course + '-lesson-' + lesson['מס.'],
+            className: courseClassName +
+                ' ' + courseClassName + '-type-' + lessonType +
+                ' ' + courseClassName + '-lesson-' + lesson['מס.'],
             courseNumber: course,
+            layerId: layerId,
             lessonData: lesson,
             selected: false,
             temporary: false
         };
     }
 
-    function initCreateCourseEvents(courseCalendar, course) {
+    function initCreateCourseEvents(courseCalendar, course, layerId) {
         var schedule = courseCalendar.courseManager.getSchedule(course);
         if (schedule.length === 0) {
             return [];
@@ -515,14 +530,14 @@ var CourseCalendar = (function () {
                 continue;
             }
 
-            events.push(makeLessonEvent(courseCalendar, course, lesson));
+            events.push(makeLessonEvent(courseCalendar, course, lesson, layerId));
             lessonsAdded[lesson['מס.']] = lesson['קבוצה'];
         }
 
         return events;
     }
 
-    function initSelectLesson(events, courseNumber, lessonType, lessonNumber) {
+    function initSelectLesson(events, courseNumber, lessonType, lessonNumber, layerId) {
         var selected = false;
         var conflictedIds = {};
 
@@ -530,7 +545,7 @@ var CourseCalendar = (function () {
             events.forEach(function (cbEvent) {
                 if (cbEvent.start.week() === 1 &&
                     !cbEvent.selected &&
-                    cbEvent.courseNumber === courseNumber &&
+                    isSameCourse(cbEvent, courseNumber, layerId) &&
                     getEventLessonType(cbEvent) === lessonType &&
                     cbEvent.lessonData['מס.'] === lessonNumber) {
 
@@ -546,7 +561,7 @@ var CourseCalendar = (function () {
 
         if (selected) {
             events.forEach(function (cbEvent) {
-                if (cbEvent.courseNumber === courseNumber &&
+                if (isSameCourse(cbEvent, courseNumber, layerId) &&
                     getEventLessonType(cbEvent) === lessonType &&
                     cbEvent.lessonData['מס.'] !== lessonNumber) {
                     // Different lesson number of the same course and type - can no longer be selected.
@@ -568,6 +583,10 @@ var CourseCalendar = (function () {
 
         function markConflictedEvents(event) {
             events.forEach(function (cbEvent) {
+                if (cbEvent.layerId !== event.layerId) {
+                    return;
+                }
+
                 if (cbEvent.courseNumber === event.courseNumber &&
                     getEventLessonType(cbEvent) === getEventLessonType(event)) {
                     return;
@@ -583,10 +602,11 @@ var CourseCalendar = (function () {
         }
     }
 
-    function makeCustomEvent(courseCalendar, eventId, eventTitle, start, end) {
+    function makeCustomEvent(courseCalendar, eventId, eventTitle, start, end, layerId) {
         return {
             id: eventId,
-            className: 'custom-event',
+            // The event id is added as a class only if it's safe to use as one.
+            className: 'custom-event' + (/^custom_event_\d+$/.test(eventId) ? ' calendar-item-' + eventId : ''),
             title: eventTitle,
             start: start,
             end: end,
@@ -599,6 +619,7 @@ var CourseCalendar = (function () {
                 end: '2017-01-07T24:00:00'
             },
             courseNumber: null,
+            layerId: layerId,
             lessonData: null,
             selected: true,
             temporary: false
@@ -636,14 +657,16 @@ var CourseCalendar = (function () {
                         eventId = 'custom_event_' + eventIdCounter;
                     }
 
-                    calendar.fullCalendar('renderEvent', makeCustomEvent(that, eventId, eventTitle, start, end));
+                    var layerId = that.getActiveLayerId ? that.getActiveLayerId() : '';
+
+                    calendar.fullCalendar('renderEvent', makeCustomEvent(that, eventId, eventTitle, start, end, layerId));
                     updateCalendarMaxDayAndTime(calendar);
 
                     that.onCustomEventAdded(eventIdCounter, {
                         title: eventTitle,
                         start: start.format(),
                         end: end.format()
-                    });
+                    }, layerId);
                 }
             }]
         });
@@ -659,7 +682,7 @@ var CourseCalendar = (function () {
             title: event.title,
             start: event.start.format(),
             end: event.end.format()
-        });
+        }, event.layerId);
     }
 
     function onEventClick(event, jsEvent) {
@@ -695,7 +718,7 @@ var CourseCalendar = (function () {
                         dialog.close();
 
                         var targetLessonTypeEvents = calendar.fullCalendar('clientEvents', function (cbEvent) {
-                            return cbEvent.courseNumber === event.courseNumber &&
+                            return isSameCourse(cbEvent, event.courseNumber, event.layerId) &&
                                 getEventLessonType(cbEvent) === getEventLessonType(event);
                         });
 
@@ -708,10 +731,10 @@ var CourseCalendar = (function () {
                         updateLessonEvents(calendar, targetLessonTypeEvents);
                         updateCalendarMaxDayAndTime(calendar);
 
-                        that.onLessonSelected(event.courseNumber, '-', getEventLessonType(event));
+                        that.onLessonSelected(event.courseNumber, '-', getEventLessonType(event), event.layerId);
 
-                        var lessonTypesHidden = getCourseHiddenLessonTypes(calendar, event.courseNumber, that.courseManager);
-                        that.onLessonTypesHidden(event.courseNumber, lessonTypesHidden);
+                        var lessonTypesHidden = getCourseHiddenLessonTypes(calendar, event.courseNumber, that.courseManager, event.layerId);
+                        that.onLessonTypesHidden(event.courseNumber, lessonTypesHidden, event.layerId);
                     }
                 }, {
                     label: 'סגור',
@@ -750,7 +773,7 @@ var CourseCalendar = (function () {
                             title: eventTitle,
                             start: event.start.format(),
                             end: event.end.format()
-                        });
+                        }, event.layerId);
                     }
                 }, {
                     label: 'הסר',
@@ -760,7 +783,7 @@ var CourseCalendar = (function () {
                         calendar.fullCalendar('removeEvents', event.id);
                         updateCalendarMaxDayAndTime(calendar);
 
-                        that.onCustomEventRemoved(event.id.replace(/^custom_event_/, ''));
+                        that.onCustomEventRemoved(event.id.replace(/^custom_event_/, ''), event.layerId);
                     }
                 }]
             });
@@ -775,7 +798,7 @@ var CourseCalendar = (function () {
         updateLessonEvent(calendar, event);
 
         var sameLessonTypeEvents = calendar.fullCalendar('clientEvents', function (cbEvent) {
-            if (cbEvent.courseNumber === event.courseNumber &&
+            if (isSameCourse(cbEvent, event.courseNumber, event.layerId) &&
                 getEventLessonType(cbEvent) === getEventLessonType(event)) {
 
                 if (cbEvent.lessonData['מס.'] === event.lessonData['מס.']) {
@@ -799,21 +822,21 @@ var CourseCalendar = (function () {
         updateCalendarMaxDayAndTime(calendar);
 
         Object.keys(conflictedCourses).forEach(function (conflictedCourse) {
-            var conflicted = getCourseConflictedStatus(calendar, conflictedCourse);
-            that.onCourseConflictedStatusChanged(conflictedCourse, conflicted);
+            var conflicted = getCourseConflictedStatus(calendar, conflictedCourse, event.layerId);
+            that.onCourseConflictedStatusChanged(conflictedCourse, conflicted, event.layerId);
         });
 
         if (selectingEvent) {
-            that.onLessonSelected(event.courseNumber, event.lessonData['מס.'], getEventLessonType(event));
+            that.onLessonSelected(event.courseNumber, event.lessonData['מס.'], getEventLessonType(event), event.layerId);
         } else {
-            that.onLessonUnselected(event.courseNumber, event.lessonData['מס.'], getEventLessonType(event));
+            that.onLessonUnselected(event.courseNumber, event.lessonData['מס.'], getEventLessonType(event), event.layerId);
         }
 
         function handleConflictedEvents(event) {
             var conflictedIds = {};
 
             var conflictedEvents = calendar.fullCalendar('clientEvents', function (cbEvent) {
-                if (cbEvent.courseNumber === null) {
+                if (cbEvent.courseNumber === null || cbEvent.layerId !== event.layerId) {
                     return false;
                 }
 
@@ -850,9 +873,10 @@ var CourseCalendar = (function () {
             return;
         }
 
-        $('.calendar-item-course-' + event.courseNumber, this.element).addClass('calendar-item-same-course-as-hovered');
-        $('.calendar-item-course-' + event.courseNumber + '-type-' + getEventLessonType(event), this.element).addClass('calendar-item-same-type-as-hovered');
-        this.onCourseHoverIn(event.courseNumber);
+        var courseClassName = getCourseClassName(event.courseNumber, event.layerId);
+        $('.' + courseClassName, this.element).addClass('calendar-item-same-course-as-hovered');
+        $('.' + courseClassName + '-type-' + getEventLessonType(event), this.element).addClass('calendar-item-same-type-as-hovered');
+        this.onCourseHoverIn(event.courseNumber, event.layerId);
     }
 
     function onEventMouseout(event) {
@@ -860,9 +884,10 @@ var CourseCalendar = (function () {
             return;
         }
 
-        $('.calendar-item-course-' + event.courseNumber, this.element).removeClass('calendar-item-same-course-as-hovered');
-        $('.calendar-item-course-' + event.courseNumber + '-type-' + getEventLessonType(event), this.element).removeClass('calendar-item-same-type-as-hovered');
-        this.onCourseHoverOut(event.courseNumber);
+        var courseClassName = getCourseClassName(event.courseNumber, event.layerId);
+        $('.' + courseClassName, this.element).removeClass('calendar-item-same-course-as-hovered');
+        $('.' + courseClassName + '-type-' + getEventLessonType(event), this.element).removeClass('calendar-item-same-type-as-hovered');
+        this.onCourseHoverOut(event.courseNumber, event.layerId);
     }
 
     function afterEventRender(event, element) {
@@ -879,8 +904,9 @@ var CourseCalendar = (function () {
             element.addClass('calendar-item-unselected');
 
             if (event.courseNumber !== null) {
-                var sameType = $('.calendar-item-course-' + event.courseNumber + '-type-' + getEventLessonType(event), this.element)
-                    .not('.calendar-item-course-' + event.courseNumber + '-lesson-' + event.lessonData['מס.']);
+                var courseClassName = getCourseClassName(event.courseNumber, event.layerId);
+                var sameType = $('.' + courseClassName + '-type-' + getEventLessonType(event), this.element)
+                    .not('.' + courseClassName + '-lesson-' + event.lessonData['מס.']);
                 if (sameType.length === 0) {
                     element.addClass('calendar-item-last-choice');
                 }
@@ -898,8 +924,10 @@ var CourseCalendar = (function () {
         updateDynamicSizes(that);
     }
 
-    CourseCalendar.prototype.addCourse = function (course) {
+    CourseCalendar.prototype.addCourse = function (course, layerId) {
         var that = this;
+
+        layerId = layerId || '';
 
         var schedule = that.courseManager.getSchedule(course);
         if (schedule.length === 0) {
@@ -918,7 +946,7 @@ var CourseCalendar = (function () {
                 continue;
             }
 
-            var event = makeLessonEvent(that, course, lesson);
+            var event = makeLessonEvent(that, course, lesson, layerId);
 
             var conflictCount = countEventConflicts(event);
             if (conflictCount > 0) {
@@ -943,8 +971,8 @@ var CourseCalendar = (function () {
 
         calendar.fullCalendar('renderEvents', events);
 
-        if (Object.keys(conflictedIds).length > 0 && getCourseConflictedStatus(calendar, course)) {
-            that.onCourseConflictedStatusChanged(course, true);
+        if (Object.keys(conflictedIds).length > 0 && getCourseConflictedStatus(calendar, course, layerId)) {
+            that.onCourseConflictedStatusChanged(course, true, layerId);
         }
 
         updateCalendarMaxDayAndTime(calendar);
@@ -952,7 +980,8 @@ var CourseCalendar = (function () {
         function countEventConflicts(event) {
             var count = 0;
             calendar.fullCalendar('clientEvents', function (cbEvent) {
-                if (cbEvent.courseNumber !== null && cbEvent.selected && areEventsOverlapping(cbEvent, event)) {
+                if (cbEvent.courseNumber !== null && cbEvent.layerId === layerId &&
+                    cbEvent.selected && areEventsOverlapping(cbEvent, event)) {
                     count++;
                 }
                 return false;
@@ -961,15 +990,18 @@ var CourseCalendar = (function () {
         }
     };
 
-    CourseCalendar.prototype.removeCourse = function (course) {
+    CourseCalendar.prototype.removeCourse = function (course, layerId) {
         var that = this;
         var calendar = that.element;
+
+        layerId = layerId || '';
 
         // Show conflicting events which can now be selected.
         var conflictedIds = {};
 
         var conflictedEvents = calendar.fullCalendar('clientEvents', function (event) {
-            if (event.courseNumber !== null && event.courseNumber !== course && isConflicted(event, course)) {
+            if (event.courseNumber !== null && event.layerId === layerId &&
+                event.courseNumber !== course && isConflicted(event, course)) {
                 if (!conflictedIds[event.id]) {
                     conflictedIds[event.id] = 1;
                     return true;
@@ -992,12 +1024,12 @@ var CourseCalendar = (function () {
 
         updateLessonEvents(calendar, conflictedEvents);
         calendar.fullCalendar('removeEvents', function (event) {
-            return event.courseNumber === course;
+            return isSameCourse(event, course, layerId);
         });
 
         Object.keys(conflictedCourses).forEach(function (conflictedCourse) {
-            var conflicted = getCourseConflictedStatus(calendar, conflictedCourse);
-            that.onCourseConflictedStatusChanged(conflictedCourse, conflicted);
+            var conflicted = getCourseConflictedStatus(calendar, conflictedCourse, layerId);
+            that.onCourseConflictedStatusChanged(conflictedCourse, conflicted, layerId);
         });
 
         updateCalendarMaxDayAndTime(calendar);
@@ -1005,19 +1037,21 @@ var CourseCalendar = (function () {
         // True if the event cannot be selected because of the given course.
         function isConflicted(event, course) {
             var conflictingEvent = calendar.fullCalendar('clientEvents', function (cbEvent) {
-                return cbEvent.courseNumber === course && cbEvent.selected && areEventsOverlapping(cbEvent, event);
+                return isSameCourse(cbEvent, course, layerId) && cbEvent.selected && areEventsOverlapping(cbEvent, event);
             });
 
             return conflictingEvent.length > 0;
         }
     };
 
-    CourseCalendar.prototype.previewCourse = function (course) {
+    CourseCalendar.prototype.previewCourse = function (course, layerId) {
         var that = this;
         var calendar = that.element;
 
+        layerId = layerId || '';
+
         var conflictedEvents = calendar.fullCalendar('clientEvents', function (event) {
-            return event.courseNumber === course && event.start.week() > 1;
+            return isSameCourse(event, course, layerId) && event.start.week() > 1;
         });
 
         var temporaryEvents = [];
@@ -1034,6 +1068,7 @@ var CourseCalendar = (function () {
                 borderColor: conf.borderColor,
                 className: conf.className,
                 courseNumber: conf.courseNumber,
+                layerId: conf.layerId,
                 lessonData: conf.lessonData,
                 selected: conf.selected,
                 temporary: true
@@ -1044,21 +1079,23 @@ var CourseCalendar = (function () {
 
         calendar.fullCalendar('renderEvents', temporaryEvents);
 
-        $('.calendar-item-course-' + course, this.element).addClass('calendar-item-previewed');
+        $('.' + getCourseClassName(course, layerId), this.element).addClass('calendar-item-previewed');
 
         if (conflictedEvents.length > 0) {
             updateCalendarMaxDayAndTime(calendar);
         }
     };
 
-    CourseCalendar.prototype.unpreviewCourse = function (course) {
+    CourseCalendar.prototype.unpreviewCourse = function (course, layerId) {
         var that = this;
         var calendar = that.element;
+
+        layerId = layerId || '';
 
         var removed = 0;
 
         calendar.fullCalendar('removeEvents', function (event) {
-            if (event.temporary && event.courseNumber === course) {
+            if (event.temporary && isSameCourse(event, course, layerId)) {
                 removed++;
                 return true;
             } else {
@@ -1066,51 +1103,70 @@ var CourseCalendar = (function () {
             }
         });
 
-        $('.calendar-item-course-' + course, this.element).removeClass('calendar-item-previewed');
+        $('.' + getCourseClassName(course, layerId), this.element).removeClass('calendar-item-previewed');
 
         if (removed > 0) {
             updateCalendarMaxDayAndTime(calendar);
         }
     };
 
-    CourseCalendar.prototype.loadSavedSchedule = function (schedule, customEvents) {
+    // Highlights a custom event, e.g. while it's hovered in the list.
+    CourseCalendar.prototype.setCustomEventHighlighted = function (eventId, highlighted) {
+        if (/^\d+$/.test(eventId)) {
+            $('.calendar-item-custom_event_' + eventId, this.element).toggleClass('calendar-item-previewed', highlighted);
+        }
+    };
+
+    // extraLayers is optional, an array of { id, schedule, customEvents } for the layers
+    // to show in addition to the first layer.
+    CourseCalendar.prototype.loadSavedSchedule = function (schedule, customEvents, extraLayers) {
         var that = this;
         var calendar = that.element;
 
         calendar.fullCalendar('removeEvents');
 
-        var events = [];
-        Object.keys(schedule).forEach(function (course) {
-            events = events.concat(initCreateCourseEvents(that, course));
-        });
+        var layers = [{ id: '', schedule: schedule, customEvents: customEvents }].concat(extraLayers || []);
 
-        Object.keys(schedule).forEach(function (course) {
-            var lessons = schedule[course];
-            Object.keys(lessons).forEach(function (lessonType) {
-                var lessonNumber = lessons[lessonType];
-                initSelectLesson(events, course, lessonType, lessonNumber);
+        var events = [];
+        layers.forEach(function (layer) {
+            Object.keys(layer.schedule).forEach(function (course) {
+                events = events.concat(initCreateCourseEvents(that, course, layer.id));
             });
         });
 
-        Object.keys(customEvents).forEach(function (eventId) {
-            var eventData = customEvents[eventId];
-            var start = calendar.fullCalendar('getCalendar').moment(eventData.start);
-            var end = calendar.fullCalendar('getCalendar').moment(eventData.end);
-            events.push(makeCustomEvent(that, 'custom_event_' + eventId, eventData.title, start, end));
+        layers.forEach(function (layer) {
+            Object.keys(layer.schedule).forEach(function (course) {
+                var lessons = layer.schedule[course];
+                Object.keys(lessons).forEach(function (lessonType) {
+                    var lessonNumber = lessons[lessonType];
+                    initSelectLesson(events, course, lessonType, lessonNumber, layer.id);
+                });
+            });
+        });
+
+        layers.forEach(function (layer) {
+            Object.keys(layer.customEvents).forEach(function (eventId) {
+                var eventData = layer.customEvents[eventId];
+                var start = calendar.fullCalendar('getCalendar').moment(eventData.start);
+                var end = calendar.fullCalendar('getCalendar').moment(eventData.end);
+                events.push(makeCustomEvent(that, 'custom_event_' + eventId, eventData.title, start, end, layer.id));
+            });
         });
 
         calendar.fullCalendar('renderEvents', events);
         updateCalendarMaxDayAndTime(calendar);
 
-        Object.keys(schedule).forEach(function (course) {
-            if (getCourseConflictedStatus(calendar, course)) {
-                that.onCourseConflictedStatusChanged(course, true);
-            }
+        layers.forEach(function (layer) {
+            Object.keys(layer.schedule).forEach(function (course) {
+                if (getCourseConflictedStatus(calendar, course, layer.id)) {
+                    that.onCourseConflictedStatusChanged(course, true, layer.id);
+                }
 
-            var lessonTypesHidden = getCourseHiddenLessonTypes(calendar, course, that.courseManager);
-            if (lessonTypesHidden.length > 0) {
-                that.onLessonTypesHidden(course, lessonTypesHidden);
-            }
+                var lessonTypesHidden = getCourseHiddenLessonTypes(calendar, course, that.courseManager, layer.id);
+                if (lessonTypesHidden.length > 0) {
+                    that.onLessonTypesHidden(course, lessonTypesHidden, layer.id);
+                }
+            });
         });
     };
 

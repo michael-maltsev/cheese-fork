@@ -14,10 +14,24 @@ var CourseButtonList = (function () {
         this.onEnableCourse = options.onEnableCourse;
         this.onDisableCourse = options.onDisableCourse;
         this.onReorder = options.onReorder;
+        this.onCourseMove = options.onCourseMove;
+        this.onLayerCreate = options.onLayerCreate;
+        this.onLayerRename = options.onLayerRename;
+        this.onLayerDelete = options.onLayerDelete;
+        this.onLayerVisibilityChange = options.onLayerVisibilityChange;
+        this.onCustomEventHoverIn = options.onCustomEventHoverIn;
+        this.onCustomEventHoverOut = options.onCustomEventHoverOut;
+        this.onCustomEventMove = options.onCustomEventMove;
+        this.onCustomEventRemove = options.onCustomEventRemove;
 
         var that = this;
 
         that.sortableInitialized = false;
+
+        // Layers are optional. Without layers (the default), there's only the first
+        // list, badgeContainer, which belongs to the first layer with an empty id.
+        that.layers = [];
+        that.activeLayerId = '';
 
         if (that.readonly) {
             that.element.addClass('course-button-list-readonly');
@@ -27,17 +41,235 @@ var CourseButtonList = (function () {
         that.badgeContainer = $('<ul class="course-button-list-badge-container list-group"></ul>');
         that.element.append(that.badgeContainer);
 
-        // Create delete area for drag-to-delete functionality (only if not readonly)
+        // Create drop areas, shown while dragging: drag-to-delete, and
+        // drag to move the course to a new layer (only if not readonly)
         if (!that.readonly) {
             that.deleteArea = $('<div class="course-button-list-delete-area">' +
                 '<i class="fas fa-trash-alt"></i>' +
                 '</div>');
-            that.deleteArea.hide();
-            that.element.append(that.deleteArea);
+            that.newLayerArea = $('<div class="course-button-list-new-layer-area" title="העברה לשכבה חדשה">' +
+                '<i class="fas fa-layer-group"></i>' +
+                '</div>');
+            that.dropAreas = $('<div class="course-button-list-drop-areas"></div>')
+                .append(that.newLayerArea, that.deleteArea);
+            that.dropAreas.hide();
+            that.element.append(that.dropAreas);
         }
 
         that.infoDialogs = [];
     }
+
+    function getAllLists(that) {
+        return that.element.find('ul.course-button-list-badge-container');
+    }
+
+    function getLayerList(that, layerId) {
+        if (!layerId) {
+            return that.badgeContainer;
+        }
+
+        return getAllLists(that).filter('[data-layer-id="' + layerId + '"]');
+    }
+
+    function getListLayerId(list) {
+        return list.attr('data-layer-id') || '';
+    }
+
+    // If layerId is undefined, returns the items of the course in all layers.
+    function findCourseItems(that, course, layerId) {
+        var lists = layerId === undefined ? getAllLists(that) : getLayerList(that, layerId);
+        return lists.find('li.list-group-item[data-course-number="' + course + '"]');
+    }
+
+    function findCustomEventItem(that, eventId) {
+        return getAllLists(that).find('li.course-button-list-custom-event').filter(function () {
+            return $(this).attr('data-custom-event-id') === String(eventId);
+        });
+    }
+
+    // Custom events are listed after the courses of the layer.
+    function moveCustomEventsToEnd(list) {
+        list.append(list.children('li.course-button-list-custom-event'));
+    }
+
+    function makeLayerHeader(that, layer) {
+        var header = $('<div class="course-button-list-layer-header"></div>').attr('data-layer-id', layer.id);
+
+        var visibility = $('<span class="course-button-list-layer-visibility"><i class="far"></i></span>');
+        visibility.find('i').addClass(layer.hidden ? 'fa-square' : 'fa-check-square');
+
+        var name = $('<span class="course-button-list-layer-name"></span>').text(layer.name);
+
+        header.append(visibility, name);
+
+        if (that.readonly) {
+            return header;
+        }
+
+        var menu = $('<span class="dropdown course-button-list-layer-menu">' +
+            '<span class="course-button-list-layer-menu-button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">' +
+            '<i class="fas fa-ellipsis-v"></i></span>' +
+            '<div class="dropdown-menu dropdown-menu-right text-right">' +
+            '<a class="dropdown-item course-button-list-layer-rename" href="#">שינוי שם</a>' +
+            '<a class="dropdown-item course-button-list-layer-add" href="#">שכבה חדשה</a>' +
+            '<a class="dropdown-item course-button-list-layer-delete" href="#">מחיקה</a>' +
+            '</div></span>');
+
+        header.append(menu);
+
+        header.click(function (e) {
+            // Clicking on the header selects the layer for adding new
+            // courses and events, unless one of the controls was clicked.
+            if ($(e.target).closest('.course-button-list-layer-visibility, .course-button-list-layer-menu').length === 0) {
+                that.setActiveLayer(layer.id);
+            }
+        });
+
+        visibility.attr('title', 'הצגה/הסתרה של השכבה').click(function () {
+            that.onLayerVisibilityChange(layer.id, !layer.hidden);
+        });
+
+        menu.find('.course-button-list-layer-rename').click(function (e) {
+            e.preventDefault();
+            showLayerRenameDialog(that, layer);
+        });
+
+        menu.find('.course-button-list-layer-add').click(function (e) {
+            e.preventDefault();
+            that.onLayerCreate(null, null);
+        });
+
+        menu.find('.course-button-list-layer-delete').click(function (e) {
+            e.preventDefault();
+            showLayerDeleteDialog(that, layer);
+        });
+
+        return header;
+    }
+
+    function showLayerRenameDialog(that, layer) {
+        var input = $('<input type="text" class="form-control" maxlength="20">').val(layer.name);
+
+        var rename = function (dialog) {
+            dialog.close();
+
+            var name = input.val().trim();
+            if (name !== '' && name !== layer.name) {
+                that.onLayerRename(layer.id, name);
+            }
+        };
+
+        BootstrapDialog.show({
+            title: 'שינוי שם השכבה',
+            message: input,
+            onshown: function (dialog) {
+                input.focus().select().keydown(function (e) {
+                    if (e.key === 'Enter') {
+                        rename(dialog);
+                    }
+                });
+            },
+            buttons: [{
+                label: 'שמור',
+                cssClass: 'btn-primary',
+                action: rename
+            }, {
+                label: 'סגור',
+                action: function (dialog) {
+                    dialog.close();
+                }
+            }]
+        });
+    }
+
+    function showLayerDeleteDialog(that, layer) {
+        var message = $('<div>').text('הפעולה תמחק את השכבה "' + layer.name + '" יחד עם הקורסים והאירועים שבה.');
+
+        BootstrapDialog.show({
+            title: 'מחיקת שכבה',
+            message: message,
+            buttons: [{
+                label: 'מחק',
+                cssClass: 'btn-danger',
+                action: function (dialog) {
+                    dialog.close();
+                    that.onLayerDelete(layer.id);
+                }
+            }, {
+                label: 'סגור',
+                action: function (dialog) {
+                    dialog.close();
+                }
+            }]
+        });
+    }
+
+    function removeLayers(that) {
+        that.element.find('.course-button-list-layer-header').remove();
+        getAllLists(that).not(that.badgeContainer).remove();
+        that.badgeContainer.removeClass('course-button-list-layer-hidden course-button-list-layer-active');
+        that.element.removeClass('course-button-list-with-layers');
+        that.layers = [];
+    }
+
+    // Sets the layers to show, an array of { id, name, hidden } with the first layer (which
+    // has an empty id) first, or an empty array for no layers. Call it for an empty list,
+    // before adding the courses.
+    CourseButtonList.prototype.setLayers = function (layers) {
+        var that = this;
+
+        that.destroySortable();
+        removeLayers(that);
+
+        that.layers = layers;
+
+        if (!layers.some(function (layer) { return layer.id === that.activeLayerId; })) {
+            that.activeLayerId = '';
+        }
+
+        if (layers.length === 0) {
+            return;
+        }
+
+        that.element.addClass('course-button-list-with-layers');
+
+        layers.forEach(function (layer) {
+            var list = that.badgeContainer;
+            if (layer.id) {
+                list = $('<ul class="course-button-list-badge-container list-group"></ul>').attr('data-layer-id', layer.id);
+                if (that.dropAreas) {
+                    list.insertBefore(that.dropAreas);
+                } else {
+                    that.element.append(list);
+                }
+            }
+
+            list.toggleClass('course-button-list-layer-hidden', !!layer.hidden);
+            makeLayerHeader(that, layer).insertBefore(list);
+        });
+
+        that.setActiveLayer(that.activeLayerId);
+
+        // Empty layers should be able to receive courses.
+        that.initializeSortableIfNeeded();
+    };
+
+    // The active layer is the layer to which new courses and custom events are added.
+    CourseButtonList.prototype.getActiveLayerId = function () {
+        return this.activeLayerId;
+    };
+
+    CourseButtonList.prototype.setActiveLayer = function (layerId) {
+        var that = this;
+
+        that.activeLayerId = layerId;
+
+        if (!that.readonly) {
+            that.element.find('.course-button-list-layer-header').each(function () {
+                $(this).toggleClass('course-button-list-layer-active', $(this).attr('data-layer-id') === layerId);
+            });
+        }
+    };
 
     function makeWhatsappGroupLinkContent(data) {
         var result = $('<div>');
@@ -272,8 +504,10 @@ var CourseButtonList = (function () {
         }
     }
 
-    CourseButtonList.prototype.addCourse = function (course) {
+    CourseButtonList.prototype.addCourse = function (course, layerId) {
         var that = this;
+
+        var list = getLayerList(that, layerId);
 
         var courseTitle = that.courseManager.getTitle(course);
 
@@ -302,11 +536,11 @@ var CourseButtonList = (function () {
             })
             .hover(function () {
                 $(this).addClass('course-button-list-item-hovered');
-                that.onHoverIn(course);
+                that.onHoverIn(course, getListLayerId($(this).parent()));
             },
             function () {
                 $(this).removeClass('course-button-list-item-hovered');
-                that.onHoverOut(course);
+                that.onHoverOut(course, getListLayerId($(this).parent()));
             })
             .append(dragHandle, spanAbsolute, spanBoldHidden, badge);
 
@@ -325,7 +559,7 @@ var CourseButtonList = (function () {
 
             gtag('event', 'course-button-list-info-click');
 
-            var firstTimeTooltipBadge = that.badgeContainer.find('[data-special-tooltip="first-time"]');
+            var firstTimeTooltipBadge = getAllLists(that).find('[data-special-tooltip="first-time"]');
             if (firstTimeTooltipBadge.length > 0) {
                 firstTimeTooltipBadge.tooltip('dispose');
                 addTooltipToBadge(firstTimeTooltipBadge, courseDescriptionHtml, false);
@@ -358,7 +592,7 @@ var CourseButtonList = (function () {
         });
 
         var showFirstTimeTooltip = false;
-        if (that.badgeContainer.find('li.list-group-item:first').length === 0) {
+        if (getAllLists(that).find('li.list-group-item[data-course-number]:first').length === 0) {
             try {
                 showFirstTimeTooltip = !localStorage.getItem('dontShowHistogramsTip');
             } catch (e) {
@@ -373,7 +607,8 @@ var CourseButtonList = (function () {
 
         addTooltipToBadge(badge, tooltipHtml, showFirstTimeTooltip);
 
-        that.badgeContainer.append(button);
+        list.append(button);
+        moveCustomEventsToEnd(list);
 
         // Initialize sortable after first course is added
         that.initializeSortableIfNeeded();
@@ -415,12 +650,12 @@ var CourseButtonList = (function () {
                 button.find('.content-absolute').removeClass('course-button-list-content-has-hidden')
                     .tooltip('dispose');
                 button.css('background-color', '');
-                that.onDisableCourse(course);
+                that.onDisableCourse(course, getListLayerId(button.parent()));
             } else {
                 button.addClass('active');
                 var color = that.colorGenerator(course);
                 button.css('background-color', color);
-                that.onEnableCourse(course);
+                that.onEnableCourse(course, getListLayerId(button.parent()));
             }
         }
     };
@@ -433,20 +668,22 @@ var CourseButtonList = (function () {
             return;
         }
 
-        // Don't initialize if no courses yet
-        if (that.badgeContainer.find('li.list-group-item').length === 0) {
+        // Don't initialize if no courses yet, unless there are layers to drag courses to
+        if (that.layers.length === 0 && that.badgeContainer.find('li.list-group-item').length === 0) {
             return;
         }
 
         that.sortableInitialized = true;
 
-        // Track if item should be deleted and original position
+        // Track if item should be deleted or moved to a new layer, and original position
         var shouldDelete = false;
+        var shouldCreateLayer = false;
         var cachedHeight = 0;
         var originalIndex = -1;
+        var originalList = null;
 
-        // Initialize jQuery UI sortable
-        that.badgeContainer.sortable({
+        // Initialize jQuery UI sortable, the lists of the layers are connected
+        getAllLists(that).sortable({
             handle: '.course-button-list-drag-handle',
             placeholder: 'course-button-list-item ui-sortable-placeholder',
             tolerance: 'pointer',
@@ -454,7 +691,7 @@ var CourseButtonList = (function () {
             opacity: 0.8,
             delay: 100, // Helps distinguish between click and drag
             distance: 5, // Minimum distance to start drag
-            connectWith: '.course-button-list-delete-area',
+            connectWith: '.course-button-list-badge-container, .course-button-list-delete-area',
 
             // Helper event - fires before start, get height while item is still visible
             helper: function(event, item) {
@@ -466,12 +703,14 @@ var CourseButtonList = (function () {
             // Start event - clean up UI and show delete area
             start: function(event, ui) {
                 shouldDelete = false;
+                shouldCreateLayer = false;
 
-                // Store the original index to detect if position changed
+                // Store the original list and index to detect if position changed
+                originalList = ui.item.parent();
                 originalIndex = ui.item.index();
 
                 // Hide any visible tooltips
-                that.badgeContainer.find('[data-toggle="tooltip"]').tooltip('hide');
+                getAllLists(that).find('[data-toggle="tooltip"]').tooltip('hide');
 
                 // Add helper class for additional styling
                 ui.helper.addClass('ui-sortable-helper');
@@ -479,39 +718,83 @@ var CourseButtonList = (function () {
                 // Set placeholder height using cached value (item is still visible when cached)
                 ui.placeholder.outerHeight(cachedHeight);
 
-                // Show delete area (if it exists)
-                if (that.deleteArea) {
-                    that.deleteArea.fadeIn(150);
+                // Show drop areas (if they exist)
+                if (that.dropAreas) {
+                    that.dropAreas.fadeIn(150);
                 }
             },
 
             // Stop event - save new order or delete course
             stop: function(event, ui) {
-                // Hide delete area (if it exists)
-                if (that.deleteArea) {
-                    that.deleteArea.fadeOut(150);
+                // Hide drop areas (if they exist)
+                if (that.dropAreas) {
+                    that.dropAreas.fadeOut(150);
                 }
 
-                if (shouldDelete) {
-                    // Get course number before removing the element
-                    var course = ui.item.attr('data-course-number');
+                var course = ui.item.attr('data-course-number');
+                var selected = ui.item.hasClass('active');
+                var originalLayerId = getListLayerId(originalList);
+                var newList = ui.item.parent();
+                var newLayerId = getListLayerId(newList);
 
+                var customEventId = ui.item.attr('data-custom-event-id');
+                if (customEventId !== undefined) {
+                    var wasDeleted = shouldDelete;
+                    var wasMovedToNewLayer = shouldCreateLayer;
+
+                    // Custom events have no order. Put the item back, the list is rebuilt if needed.
+                    originalList.sortable('cancel');
+
+                    // Not from within the callback, since the sortable is destroyed.
+                    setTimeout(function () {
+                        if (wasDeleted) {
+                            that.onCustomEventRemove(customEventId, originalLayerId);
+                        } else if (wasMovedToNewLayer) {
+                            that.onLayerCreate(null, originalLayerId, customEventId);
+                        } else if (newLayerId !== originalLayerId) {
+                            that.onCustomEventMove(customEventId, originalLayerId, newLayerId);
+                        }
+                    }, 0);
+                } else if (shouldDelete) {
                     // Remove the item from DOM
                     ui.item.remove();
 
                     // Call onDisableCourse to handle the deletion
                     if (course && that.onDisableCourse) {
-                        that.onDisableCourse(course);
+                        that.onDisableCourse(course, originalLayerId);
+                    }
+                } else if (shouldCreateLayer) {
+                    // Put the item back, the list is rebuilt once the layer is created.
+                    originalList.sortable('cancel');
+
+                    if (selected) {
+                        // Not from within the callback, since the sortable is destroyed.
+                        setTimeout(function () {
+                            that.onLayerCreate(course, originalLayerId);
+                        }, 0);
+                    }
+                } else if (newLayerId !== originalLayerId) {
+                    if (newList.find('li.list-group-item[data-course-number="' + course + '"]').length > 1) {
+                        // The course is already in the target layer.
+                        originalList.sortable('cancel');
+                    } else if (selected) {
+                        // Not from within the callback, since the sortable is destroyed.
+                        setTimeout(function () {
+                            that.onCourseMove(course, originalLayerId, newLayerId);
+                        }, 0);
                     }
                 } else {
                     // Only call onReorder if position actually changed
                     var newIndex = ui.item.index();
                     if (newIndex !== originalIndex && that.onReorder) {
-                        that.onReorder();
+                        that.onReorder(newLayerId);
                     }
+
+                    moveCustomEventsToEnd(newList);
                 }
 
                 shouldDelete = false;
+                shouldCreateLayer = false;
             }
         });
 
@@ -529,21 +812,46 @@ var CourseButtonList = (function () {
                 }
             });
         }
+
+        // Make new layer area droppable (only if it exists)
+        if (that.newLayerArea) {
+            that.newLayerArea.droppable({
+                accept: '.course-button-list-item',
+                tolerance: 'pointer',
+                hoverClass: 'ui-droppable-hover',
+                over: function(event, ui) {
+                    shouldCreateLayer = true;
+                },
+                out: function(event, ui) {
+                    shouldCreateLayer = false;
+                }
+            });
+        }
     };
 
     CourseButtonList.prototype.destroySortable = function () {
         var that = this;
 
         if (that.sortableInitialized) {
-            try {
-                that.badgeContainer.sortable('destroy');
-            } catch (e) {
-                // Sortable may not be initialized, ignore
-            }
+            getAllLists(that).each(function () {
+                try {
+                    $(this).sortable('destroy');
+                } catch (e) {
+                    // Sortable may not be initialized, ignore
+                }
+            });
 
             if (that.deleteArea) {
                 try {
                     that.deleteArea.droppable('destroy');
+                } catch (e) {
+                    // Droppable may not be initialized, ignore
+                }
+            }
+
+            if (that.newLayerArea) {
+                try {
+                    that.newLayerArea.droppable('destroy');
                 } catch (e) {
                     // Droppable may not be initialized, ignore
                 }
@@ -670,29 +978,66 @@ var CourseButtonList = (function () {
         setInfoDialogContent(dialog, course, that.courseManager);
     };
 
-    CourseButtonList.prototype.setHovered = function (course) {
-        var selector = 'li.list-group-item[data-course-number="' + course + '"]';
-        this.badgeContainer.find(selector).addClass('course-button-list-item-hovered');
+    // Custom events are shown in the list only if layers are used, for moving them between layers.
+    CourseButtonList.prototype.addCustomEvent = function (eventId, title, layerId) {
+        var that = this;
+
+        // Same structure as of a course item, see addCourse.
+        var spanAbsolute = $('<div class="content-wrapper"></div>').html($('<span class="content-absolute"></span>').text(title));
+        var spanBoldHidden = $('<span class="content-bold-hidden"></span>').text(title);
+
+        var dragHandle = $('<span class="course-button-list-drag-handle">' +
+            '<i class="fas fa-grip-vertical"></i>' +
+            '</span>');
+
+        var item = $('<li class="list-group-item active course-button-list-item course-button-list-custom-event"></li>')
+            .attr('data-custom-event-id', eventId)
+            .css('background-color', that.colorGenerator(title))
+            .hover(function () {
+                $(this).addClass('course-button-list-item-hovered');
+                that.onCustomEventHoverIn($(this).attr('data-custom-event-id'));
+            },
+            function () {
+                $(this).removeClass('course-button-list-item-hovered');
+                that.onCustomEventHoverOut($(this).attr('data-custom-event-id'));
+            })
+            .append(dragHandle, spanAbsolute, spanBoldHidden);
+
+        getLayerList(that, layerId).append(item);
+
+        that.initializeSortableIfNeeded();
     };
 
-    CourseButtonList.prototype.removeHovered = function (course) {
-        var selector = 'li.list-group-item[data-course-number="' + course + '"]';
-        this.badgeContainer.find(selector).removeClass('course-button-list-item-hovered');
+    CourseButtonList.prototype.updateCustomEvent = function (eventId, title) {
+        var item = findCustomEventItem(this, eventId);
+        item.find('.content-absolute, .content-bold-hidden').text(title);
+        item.css('background-color', this.colorGenerator(title));
     };
 
-    CourseButtonList.prototype.setConflicted = function (course) {
-        var selector = 'li.list-group-item[data-course-number="' + course + '"]';
-        this.badgeContainer.find(selector).addClass('course-button-list-item-conflicted');
+    CourseButtonList.prototype.removeCustomEvent = function (eventId) {
+        findCustomEventItem(this, eventId).remove();
     };
 
-    CourseButtonList.prototype.removeConflicted = function (course) {
-        var selector = 'li.list-group-item[data-course-number="' + course + '"]';
-        this.badgeContainer.find(selector).removeClass('course-button-list-item-conflicted');
+    // In the functions below, an undefined layerId means all layers.
+
+    CourseButtonList.prototype.setHovered = function (course, layerId) {
+        findCourseItems(this, course, layerId).addClass('course-button-list-item-hovered');
     };
 
-    CourseButtonList.prototype.setLessonTypesHidden = function (course, lessonTypesHidden) {
-        var selector = 'li.list-group-item[data-course-number="' + course + '"] .content-absolute';
-        var listGroupTextItem = this.badgeContainer.find(selector);
+    CourseButtonList.prototype.removeHovered = function (course, layerId) {
+        findCourseItems(this, course, layerId).removeClass('course-button-list-item-hovered');
+    };
+
+    CourseButtonList.prototype.setConflicted = function (course, layerId) {
+        findCourseItems(this, course, layerId).addClass('course-button-list-item-conflicted');
+    };
+
+    CourseButtonList.prototype.removeConflicted = function (course, layerId) {
+        findCourseItems(this, course, layerId).removeClass('course-button-list-item-conflicted');
+    };
+
+    CourseButtonList.prototype.setLessonTypesHidden = function (course, lessonTypesHidden, layerId) {
+        var listGroupTextItem = findCourseItems(this, course, layerId).find('.content-absolute');
 
         if (lessonTypesHidden.length > 0) {
             var title = 'אירועים מהסוגים הבאים הוסתרו מהמערכת:\n' + lessonTypesHidden.sort().join(', ');
@@ -712,31 +1057,36 @@ var CourseButtonList = (function () {
         }
     };
 
-    CourseButtonList.prototype.isCourseInList = function (course) {
-        var selector = 'li.list-group-item[data-course-number="' + course + '"]';
-        return this.badgeContainer.find(selector).length > 0;
+    CourseButtonList.prototype.isCourseInList = function (course, layerId) {
+        return findCourseItems(this, course, layerId).length > 0;
     };
 
-    CourseButtonList.prototype.getCourseNumbers = function (onlySelected) {
+    // Each course is returned once, even if it's in several layers.
+    CourseButtonList.prototype.getCourseNumbers = function (onlySelected, layerId) {
         var that = this;
 
-        var selector = 'li.list-group-item';
+        var selector = 'li.list-group-item[data-course-number]';
         if (onlySelected) {
             selector += '.active';
         }
 
+        var lists = layerId === undefined ? getAllLists(that) : getLayerList(that, layerId);
+
         var courseNumbers = [];
-        that.badgeContainer.find(selector).each(function () {
+        lists.find(selector).each(function () {
             var course = $(this).attr('data-course-number');
-            courseNumbers.push(course);
+            if (courseNumbers.indexOf(course) === -1) {
+                courseNumbers.push(course);
+            }
         });
 
         return courseNumbers;
     };
 
     CourseButtonList.prototype.clear = function () {
-        this.badgeContainer.find('[data-toggle="tooltip"]').tooltip('hide');
+        getAllLists(this).find('[data-toggle="tooltip"]').tooltip('hide');
         this.destroySortable();
+        removeLayers(this);
         this.badgeContainer.empty();
     };
 
