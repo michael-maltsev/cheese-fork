@@ -712,6 +712,15 @@ var CourseButtonList = (function () {
         }
     };
 
+    // Re-applies colorGenerator to the selected courses, call after a custom color changes.
+    CourseButtonList.prototype.updateColors = function () {
+        var that = this;
+
+        that.badgeContainer.find('li.list-group-item.active').each(function () {
+            $(this).css('background-color', that.colorGenerator($(this).attr('data-course-number')));
+        });
+    };
+
     CourseButtonList.prototype.isCourseInList = function (course) {
         var selector = 'li.list-group-item[data-course-number="' + course + '"]';
         return this.badgeContainer.find(selector).length > 0;
