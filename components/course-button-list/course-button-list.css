@@ -128,6 +128,25 @@
     opacity: 1;
 }
 
+/* No hover on touch screens, so always show the drag handle there */
+@media (hover: none) {
+    .course-button-list-drag-handle {
+        opacity: 1;
+        /* Don't scroll the page when dragging starts on the handle */
+        touch-action: none;
+    }
+
+    /* Larger touch target without moving the icon */
+    .course-button-list-drag-handle::before {
+        content: '';
+        position: absolute;
+        top: -10px;
+        bottom: -10px;
+        left: -8px;
+        right: -4px;
+    }
+}
+
 /* Keep handle visible while dragging */
 .ui-sortable-helper .course-button-list-drag-handle {
     opacity: 1;
