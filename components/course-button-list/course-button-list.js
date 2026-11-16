@@ -19,6 +19,10 @@ var CourseButtonList = (function () {
         this.onLayerRename = options.onLayerRename;
         this.onLayerDelete = options.onLayerDelete;
         this.onLayerVisibilityChange = options.onLayerVisibilityChange;
+        this.onCustomEventHoverIn = options.onCustomEventHoverIn;
+        this.onCustomEventHoverOut = options.onCustomEventHoverOut;
+        this.onCustomEventMove = options.onCustomEventMove;
+        this.onCustomEventRemove = options.onCustomEventRemove;
 
         var that = this;
 
@@ -75,6 +79,17 @@ var CourseButtonList = (function () {
     function findCourseItems(that, course, layerId) {
         var lists = layerId === undefined ? getAllLists(that) : getLayerList(that, layerId);
         return lists.find('li.list-group-item[data-course-number="' + course + '"]');
+    }
+
+    function findCustomEventItem(that, eventId) {
+        return getAllLists(that).find('li.course-button-list-custom-event').filter(function () {
+            return $(this).attr('data-custom-event-id') === String(eventId);
+        });
+    }
+
+    // Custom events are listed after the courses of the layer.
+    function moveCustomEventsToEnd(list) {
+        list.append(list.children('li.course-button-list-custom-event'));
     }
 
     function makeLayerHeader(that, layer) {
@@ -577,7 +592,7 @@ var CourseButtonList = (function () {
         });
 
         var showFirstTimeTooltip = false;
-        if (getAllLists(that).find('li.list-group-item:first').length === 0) {
+        if (getAllLists(that).find('li.list-group-item[data-course-number]:first').length === 0) {
             try {
                 showFirstTimeTooltip = !localStorage.getItem('dontShowHistogramsTip');
             } catch (e) {
@@ -593,6 +608,7 @@ var CourseButtonList = (function () {
         addTooltipToBadge(badge, tooltipHtml, showFirstTimeTooltip);
 
         list.append(button);
+        moveCustomEventsToEnd(list);
 
         // Initialize sortable after first course is added
         that.initializeSortableIfNeeded();
@@ -721,7 +737,25 @@ var CourseButtonList = (function () {
                 var newList = ui.item.parent();
                 var newLayerId = getListLayerId(newList);
 
-                if (shouldDelete) {
+                var customEventId = ui.item.attr('data-custom-event-id');
+                if (customEventId !== undefined) {
+                    var wasDeleted = shouldDelete;
+                    var wasMovedToNewLayer = shouldCreateLayer;
+
+                    // Custom events have no order. Put the item back, the list is rebuilt if needed.
+                    originalList.sortable('cancel');
+
+                    // Not from within the callback, since the sortable is destroyed.
+                    setTimeout(function () {
+                        if (wasDeleted) {
+                            that.onCustomEventRemove(customEventId, originalLayerId);
+                        } else if (wasMovedToNewLayer) {
+                            that.onLayerCreate(null, originalLayerId, customEventId);
+                        } else if (newLayerId !== originalLayerId) {
+                            that.onCustomEventMove(customEventId, originalLayerId, newLayerId);
+                        }
+                    }, 0);
+                } else if (shouldDelete) {
                     // Remove the item from DOM
                     ui.item.remove();
 
@@ -755,6 +789,8 @@ var CourseButtonList = (function () {
                     if (newIndex !== originalIndex && that.onReorder) {
                         that.onReorder(newLayerId);
                     }
+
+                    moveCustomEventsToEnd(newList);
                 }
 
                 shouldDelete = false;
@@ -942,6 +978,46 @@ var CourseButtonList = (function () {
         setInfoDialogContent(dialog, course, that.courseManager);
     };
 
+    // Custom events are shown in the list only if layers are used, for moving them between layers.
+    CourseButtonList.prototype.addCustomEvent = function (eventId, title, layerId) {
+        var that = this;
+
+        // Same structure as of a course item, see addCourse.
+        var spanAbsolute = $('<div class="content-wrapper"></div>').html($('<span class="content-absolute"></span>').text(title));
+        var spanBoldHidden = $('<span class="content-bold-hidden"></span>').text(title);
+
+        var dragHandle = $('<span class="course-button-list-drag-handle">' +
+            '<i class="fas fa-grip-vertical"></i>' +
+            '</span>');
+
+        var item = $('<li class="list-group-item active course-button-list-item course-button-list-custom-event"></li>')
+            .attr('data-custom-event-id', eventId)
+            .css('background-color', that.colorGenerator(title))
+            .hover(function () {
+                $(this).addClass('course-button-list-item-hovered');
+                that.onCustomEventHoverIn($(this).attr('data-custom-event-id'));
+            },
+            function () {
+                $(this).removeClass('course-button-list-item-hovered');
+                that.onCustomEventHoverOut($(this).attr('data-custom-event-id'));
+            })
+            .append(dragHandle, spanAbsolute, spanBoldHidden);
+
+        getLayerList(that, layerId).append(item);
+
+        that.initializeSortableIfNeeded();
+    };
+
+    CourseButtonList.prototype.updateCustomEvent = function (eventId, title) {
+        var item = findCustomEventItem(this, eventId);
+        item.find('.content-absolute, .content-bold-hidden').text(title);
+        item.css('background-color', this.colorGenerator(title));
+    };
+
+    CourseButtonList.prototype.removeCustomEvent = function (eventId) {
+        findCustomEventItem(this, eventId).remove();
+    };
+
     // In the functions below, an undefined layerId means all layers.
 
     CourseButtonList.prototype.setHovered = function (course, layerId) {
@@ -989,7 +1065,7 @@ var CourseButtonList = (function () {
     CourseButtonList.prototype.getCourseNumbers = function (onlySelected, layerId) {
         var that = this;
 
-        var selector = 'li.list-group-item';
+        var selector = 'li.list-group-item[data-course-number]';
         if (onlySelected) {
             selector += '.active';
         }

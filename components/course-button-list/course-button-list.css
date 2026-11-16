@@ -284,3 +284,17 @@
 .course-button-list-layer-hidden .course-button-list-item {
     opacity: 0.5;
 }
+
+/* Custom events in the list, only if layers are used */
+.course-button-list-custom-event {
+    cursor: default;
+}
+
+.course-button-list-custom-event .content-wrapper::before {
+    /* Font Awesome calendar-alt */
+    content: "\f073";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    float: right;
+    margin-left: 6px;
+}

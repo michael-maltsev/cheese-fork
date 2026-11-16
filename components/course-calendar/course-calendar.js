@@ -605,7 +605,8 @@ var CourseCalendar = (function () {
     function makeCustomEvent(courseCalendar, eventId, eventTitle, start, end, layerId) {
         return {
             id: eventId,
-            className: 'custom-event',
+            // The event id is added as a class only if it's safe to use as one.
+            className: 'custom-event' + (/^custom_event_\d+$/.test(eventId) ? ' calendar-item-' + eventId : ''),
             title: eventTitle,
             start: start,
             end: end,
@@ -1106,6 +1107,13 @@ var CourseCalendar = (function () {
 
         if (removed > 0) {
             updateCalendarMaxDayAndTime(calendar);
+        }
+    };
+
+    // Highlights a custom event, e.g. while it's hovered in the list.
+    CourseCalendar.prototype.setCustomEventHighlighted = function (eventId, highlighted) {
+        if (/^\d+$/.test(eventId)) {
+            $('.calendar-item-custom_event_' + eventId, this.element).toggleClass('calendar-item-previewed', highlighted);
         }
     };
 
